@@ -1,0 +1,181 @@
+openapi: '3.0.3'
+
+info:
+  title: API Golang-сервера
+  version: '1.0'
+
+servers:
+  - url: https://nginx-ip/api/v1
+
+tags:
+  - name: "OAuth 2.0"
+    description: "Авторизация / aутентификация пользователя"
+
+  - name: "Аккаунт пользователя"
+    description: "Изменение профиля пользователя"
+
+  - name: "Пользовательские сессии"
+    description: "Управление сессиями"
+  
+  - name: "Конспекты"
+    description: "Обработка конспектов"
+  
+  - name: "Комментарии для конспектов"
+    description: ""
+
+  - name: "Реакции на конспекты"
+    description: ""
+
+paths:
+  /auth/check:
+    get:
+      description: "Проверка access и refresh токенов аутентификации"
+      tags:
+        - "OAuth 2.0"
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Tokens"   
+        description: "Входные данные"
+        required: true
+
+      responses:
+        200:
+          description: "Редирект на сервер аутентификации"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthCheck"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /auth/logout:
+    get:
+      description: "Выход из аккаунта"
+      tags:
+        - "OAuth 2.0"
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Tokens"   
+        description: "Входные данные"
+        required: true
+
+      responses:
+        200:
+          description: "Успешный выход"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /auth/callback:
+    get:
+      description: "Получение access / refresh токенов"
+      tags:
+        - "OAuth 2.0"
+
+      parameters:
+        - in: query
+          name: code
+          description: Код ответа от Keycloak
+          required: true
+          schema:
+            type: integer
+
+      responses:
+        200:
+          description: "Успешная аутентификация"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tokens"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /password/update:
+    get:
+      description: "Проверка access и refresh токенов аутентификации"
+      tags:
+        - "Аккаунт пользователя"
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Tokens"   
+        description: "Входные данные"
+        required: true
+
+      responses:
+        200:
+          description: "Редирект на сервер аутентификации"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthCheck"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+components:
+  securitySchemes:
+    JWT:
+      type: "apiKey"
+      in: "header"
+      name: "Authorization"
+      description: ""
+
+  schemas:
+    AuthCheck:
+      required:
+        - "url"
+        - "redirect"
+      properties:
+        url:
+          type: "string"
+          description: ""
+        redirect:
+          type: "boolean"
+          description: ""
+
+    Tokens:
+      required:
+        - "access_token"
+        - "refresh_token"
+      properties:
+        access_token:
+          type: "string"
+          description: ""
+        refresh_token:
+          type: "string"
+          description: ""
+
+    ApiError:
+      required:
+        - "message"
+      properties:
+        message:
+          type: "string"
+          description: ""
