@@ -8,14 +8,14 @@ const Header = () => {
     <header className={styles.header_style}>
       <div className={styles.container} >
         <Link to="/">
-          <h1>PolyPrep</h1>
+          <h1>PolyPrep &lt;&lt;</h1>
         </Link>
 
         <div className={styles.menu}>
-          <Link to="/search">
+          <Link to="/">
             <img src={IconSearch} alt='search' />
           </Link>
-          <Link to="/profile">
+          <Link to="/user">
             <img src={IconUser} alt='user' />
           </Link>
         </div>
