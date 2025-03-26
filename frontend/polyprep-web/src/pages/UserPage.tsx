@@ -16,7 +16,7 @@ export const LoginPage = () => {
     :
       (async () => {
         await authCheck()
-        .then((resp) => resp.redirect ? window.location.href = resp.url : console.log("redirect = NULL"))
+        .then((resp) => resp.redirect ? window.open(resp.url, "_blank") : console.log("redirect = NULL"))
         .catch((err) => console.log(err));
       }) ();
   }, []);
