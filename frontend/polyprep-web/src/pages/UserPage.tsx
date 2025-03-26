@@ -1,31 +1,6 @@
 import { useEffect, useState } from "react";
-import { Navigate, useSearchParams } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import store from "../redux-store/store";
-import { authCallback, authCheck } from "../server-api/auth";
-
-
-export const LoginPage = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  useEffect(() => {
-    searchParams.get("p") ?
-      (async () => {
-        await authCallback(Number(searchParams.get("p") || null))
-        .catch((err) => console.log(err));
-      }) ()
-    :
-      (async () => {
-        await authCheck()
-        .then((resp) => resp.redirect ? window.open(resp.url, "_blank") : console.log("redirect = NULL"))
-        .catch((err) => console.log(err));
-      }) ();
-  }, []);
-
-  return (
-    <>
-    </>
-  )
-}
 
 const UserPage = () => {
   const [tokens, setTokens] = useState(false);
@@ -46,7 +21,6 @@ const UserPage = () => {
         <Navigate to={"/login"} replace={true} />
     }
     </>
-
   );
 }
 
