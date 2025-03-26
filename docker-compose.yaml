@@ -11,7 +11,7 @@ services:
       keycloak:
         condition: service_healthy
     environment:
-      KEYCLOAK_URL: "http://keycloak:8091"
+      KEYCLOAK_URL: "http://localhost:8091"
       REALM: "master"
       CLIENT_ID: "polyclient"
       CLIENT_SECRET: "opab4laUFRhlvPQgwp8DgSjGYV4kvPdp"

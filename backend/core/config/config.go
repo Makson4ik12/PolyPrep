@@ -1,5 +1,6 @@
 package config
 
+/*
 import (
 	"log"
 	"os"
@@ -39,3 +40,4 @@ func getEnv(key, defaultValue string) string {
 	}
 	return value
 }
+*/
