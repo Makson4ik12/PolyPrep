@@ -1,0 +1,26 @@
+# Используем базовый образ Go
+FROM golang:1.23.5-alpine AS builder
+
+# Устанавливаем рабочую директорию
+WORKDIR /app
+
+# Копируем исходный код
+COPY . .
+
+# Скачиваем зависимости
+RUN go mod download
+
+# Собираем приложение
+RUN go build -o main ./cmd
+
+# Используем минимальный образ для запуска
+FROM alpine:latest
+
+# Устанавливаем рабочую директорию
+WORKDIR /app
+
+# Копируем собранный бинарник из builder
+COPY --from=builder /app/main .
+
+# Указываем команду для запуска
+CMD ["./main"]
