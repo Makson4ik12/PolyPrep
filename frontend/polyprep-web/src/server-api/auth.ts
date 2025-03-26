@@ -30,7 +30,7 @@ export const authCheck = async () => {
 
 export const authLogout = async () => {
   const tokens = store.getState().auth.authTokens;
-  
+
   try {
       const response = await axios.get(
         `${SERVER_ADDRESS}${SERVER_API_VERSION}auth/logout`, 
@@ -48,7 +48,7 @@ export const authLogout = async () => {
     }
 }
 
-export const authCallback = async (code: number) => {
+export const authCallback = async (code: string) => {
   try {
       const response = await axios.get(
         `${SERVER_ADDRESS}${SERVER_API_VERSION}auth/callback`, 
@@ -59,7 +59,7 @@ export const authCallback = async (code: number) => {
         }
       );
   
-      store.dispatch(setStateLogin({ access: response.data.access, refresh: response.data.refresh }));
+      response ? store.dispatch(setStateLogin({ access: (response.data as ITokens).access, refresh: (response.data as ITokens).refresh })) : console.log("Error respnse");
     } catch (error: any) {
       throw error;
     }

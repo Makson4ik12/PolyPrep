@@ -3,10 +3,10 @@ import { Route, BrowserRouter, Routes } from 'react-router-dom';
 import MainPage from './pages/MainPage';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import UserPage, { LoginPage } from './pages/UserPage';
+import UserPage from './pages/UserPage';
+import { LoginPage } from './pages/LoginPage';
 
 const App = () => {
-
   return (
     <BrowserRouter>
       <div className={styles.app}>
