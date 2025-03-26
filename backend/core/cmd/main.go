@@ -26,7 +26,7 @@ var (
 
 func init() {
 	config = Config{
-		KeycloakURL:  getEnv("KEYCLOAK_URL", "http://keycloak:8091"),
+		KeycloakURL:  getEnv("KEYCLOAK_URL", "http://localhost:8091"),
 		Realm:        getEnv("REALM", "master"),
 		ClientID:     getEnv("CLIENT_ID", "polyclient"),
 		ClientSecret: getEnv("CLIENT_SECRET", "opab4laUFRhlvPQgwp8DgSjGYV4kvPdp"),
@@ -75,21 +75,19 @@ func logoutCallback(c *gin.Context) {
 }
 
 func checkAuth(c *gin.Context) {
-	accessToken, err := c.Cookie("access_token")
-	if err != nil {
-		// Если нет в куках, проверяем заголовки (для API-запросов)
-		accessToken = c.GetHeader("Authorization")
-		if accessToken == "" {
-			c.JSON(http.StatusOK, gin.H{
-				"url":      getAuthURL(),
-				"redirect": true,
-			})
-			return
-		}
-		// Удаляем "Bearer " из заголовка если есть
-		accessToken = strings.TrimPrefix(accessToken, "Bearer ")
+	accessToken := c.Query("access_token")
+
+	log.Println(accessToken)
+
+	if accessToken == "" {
+		c.JSON(http.StatusOK, gin.H{
+			"url":      getAuthURL(),
+			"redirect": true,
+		})
+		return
 	}
 
+	// Проверяем токен в Keycloak
 	token, _, err := keycloakClient.DecodeAccessToken(c.Request.Context(), accessToken, config.Realm)
 	if err != nil || token == nil {
 		c.JSON(http.StatusOK, gin.H{
@@ -100,7 +98,7 @@ func checkAuth(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"url":      getAuthURL(),
+		"url":      "",
 		"redirect": false,
 	})
 }
