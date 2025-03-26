@@ -1,0 +1,97 @@
+.container {
+    width: 100%;
+    background-color: var(--color-card);
+    padding: 20px;
+    border-radius: 20px;
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    .divider {
+        width: 100%;
+        border-top: 2px solid #cecece;
+    }
+
+    p {
+        font-size: 18px;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 6;
+                line-clamp: 6; 
+        -webkit-box-orient: vertical;
+    }
+
+    .top {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        flex-direction: row;
+        gap: 10px;
+
+        h2 {
+            font-size: 18px;
+        }
+
+        img {
+            width: 25px;
+            height: 25px;
+            padding: 5px;
+            transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+            cursor: pointer;
+
+            background-color: black;
+            border-radius: 50%;
+
+            &:hover {
+                filter: brightness(70%) contrast(120%);
+            }
+        }
+    }
+
+    .bottom {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 7px;
+        
+        .like_btn {
+            width: 35px;
+            height: 35px;
+            transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+            cursor: pointer;
+
+            &:hover {
+                filter: brightness(70%) contrast(120%);
+            }
+        }
+
+        .btns {
+            @extend .like_btn;
+            padding: 5px;
+
+            &:hover {
+                background-color: #ffffff;
+                border-radius: 10px;
+                filter: brightness(70%) contrast(120%);
+            }
+        }
+
+        .likes {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 7px;
+            border: 2px solid #cecece;
+            border-radius: 20px;
+            padding: 7px;
+            box-sizing: border-box;
+
+            p {
+                font-weight: 500;
+            }
+        }
+    }
+}
