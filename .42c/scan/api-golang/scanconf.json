@@ -1,0 +1,285 @@
+{
+    "version": "2.0.0",
+    "runtimeConfiguration": {
+        "environment": "default",
+        "laxTestingModeEnabled": false,
+        "apiConnectivityCheck": true,
+        "logLevel": "error",
+        "logDestination": "stdout+platform",
+        "logMaxFileSize": 2147483648,
+        "requestHeaderNameRequestId": "x-scan-request-id",
+        "requestHeaderNameScenarioId": "x-scan-scenario-id",
+        "requestHeaderNameRequestType": "x-scan-request-type",
+        "requestFlowrate": 100,
+        "requestTimeout": 30,
+        "requestTlsInsecureSkipVerify": true,
+        "responseFollowRedirection": false,
+        "responseMaxBodySizeScan": 10485760,
+        "happyPathOnly": false,
+        "maxRequestRetryAttempts": 5,
+        "maxScanDuration": 1800,
+        "memoryLimit": 2147483648,
+        "memoryTimeSpan": 10,
+        "reportMaxRequestSizeHappyPath": 8092,
+        "reportMaxRequestSizeTest": 8092,
+        "reportIncludeRequestBody": true,
+        "reportIncludeResponseBody": true,
+        "reportMaxHttpResponseSizeHappyPath": 8092,
+        "reportMaxBodySizeHappyPath": 8092,
+        "reportMaxHttpResponseSizeTest": 8092,
+        "reportMaxBodySizeTest": 8092,
+        "reportIssuesOnly": false,
+        "reportMaxIssues": 1000,
+        "reportMaxSize": 20971520,
+        "reportGenerateCurlCommand": true
+    },
+    "customizations": {
+        "happyPaths": {
+            "retry": 1,
+            "responsePolicy": {
+                "httpStatusExpected": true,
+                "mustBeConformant": true
+            },
+            "httpStatusExpected": []
+        },
+        "tests": {
+            "responsePolicy": {
+                "httpStatusExpected": true,
+                "mustBeConformant": true
+            }
+        }
+    },
+    "authenticationDetails": [
+        {
+            "JWT": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "Authorization",
+                "default": "JWT",
+                "credentials": {
+                    "JWT": {
+                        "description": "JWT security",
+                        "credential": "{{JWT}}"
+                    }
+                }
+            }
+        }
+    ],
+    "operations": {
+        "/auth/callback:get": {
+            "operationId": "/auth/callback:get",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/~1auth~1callback:get/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "/auth/callback:get",
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/auth/callback",
+                        "method": "GET",
+                        "queries": [
+                            {
+                                "key": "code",
+                                "value": 8204977879020757880
+                            }
+                        ]
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    },
+                    "default": {
+                        "expectations": {
+                            "httpStatus": "default"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/check:get": {
+            "operationId": "/auth/check:get",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/~1auth~1check:get/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "/auth/check:get",
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/auth/check",
+                        "method": "GET",
+                        "headers": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "requestBody": {
+                            "mode": "json",
+                            "json": {
+                                "access_token": "{{$randomFromSchema}}",
+                                "refresh_token": "{{$randomFromSchema}}"
+                            }
+                        }
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    },
+                    "default": {
+                        "expectations": {
+                            "httpStatus": "default"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/logout:get": {
+            "operationId": "/auth/logout:get",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/~1auth~1logout:get/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "/auth/logout:get",
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/auth/logout",
+                        "method": "GET",
+                        "headers": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "requestBody": {
+                            "mode": "json",
+                            "json": {
+                                "access_token": "{{$randomFromSchema}}",
+                                "refresh_token": "{{$randomFromSchema}}"
+                            }
+                        }
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    },
+                    "default": {
+                        "expectations": {
+                            "httpStatus": "default"
+                        }
+                    }
+                }
+            }
+        },
+        "/password/update:get": {
+            "operationId": "/password/update:get",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/~1password~1update:get/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "/password/update:get",
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/password/update",
+                        "method": "GET",
+                        "headers": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "requestBody": {
+                            "mode": "json",
+                            "json": {
+                                "access_token": "{{$randomFromSchema}}",
+                                "refresh_token": "{{$randomFromSchema}}"
+                            }
+                        }
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    },
+                    "default": {
+                        "expectations": {
+                            "httpStatus": "default"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "environments": {
+        "default": {
+            "variables": {
+                "JWT": {
+                    "from": "environment",
+                    "name": "SCAN42C_SECURITY_JWT",
+                    "required": false,
+                    "default": "secret_to_be_overridden"
+                },
+                "host": {
+                    "from": "environment",
+                    "name": "SCAN42C_HOST",
+                    "required": false,
+                    "default": "https://nginx-ip/api/v1"
+                }
+            }
+        }
+    }
+}
