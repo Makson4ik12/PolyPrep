@@ -1,1 +1,53 @@
-STUB
+version: "3.3"
+
+services:
+  backend:
+    build:
+      context: backend/core
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    environment:
+      KEYCLOAK_URL: "http://keycloak:8091"
+      REALM: "master"
+      CLIENT_ID: "polyclient"
+      CLIENT_SECRET: "opab4laUFRhlvPQgwp8DgSjGYV4kvPdp"
+
+  frontend:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3000"  # Сопоставляем порт 3000 контейнера с портом 3000 хоста
+    volumes:
+       - ./frontend/polyprep-web/src:/app/src
+       - ./frontend/polyprep-web/public:/app/public
+    environment:
+      - CHOKIDAR_USEPOLLING=true  # Для работы файлового вотчера в Docker
+      - REACT_APP_BACKEND_URL=http://localhost:8081
+      - HOST=0.0.0.0
+    depends_on:
+      - backend
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:20.0.1
+    restart: always
+    command: start-dev
+    ports:
+      - "8092:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/realms/master"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - data:/opt/keycloak/data/
+
+volumes:
+  data:

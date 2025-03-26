@@ -1,0 +1,3 @@
+apis:
+  docks/api/core-server.yml:
+    alias: api-golang

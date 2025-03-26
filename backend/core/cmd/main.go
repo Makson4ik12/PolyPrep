@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Nerzal/gocloak/v13"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -29,7 +30,7 @@ func init() {
 		Realm:        getEnv("REALM", "master"),
 		ClientID:     getEnv("CLIENT_ID", "polyclient"),
 		ClientSecret: getEnv("CLIENT_SECRET", "opab4laUFRhlvPQgwp8DgSjGYV4kvPdp"),
-		RedirectURL:  getEnv("REDIRECT_URL", "http://localhost:8081/auth/callback"),
+		RedirectURL:  getEnv("REDIRECT_URL", "http://localhost:3001/login"),
 	}
 
 	keycloakClient = gocloak.NewClient(config.KeycloakURL)
@@ -45,13 +46,24 @@ func getEnv(key, defaultValue string) string {
 func main() {
 	r := gin.Default()
 
-	r.GET("/auth/check", checkAuth)
-	r.GET("/auth/logout", logout)
-	r.GET("/auth/callback", authCallback)
-	r.GET("/", func(c *gin.Context) {
-		c.Redirect(http.StatusFound, "/auth/check")
-	})
-	r.POST("/auth/logout/callback", logoutCallback)
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3001"}, // Укажите ваш фронтенд-адрес
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
+
+	api := r.Group("/api/v1")
+	{
+		auth := api.Group("/auth")
+		{
+			auth.GET("/check", checkAuth)
+			auth.GET("/logout", logout)
+			auth.GET("/callback", authCallback)
+			auth.POST("/logout/callback", logoutCallback)
+		}
+	}
 
 	r.Run(":8081")
 }
@@ -65,11 +77,17 @@ func logoutCallback(c *gin.Context) {
 func checkAuth(c *gin.Context) {
 	accessToken, err := c.Cookie("access_token")
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"url":      getAuthURL(),
-			"redirect": true,
-		})
-		return
+		// Если нет в куках, проверяем заголовки (для API-запросов)
+		accessToken = c.GetHeader("Authorization")
+		if accessToken == "" {
+			c.JSON(http.StatusOK, gin.H{
+				"url":      getAuthURL(),
+				"redirect": true,
+			})
+			return
+		}
+		// Удаляем "Bearer " из заголовка если есть
+		accessToken = strings.TrimPrefix(accessToken, "Bearer ")
 	}
 
 	token, _, err := keycloakClient.DecodeAccessToken(c.Request.Context(), accessToken, config.Realm)
