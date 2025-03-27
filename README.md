@@ -51,9 +51,9 @@
 | /POLYPREP/docker-compose.yaml  | Docker-compose файл для развертывания контейнеров |
 | /POLYPREP/docks  | Документация проекта |
 | /POLYPREP/docks/api  | Open-API документация API |
-| /POLYPREP/backand  | Папка для нод бэкэнда |
-| /POLYPREP/backand/core  | Папка для основного сервера на Golang |
-| /POLYPREP/backand/data-processing  | Папка для Python-сервера для работы с файлами/звуками/текстом |
+| /POLYPREP/backend  | Папка для нод бэкэнда |
+| /POLYPREP/backend/core  | Папка для основного сервера на Golang |
+| /POLYPREP/backend/data-processing  | Папка для Python-сервера для работы с файлами/звуками/текстом |
 | /POLYPREP/frontend  | Папка для фронтенда |
 
 ## Описание каждой ноды
