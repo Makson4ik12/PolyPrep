@@ -58,8 +58,6 @@ export const authCallback = async (code: string) => {
           }
         }
       );
-  
-      response ? store.dispatch(setStateLogin({ access: (response.data as ITokens).access, refresh: (response.data as ITokens).refresh })) : console.log("Error respnse");
     } catch (error: any) {
       throw error;
     }

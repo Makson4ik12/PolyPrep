@@ -1,9 +1,12 @@
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { authCallback, authCheck } from "../server-api/auth";
 import { useEffect } from "react";
+import store from "../redux-store/store";
+import { setStateLogin } from "../redux-store/user-auth";
 
 export const LoginPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
   
     useEffect(() => {
       if (searchParams.get("code")) {
@@ -12,10 +15,14 @@ export const LoginPage = () => {
           .catch((err) => console.log(err));
         }) ();
   
+      } else if (searchParams.get("access") && searchParams.get("refresh")) {
+        store.dispatch(setStateLogin({ access: searchParams.get("access") as string, refresh: searchParams.get("refresh") as string }))
+        navigate("/user");
+
       } else {
         (async () => {
           await authCheck()
-          .then((resp) => resp.redirect ? window.open(resp.url, "_blank") : console.log("redirect = NULL"))
+          .then((resp) => resp.redirect ? window.open(resp.url, "_self") : console.log("redirect = NULL"))
           .catch((err) => console.log(err));
         }) ();
       }
@@ -23,7 +30,7 @@ export const LoginPage = () => {
   
     return (
       <div>
-        <h1>USERPAGE</h1>
+        <h1>LOGINPAGE</h1>
       </div>
     )
   }

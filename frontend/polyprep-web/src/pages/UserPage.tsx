@@ -16,7 +16,7 @@ const UserPage = () => {
     <>
     {
       tokens ? 
-        <Navigate to={"/IAMLOGGENEDIN"} replace={true} />
+        <h1>I AM LOGGED IN </h1>
       :
         <Navigate to={"/login"} replace={true} />
     }

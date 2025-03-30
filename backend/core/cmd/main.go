@@ -29,7 +29,7 @@ func init() {
 		KeycloakURL:  getEnv("KEYCLOAK_URL", "http://localhost:8091"),
 		Realm:        getEnv("REALM", "master"),
 		ClientID:     getEnv("CLIENT_ID", "polyclient"),
-		ClientSecret: getEnv("CLIENT_SECRET", "opab4laUFRhlvPQgwp8DgSjGYV4kvPdp"),
+		ClientSecret: getEnv("CLIENT_SECRET", "3RufZF7p6G4oRQ7UEttCdMwPASEQVF9D"),
 		RedirectURL:  getEnv("REDIRECT_URL", "http://localhost:3001/login"),
 	}
 
