@@ -26,11 +26,11 @@ var (
 
 func init() {
 	config = Config{
-		KeycloakURL:  getEnv("KEYCLOAK_URL", "http://localhost:8091"),
+		KeycloakURL:  getEnv("KEYCLOAK_URL", "http://90.156.170.153:8091"),
 		Realm:        getEnv("REALM", "master"),
 		ClientID:     getEnv("CLIENT_ID", "polyclient"),
-		ClientSecret: getEnv("CLIENT_SECRET", "opab4laUFRhlvPQgwp8DgSjGYV4kvPdp"),
-		RedirectURL:  getEnv("REDIRECT_URL", "http://localhost:3001/login"),
+		ClientSecret: getEnv("CLIENT_SECRET", "WYB2ObPJDY2xBDjpus9wQiWPo96b4Gcs"),
+		RedirectURL:  getEnv("REDIRECT_URL", "http://90.156.170.153:3001/login"),
 	}
 
 	keycloakClient = gocloak.NewClient(config.KeycloakURL)
@@ -47,7 +47,7 @@ func main() {
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3001"},
+		AllowOrigins:     []string{"http://90.156.170.153:3001"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
