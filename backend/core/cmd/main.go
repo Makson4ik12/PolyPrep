@@ -75,32 +75,32 @@ func logoutCallback(c *gin.Context) {
 }
 
 type bodyreq struct {
-	access_token  string
-	refresh_token string
-	next_page string
+    AccessToken  string `json:"access_token"`
+    RefreshToken string `json:"refresh_token"`
+    NextPage     string `json:"next_page"`
 }
 
 func checkAuth(c *gin.Context) {
-
 	var br bodyreq
+    
+    if err := c.ShouldBindJSON(&br); err != nil {
+        log.Println("Bind error:", err)
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+        return
+    }
 
-	c.ShouldBindJSON(&br)
-
-	log.Println(br.access_token)
-	log.Println(br.next_page)
-
-	if br.access_token == "" {
+	if br.AccessToken == "" {
 		c.JSON(http.StatusOK, gin.H{
-			"url":      getAuthURL(br.next_page),
+			"url":      getAuthURL(br.NextPage),
 			"redirect": true,
 		})
 		return
 	}
 
-	token, _, err := keycloakClient.DecodeAccessToken(c.Request.Context(), br.access_token, config.Realm)
+	token, _, err := keycloakClient.DecodeAccessToken(c.Request.Context(), br.AccessToken, config.Realm)
 	if err != nil || token == nil {
 		c.JSON(http.StatusOK, gin.H{
-			"url":      getAuthURL(br.next_page),
+			"url":      getAuthURL(br.NextPage),
 			"redirect": true,
 		})
 		return
