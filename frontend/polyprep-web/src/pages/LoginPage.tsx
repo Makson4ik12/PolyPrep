@@ -21,7 +21,7 @@ export const LoginPage = (params: IProtectedPage) => {
         }) ();
       } else {
         (async () => {
-          await authCheck("next_page")
+          await authCheck(params.next_page)
           .then((resp) => resp.redirect ? window.open(resp.url, "_self") : setIsLoading(false))
           .catch((err) => console.log(err));
         }) ();
