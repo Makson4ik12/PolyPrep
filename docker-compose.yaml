@@ -11,10 +11,10 @@ services:
       keycloak:
         condition: service_healthy
     environment:
-      KEYCLOAK_URL: "http://localhost:8091"
+      KEYCLOAK_URL: "http://90.156.170.153:8091"
       REALM: "master"
       CLIENT_ID: "polyclient"
-      CLIENT_SECRET: "3RufZF7p6G4oRQ7UEttCdMwPASEQVF9D"
+      CLIENT_SECRET: "WYB2ObPJDY2xBDjpus9wQiWPo96b4Gcs"
 
   frontend:
     build:
@@ -27,7 +27,7 @@ services:
        - ./frontend/polyprep-web/public:/app/public
     environment:
       - CHOKIDAR_USEPOLLING=true  # Для работы файлового вотчера в Docker
-      - REACT_APP_BACKEND_URL=http://localhost:8081
+      - REACT_APP_BACKEND_URL=http://90.156.170.153:8081
       - HOST=0.0.0.0
     depends_on:
       - backend
@@ -41,6 +41,9 @@ services:
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_STRICT_HTTPS: false
+      KC_HTTP_ENABLED: true
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/realms/master"]
       interval: 10s
