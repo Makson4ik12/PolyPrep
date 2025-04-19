@@ -13,8 +13,7 @@ const App = () => {
         <Header />
 
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/user" element={<UserPage />} />
+          <Route path="/user" element={<LoginPage page={<UserPage />} next_page='user'/>} />
           <Route path="/" element={<MainPage />} />
           <Route path="*" element={<MainPage />} />
         </Routes>
