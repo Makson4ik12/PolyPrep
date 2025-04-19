@@ -5,11 +5,6 @@ import { Link } from 'react-router-dom';
 const Section = (params: {title: string}) => {
   return (
     <div className={styles.cards_container}>
-      <div className={styles.razdel}>
-        <h1>{params.title}</h1>
-        <div className={styles.divider}></div>
-      </div>
-
       <Card 
         author='Макс Пупкин' 
         title='Конспекты по кмзи от Пупки Лупкиной' 
