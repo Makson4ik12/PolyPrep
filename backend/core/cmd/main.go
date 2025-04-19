@@ -77,6 +77,7 @@ func logoutCallback(c *gin.Context) {
 type bodyreq struct {
 	access_token  string
 	refresh_token string
+	next_page string
 }
 
 func checkAuth(c *gin.Context) {
