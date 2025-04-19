@@ -36,13 +36,14 @@ export const authLogout = async () => {
     }
 }
 
-export const authCallback = async (code: string) => {
+export const authCallback = async (code: string, next_page: string) => {
   try {
       const response = await axios.get(
         `${SERVER_ADDRESS}${SERVER_API_VERSION}auth/callback`, 
         {
           params: {
-            code: code
+            code: code,
+            next_page: next_page
           }
         }
       );

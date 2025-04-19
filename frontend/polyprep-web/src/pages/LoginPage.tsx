@@ -15,7 +15,7 @@ export const LoginPage = (params: IProtectedPage) => {
     useEffect(() => {
       if (searchParams.get("code")) {
         (async () => {
-          await authCallback(searchParams.get("code") || "abc")
+          await authCallback(searchParams.get("code") || "abc", params.next_page)
           .then(() => setIsLoading(false))
           .catch((err) => console.log(err));
         }) ();

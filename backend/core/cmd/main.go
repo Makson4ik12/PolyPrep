@@ -133,6 +133,8 @@ func logout(c *gin.Context) {
 
 func authCallback(c *gin.Context) {
 	code := c.Query("code")
+	next_page := c.Query("next_page")
+
 	if code == "" {
 		return
 	}
