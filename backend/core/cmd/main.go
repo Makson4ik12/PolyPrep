@@ -87,6 +87,7 @@ func checkAuth(c *gin.Context) {
 	c.ShouldBindJSON(&br)
 
 	log.Println(br.access_token)
+	log.Println(br.next_page)
 
 	if br.access_token == "" {
 		c.JSON(http.StatusOK, gin.H{
