@@ -26,7 +26,7 @@ var (
 
 func init() {
 	config = Config{
-		KeycloakURL:  getEnv("KEYCLOAK_URL", "http://localhost:8091"),
+		KeycloakURL:  getEnv("KEYCLOAK_URL", "http://90.156.170.153:8091"),
 		Realm:        getEnv("REALM", "master"),
 		ClientID:     getEnv("CLIENT_ID", "polyclient"),
 		ClientSecret: getEnv("CLIENT_SECRET", "WYB2ObPJDY2xBDjpus9wQiWPo96b4Gcs"),
@@ -47,7 +47,7 @@ func main() {
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://90.156.170.153:3001"}, // Укажите ваш фронтенд-адрес
+		AllowOrigins:     []string{"http://90.156.170.153:3001"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -74,12 +74,20 @@ func logoutCallback(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+type bodyreq struct {
+	access_token  string
+	refresh_token string
+}
+
 func checkAuth(c *gin.Context) {
-	accessToken := c.Query("access_token")
 
-	log.Println(accessToken)
+	var br bodyreq
 
-	if accessToken == "" {
+	c.ShouldBindJSON(&br)
+
+	log.Println(br.access_token)
+
+	if br.access_token == "" {
 		c.JSON(http.StatusOK, gin.H{
 			"url":      getAuthURL(),
 			"redirect": true,
@@ -87,8 +95,7 @@ func checkAuth(c *gin.Context) {
 		return
 	}
 
-	// Проверяем токен в Keycloak
-	token, _, err := keycloakClient.DecodeAccessToken(c.Request.Context(), accessToken, config.Realm)
+	token, _, err := keycloakClient.DecodeAccessToken(c.Request.Context(), br.access_token, config.Realm)
 	if err != nil || token == nil {
 		c.JSON(http.StatusOK, gin.H{
 			"url":      getAuthURL(),
@@ -105,27 +112,27 @@ func checkAuth(c *gin.Context) {
 
 func logout(c *gin.Context) {
 
-	refreshToken, _ := c.Cookie("refresh_token")
-	log.Println(refreshToken)
+	var br bodyreq
 
-	if refreshToken != "" {
-		err := keycloakClient.Logout(c.Request.Context(), config.ClientID, config.ClientSecret, config.Realm, refreshToken)
+	c.BindJSON(br)
+
+	log.Println(br.access_token)
+
+	if br.access_token != "" {
+		err := keycloakClient.Logout(c.Request.Context(), config.ClientID, config.ClientSecret, config.Realm, br.refresh_token)
 		if err != nil {
 			log.Printf("Keycloak logout error: %v", err)
 		}
 	}
 
 	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("access_token", "", -1, "/", "", true, true)
-	c.SetCookie("refresh_token", "", -1, "/", "", true, true)
 
-	c.Redirect(http.StatusFound, "/auth/check")
+	c.JSON(http.StatusOK, gin.H{})
 }
 
 func authCallback(c *gin.Context) {
 	code := c.Query("code")
 	if code == "" {
-		c.Redirect(http.StatusFound, "/")
 		return
 	}
 
@@ -138,14 +145,13 @@ func authCallback(c *gin.Context) {
 	})
 	if err != nil {
 		log.Printf("Failed to get token: %v", err)
-		c.Redirect(http.StatusFound, "/")
 		return
 	}
 
-	c.SetCookie("access_token", token.AccessToken, int(token.ExpiresIn), "/", "", false, true)
-	c.SetCookie("refresh_token", token.RefreshToken, int(token.RefreshExpiresIn), "/", "", false, true)
-
-	c.Redirect(http.StatusFound, "/")
+	c.JSON(http.StatusOK, gin.H{
+		"access_token":  token.AccessToken,
+		"refresh_token": token.RefreshToken,
+	})
 }
 
 func getAuthURL() string {
