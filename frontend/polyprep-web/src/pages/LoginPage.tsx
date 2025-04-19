@@ -1,8 +1,6 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { authCallback, authCheck } from "../server-api/auth";
 import { useEffect } from "react";
-import store from "../redux-store/store";
-import { setStateLogin } from "../redux-store/user-auth";
 
 export const LoginPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -12,13 +10,10 @@ export const LoginPage = () => {
       if (searchParams.get("code")) {
         (async () => {
           await authCallback(searchParams.get("code") || "abc")
+          .then (() => navigate("/user"))
           .catch((err) => console.log(err));
         }) ();
   
-      } else if (searchParams.get("access") && searchParams.get("refresh")) {
-        store.dispatch(setStateLogin({ access: searchParams.get("access") as string, refresh: searchParams.get("refresh") as string }))
-        navigate("/user");
-
       } else {
         (async () => {
           await authCheck()

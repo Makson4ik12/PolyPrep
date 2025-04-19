@@ -12,14 +12,8 @@ export const authCheck = async () => {
   const tokens = store.getState().auth.authTokens;
 
   try {
-      const response = await axios.get(
-        `${SERVER_ADDRESS}${SERVER_API_VERSION}auth/check`, 
-        {
-          params: {
-            access_token: tokens.access,
-            refresh_token: tokens.refresh
-          }
-        }
+      const response = await axios.post(
+        `${SERVER_ADDRESS}${SERVER_API_VERSION}auth/check`, tokens
       );
   
       return response.data as IAuthCheckResponse;
@@ -32,14 +26,8 @@ export const authLogout = async () => {
   const tokens = store.getState().auth.authTokens;
 
   try {
-      const response = await axios.get(
-        `${SERVER_ADDRESS}${SERVER_API_VERSION}auth/logout`, 
-        {
-          params: {
-            access_token: tokens.access,
-            refresh_token: tokens.refresh
-          }
-        }
+      const response = await axios.post(
+        `${SERVER_ADDRESS}${SERVER_API_VERSION}auth/logout`, tokens
       );
   
       store.dispatch(setStateLogout());
@@ -58,6 +46,8 @@ export const authCallback = async (code: string) => {
           }
         }
       );
+
+      store.dispatch(setStateLogin(response.data as ITokens))
     } catch (error: any) {
       throw error;
     }
