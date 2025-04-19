@@ -58,6 +58,8 @@ export const authCallback = async (code: string) => {
           }
         }
       );
+
+      store.dispatch(setStateLogin({ access: response.data.access_token as string, refresh: response.data.refresh_token as string }))
     } catch (error: any) {
       throw error;
     }
