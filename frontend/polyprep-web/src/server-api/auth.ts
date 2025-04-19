@@ -47,7 +47,7 @@ export const authCallback = async (code: string) => {
         }
       );
 
-      store.dispatch(setStateLogin({ access_token: response.data.access_token as string, refresh_token: response.data.refresh_token as string }))
+      store.dispatch(setStateLogin(response.data as ITokens))
     } catch (error: any) {
       throw error;
     }
