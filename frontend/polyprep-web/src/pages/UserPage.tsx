@@ -4,22 +4,11 @@ import store from "../redux-store/store";
 import { current } from "@reduxjs/toolkit";
 
 const UserPage = () => {
-  const [tokens, setTokens] = useState(false);
   const current_state = store.getState().auth;
-
-  useEffect(() => {
-    if (current_state.authTokens.refresh_token !== null)
-      setTokens(true);
-  }, []);
   
   return (
     <>
-    {
-      tokens ? 
-        <h1>I AM LOGGED IN - {current_state.userData.user_mail}</h1>
-      :
-        <Navigate to={"/login"} replace={true} />
-    }
+      <h1>I AM LOGGED IN - {current_state.userData.user_mail}</h1>
     </>
   );
 }
