@@ -113,14 +113,15 @@ func checkAuth(c *gin.Context) {
 }
 
 func logout(c *gin.Context) {
-
 	var br bodyreq
+    
+    if err := c.ShouldBindJSON(&br); err != nil {
+        log.Println("Bind error:", err)
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+        return
+    }
 
-	c.BindJSON(br)
-
-	log.Println(br.access_token)
-
-	if br.access_token != "" {
+	if br.AccessToken != "" {
 		err := keycloakClient.Logout(c.Request.Context(), config.ClientID, config.ClientSecret, config.Realm, br.refresh_token)
 		if err != nil {
 			log.Printf("Keycloak logout error: %v", err)
