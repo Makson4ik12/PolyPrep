@@ -142,7 +142,7 @@ func authCallback(c *gin.Context) {
 		Code:         &code,
 		ClientID:     &config.ClientID,
 		ClientSecret: &config.ClientSecret,
-		RedirectURI:  &config.RedirectURL,
+		RedirectURI:  &config.RedirectURL + next_page,
 	})
 	if err != nil {
 		log.Printf("Failed to get token: %v", err)
