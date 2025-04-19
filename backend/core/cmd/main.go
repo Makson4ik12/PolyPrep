@@ -122,7 +122,7 @@ func logout(c *gin.Context) {
     }
 
 	if br.AccessToken != "" {
-		err := keycloakClient.Logout(c.Request.Context(), config.ClientID, config.ClientSecret, config.Realm, br.refresh_token)
+		err := keycloakClient.Logout(c.Request.Context(), config.ClientID, config.ClientSecret, config.Realm, br.RefreshToken)
 		if err != nil {
 			log.Printf("Keycloak logout error: %v", err)
 		}
