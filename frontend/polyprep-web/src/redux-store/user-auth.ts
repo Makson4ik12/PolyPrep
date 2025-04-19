@@ -12,8 +12,8 @@ export interface IToken {
 }
 
 export interface ITokens{
-  refresh: string | null;
-  access: string | null
+  refresh_token: string | null;
+  access_token: string | null
 }
 
 interface IUserData {
@@ -46,11 +46,11 @@ export const authSlice = createSlice({
   reducers: {
     setStateLogin: (state, data: {payload: ITokens, type: any}) => {
       state.userData = {
-        user_mail: (jwtDecode(data.payload.access as string) as IToken).email,
-        first_name: (jwtDecode(data.payload.access as string) as IToken).given_name,
-        last_name: (jwtDecode(data.payload.access as string) as IToken).family_name,
-        email_verified: (jwtDecode(data.payload.access as string) as IToken).email_verified,
-        preferred_username: (jwtDecode(data.payload.access as string) as IToken).preferred_username
+        user_mail: (jwtDecode(data.payload.access_token as string) as IToken).email,
+        first_name: (jwtDecode(data.payload.access_token as string) as IToken).given_name,
+        last_name: (jwtDecode(data.payload.access_token as string) as IToken).family_name,
+        email_verified: (jwtDecode(data.payload.access_token as string) as IToken).email_verified,
+        preferred_username: (jwtDecode(data.payload.access_token as string) as IToken).preferred_username
       };
       state.authTokens = data.payload;
       localStorage.setItem('authTokens', JSON.stringify(data.payload));
@@ -63,7 +63,7 @@ export const authSlice = createSlice({
         email_verified: null,
         preferred_username: null
       };
-      state.authTokens = {refresh: null, access: null};
+      state.authTokens = {refresh_token: null, access_token: null};
       localStorage.removeItem('authTokens');
     }
   },
