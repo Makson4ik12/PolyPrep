@@ -8,7 +8,7 @@ const UserPage = () => {
   const current_state = store.getState().auth;
 
   useEffect(() => {
-    if (current_state.authTokens.refresh !== null)
+    if (current_state.authTokens.refresh_token !== null)
       setTokens(true);
   }, []);
   
