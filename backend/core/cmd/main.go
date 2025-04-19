@@ -30,7 +30,7 @@ func init() {
 		Realm:        getEnv("REALM", "master"),
 		ClientID:     getEnv("CLIENT_ID", "polyclient"),
 		ClientSecret: getEnv("CLIENT_SECRET", "WYB2ObPJDY2xBDjpus9wQiWPo96b4Gcs"),
-		RedirectURL:  getEnv("REDIRECT_URL", "http://90.156.170.153:3001/login"),
+		RedirectURL:  getEnv("REDIRECT_URL", "http://90.156.170.153:3001/"),
 	}
 
 	keycloakClient = gocloak.NewClient(config.KeycloakURL)
@@ -89,7 +89,7 @@ func checkAuth(c *gin.Context) {
 
 	if br.access_token == "" {
 		c.JSON(http.StatusOK, gin.H{
-			"url":      getAuthURL(),
+			"url":      getAuthURL(br.next_page),
 			"redirect": true,
 		})
 		return
@@ -98,7 +98,7 @@ func checkAuth(c *gin.Context) {
 	token, _, err := keycloakClient.DecodeAccessToken(c.Request.Context(), br.access_token, config.Realm)
 	if err != nil || token == nil {
 		c.JSON(http.StatusOK, gin.H{
-			"url":      getAuthURL(),
+			"url":      getAuthURL(br.next_page),
 			"redirect": true,
 		})
 		return
@@ -154,12 +154,12 @@ func authCallback(c *gin.Context) {
 	})
 }
 
-func getAuthURL() string {
+func getAuthURL(next_page string) string {
 
 	baseURL := strings.TrimSuffix(config.KeycloakURL, "/")
 	return baseURL + "/realms/" + config.Realm + "/protocol/openid-connect/auth" +
 		"?client_id=" + config.ClientID +
 		"&response_type=code" +
 		"&scope=openid profile" +
-		"&redirect_uri=" + config.RedirectURL
+		"&redirect_uri=" + config.RedirectURL + next_page
 }
