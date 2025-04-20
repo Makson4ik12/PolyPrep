@@ -1,6 +1,5 @@
 package config
 
-/*
 import (
 	"log"
 	"os"
@@ -25,11 +24,11 @@ func LoadConfig() *Config {
 
 	return &Config{
 		ServerPort:   getEnv("SERVER_PORT", "8081"),
-		KeycloakURL:  getEnv("KEYCLOAK_URL", "http://localhost:8080"),
-		ClientID:     getEnv("CLIENT_ID", "your-client-id"),
-		ClientSecret: getEnv("CLIENT_SECRET", "your-client-secret"),
-		Realm:        getEnv("REALM", "your-realm"),
-		RedirectURI:  getEnv("REDIRECT_URI", "http://localhost:8081/auth/callback"),
+		KeycloakURL:  getEnv("KEYCLOAK_URL", "http://90.156.170.153:8091"),
+		ClientID:     getEnv("CLIENT_ID", "polyclient"),
+		ClientSecret: getEnv("CLIENT_SECRET", "WYB2ObPJDY2xBDjpus9wQiWPo96b4Gcs"),
+		Realm:        getEnv("REALM", "master"),
+		RedirectURI:  getEnv("REDIRECT_URI", "http://90.156.170.153:3001/login"),
 	}
 }
 
@@ -40,4 +39,3 @@ func getEnv(key, defaultValue string) string {
 	}
 	return value
 }
-*/
