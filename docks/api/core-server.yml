@@ -5,30 +5,26 @@ info:
   version: '1.0'
 
 servers:
-  - url: https://nginx-ip/api/v1
+  - url: http://90.156.170.153:8081/api/v1
 
 tags:
   - name: "OAuth 2.0"
     description: "Авторизация / aутентификация пользователя"
 
-  - name: "Аккаунт пользователя"
-    description: "Изменение профиля пользователя"
+  - name: "Посты"
 
-  - name: "Пользовательские сессии"
-    description: "Управление сессиями"
+  - name: "Комментарии"
   
-  - name: "Конспекты"
-    description: "Обработка конспектов"
-  
-  - name: "Комментарии для конспектов"
-    description: ""
+  - name: "Лайки"
 
-  - name: "Реакции на конспекты"
-    description: ""
+  - name: "Вложения"
+    description: "Фото / аудио / doc & pdf файлы"
+
+  - name: "Избранное"
 
 paths:
   /auth/check:
-    get:
+    post:
       description: "Проверка access и refresh токенов аутентификации"
       tags:
         - "OAuth 2.0"
@@ -37,7 +33,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Tokens"   
+              $ref: "#/components/schemas/AuthBody"   
         description: "Входные данные"
         required: true
 
@@ -47,7 +43,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthCheck"
+                $ref: "#/components/schemas/Tokens"
 
         default:
           description: "Ошибка запроса"
@@ -57,7 +53,7 @@ paths:
                 $ref: "#/components/schemas/ApiError"
 
   /auth/logout:
-    get:
+    post:
       description: "Выход из аккаунта"
       tags:
         - "OAuth 2.0"
@@ -94,6 +90,12 @@ paths:
           required: true
           schema:
             type: integer
+        - in: query
+          name: next_page
+          description: Страница фронта для редиректа
+          required: true
+          schema:
+            type: string
 
       responses:
         200:
@@ -110,27 +112,30 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiError"
 
-  /password/update:
+  /auth/refresh:
     get:
-      description: "Проверка access и refresh токенов аутентификации"
+      description: "Получение access токена по refresh токену"
       tags:
-        - "Аккаунт пользователя"
+        - "OAuth 2.0"
 
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Tokens"   
-        description: "Входные данные"
-        required: true
+      parameters:
+        - in: header
+          name: Authorization
+          description: "Refresh токен"
+          required: true
+          schema:
+            type: string
 
       responses:
         200:
-          description: "Редирект на сервер аутентификации"
+          description: "Токен обновлен"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthCheck"
+                $ref: "#/components/schemas/AuthRefresh"
+
+        405:
+          description: "Refresh токен истек"
 
         default:
           description: "Ошибка запроса"
@@ -138,6 +143,743 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+
+  /post:
+    get:
+      description: "Получение поста"
+      tags:
+        - "Посты"
+
+      parameters:
+        - in: query
+          name: id
+          description: Id поста
+          required: true
+          schema:
+            type: integer
+
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: "Пост найден"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetPost"
+        
+        403:
+          description: "Пост не найден"
+
+        405:
+          description: "Нет доступа (если пост приватный)"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    
+    post:
+      description: "Создание поста"
+      tags:
+        - "Посты"
+
+      parameters:
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostPost"   
+        required: true
+
+      responses:
+        200:
+          description: "Успешно"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    
+    put:
+      description: "Изменение поста"
+      tags:
+        - "Посты"
+
+      parameters:
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PutPost"   
+        required: true
+
+      responses:
+        200:
+          description: "Успешно изменен"
+
+        403:
+          description: "Пост не найден"
+
+        405:
+          description: "Нет доступа (если пост приватный)"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    
+    delete:
+      description: "Удаление поста"
+      tags:
+        - "Посты"
+
+      parameters:
+        - in: query
+          name: id
+          description: Id поста
+          required: true
+          schema:
+            type: integer
+
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: "Успешно удален"
+
+        403:
+          description: "Пост не найден"
+
+        405:
+          description: "Нет доступа (если пост приватный)"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /post/search:
+    get:
+      description: "Поиск постов"
+      tags:
+        - "Посты"
+
+      parameters:
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+
+        - in: query
+          name: text
+          description: Поисковый запрос
+          required: true
+          example: "Гдз вышмат политех"
+          schema:
+            type: string
+        
+        - in: query
+          name: from
+          description: Индексы найденных возвращаемых постов (с from по to)
+          required: true
+          example: 0
+          schema:
+            type: string
+
+        - in: query
+          name: to
+          description: Если столько постов нет - вернется сколько нашлось
+          required: true
+          example: 50
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: "Посты найдены"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Search"
+        
+        403:
+          description: "Посты не найдены"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /post/random:
+    get:
+      description: "Случайные n постов"
+      tags:
+        - "Посты"
+
+      parameters:
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+        
+        - in: query
+          name: count
+          description: Количество возвращаемых постов
+          required: true
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: "Посты найдены"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Search"
+        
+        403:
+          description: "Посты не найдены"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /comment:
+    get:
+      description: "Получение комментариев поста"
+      tags:
+        - "Комментарии"
+
+      parameters:
+        - in: query
+          name: id
+          description: Id комментария
+          required: true
+          schema:
+            type: integer
+
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: "Комментарии найдены"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetComment"
+        
+        403:
+          description: "Комментарии не найдены"
+
+        405:
+          description: "Нет доступа (если пост приватный)"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    
+    post:
+      description: "Создание комментария"
+      tags:
+        - "Комментарии"
+
+      parameters:
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostComment"   
+        required: true
+
+      responses:
+        200:
+          description: "Успешно"
+        
+        403:
+          description: "Пост не найден"
+
+        405:
+          description: "Нет доступа (если пост приватный)"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    
+    put:
+      description: "Изменение комментария"
+      tags:
+        - "Комментарии"
+
+      parameters:
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PutComment"   
+        required: true
+
+      responses:
+        200:
+          description: "Успешно изменен"
+
+        403:
+          description: "Комментарий не найден"
+
+        405:
+          description: "Нет доступа (если пост приватный)"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    
+    delete:
+      description: "Удаление комментария"
+      tags:
+        - "Комментарии"
+
+      parameters:
+        - in: query
+          name: id
+          description: Id комментарии
+          required: true
+          schema:
+            type: integer
+
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: "Успешно удален"
+
+        403:
+          description: "Комментарии не найден"
+
+        405:
+          description: "Нет доступа (если пост приватный)"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /like:
+    get:
+      description: "Получение лайков поста"
+      tags:
+        - "Лайки"
+
+      parameters:
+        - in: query
+          name: id
+          description: Id поста
+          required: true
+          schema:
+            type: integer
+
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: "Лайки найдены"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetLike"
+        
+        403:
+          description: "Лайки не найдены"
+
+        405:
+          description: "Нет доступа (если пост приватный)"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    
+    post:
+      description: "Лайк поста"
+      tags:
+        - "Лайки"
+
+      parameters:
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostLike"   
+        required: true
+
+      responses:
+        200:
+          description: "Успешно"
+        
+        403:
+          description: "Пост не найден"
+
+        405:
+          description: "Нет доступа (если пост приватный)"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    
+    delete:
+      description: "Удаление лайка"
+      tags:
+        - "Лайки"
+
+      parameters:
+        - in: query
+          name: id
+          description: Id лайка
+          required: true
+          schema:
+            type: integer
+
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: "Успешно удален"
+
+        403:
+          description: "Лайк не найден"
+
+        405:
+          description: "Нет доступа (если пост приватный)"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /include:
+    get:
+      description: "Получение вложений поста"
+      tags:
+        - "Вложения"
+
+      parameters:
+        - in: query
+          name: id
+          description: Id поста
+          required: true
+          schema:
+            type: integer
+
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: "Вложения найдены"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetInclude"
+        
+        403:
+          description: "Вложения не найдены"
+
+        405:
+          description: "Нет доступа (если пост приватный)"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    
+    post:
+      description: "Вложения поста"
+      tags:
+        - "Вложения"
+
+      parameters:
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostInclude"   
+        required: true
+
+      responses:
+        200:
+          description: "Успешно"
+        
+        403:
+          description: "Пост не найден"
+
+        405:
+          description: "Нет доступа (если пост приватный)"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    
+    delete:
+      description: "Удаление вложения"
+      tags:
+        - "Вложения"
+
+      parameters:
+        - in: query
+          name: id
+          description: Id вложения
+          required: true
+          schema:
+            type: integer
+
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: "Успешно удалено"
+
+        403:
+          description: "Вложения не найдено"
+
+        405:
+          description: "Нет доступа (если пост приватный)"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /favourite:
+    get:
+      description: "Получение избранных постов пользователя"
+      tags:
+        - "Избранное"
+
+      parameters:
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: "Избранные посты найдены"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetFavourite"
+        
+        403:
+          description: "Избранные посты не найдены"
+
+        405:
+          description: "Нет доступа (если пост приватный)"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    
+    post:
+      description: "Сделать пост избранным"
+      tags:
+        - "Избранное"
+
+      parameters:
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostFavourite"   
+        required: true
+
+      responses:
+        200:
+          description: "Успешно"
+        
+        403:
+          description: "Пост не найден"
+
+        405:
+          description: "Нет доступа (если пост приватный)"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    
+    delete:
+      description: "Удаление пост из избранного"
+      tags:
+        - "Избранное"
+
+      parameters:
+        - in: query
+          name: id
+          description: Id избранного поста
+          required: true
+          schema:
+            type: integer
+
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: "Успешно удален"
+
+        403:
+          description: "Избранный пост не найден"
+
+        405:
+          description: "Нет доступа (если пост приватный)"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    
 
 components:
   securitySchemes:
@@ -155,10 +897,9 @@ components:
       properties:
         url:
           type: "string"
-          description: ""
+
         redirect:
           type: "boolean"
-          description: ""
 
     Tokens:
       required:
@@ -167,10 +908,239 @@ components:
       properties:
         access_token:
           type: "string"
-          description: ""
+
         refresh_token:
           type: "string"
-          description: ""
+
+    AuthRefresh:
+      required:
+        - "access_token"
+      properties:
+        access_token:
+          type: "string"
+
+    AuthBody:
+      required:
+        - "access_token"
+        - "refresh_token"
+        - "next_page"
+      properties:
+        access_token:
+          type: "string"
+
+        refresh_token:
+          type: "string"
+
+        next_page:
+          type: "string"
+
+    
+    GetPost:
+      required:
+        - "id"
+        - "created_at"
+        - "updated_at"
+        - "scheduled_at"
+        - "author_id"
+        - "title"
+        - "text"
+        - "public"
+        - "hashtages"
+      properties:
+        id:
+          type: "integer"
+          example: 1
+        created_at:
+          type: "integer"
+          example: 12345678
+        updated_at:
+          type: "integer"
+          example: 12345679
+        scheduled_at:
+          type: "integer"
+          example: 12345679
+        author_id:
+          type: "integer"
+          example: 1
+        title:
+          type: "string"
+          example: "Основы математики"
+        text:
+          type: "string"
+          example: "Блаблабла"
+        public:
+          type: "boolean"
+          example: true
+        hashtages:
+          type: "array"
+          example: ["#hype", "#math", "#школанекул"]
+
+    PostPost:
+      required:
+        - "title"
+        - "text"
+        - "hashtages"
+        - "public"
+        - "scheduled_at"
+      properties:
+        title:
+          type: "string"
+          example: "Пост по математике"
+        text:
+          type: "string"
+          example: "Блаблабла"
+        hashtages:
+          type: "array"
+          example: ["#hype", "#math", "#школанекул"]
+        public:
+          type: "boolean"
+        scheduled_at:
+          type: "integer"
+          example: 12345679
+    
+    PutPost:
+      required:
+        - "id"
+        - "title"
+        - "text"
+        - "hashtages"
+        - "public"
+        - "scheduled_at"
+      properties:
+        id:
+          type: "integer"
+        title:
+          type: "string"
+          example: "Пост по математике"
+        text:
+          type: "string"
+          example: "Блаблабла"
+        hashtages:
+          type: "array"
+          example: ["#hype", "#math", "#школанекул"]
+        public:
+          type: "boolean"
+        scheduled_at:
+          type: "integer"
+          example: 12345679
+
+    Search:
+      type: array
+      items:
+        type: object
+        properties:
+          post_id::
+            type: "integer"
+
+
+    GetComment:
+      type: array
+      items:
+        type: object
+        properties: 
+          id:
+            type: "integer"
+          created_at:
+            type: "integer"
+          updated_at:
+            type: "integer"
+          author_id:
+            type: "integer"
+          post_id:
+            type: "integer"
+          text:
+            type: "string"
+    
+    PostComment:
+      required:
+        - "text"
+        - "post_id"
+      properties:
+        text:
+          type: "string"
+        post_id:
+          type: "integer"
+
+    PutComment:
+      required:
+        - "id"
+        - "text"
+        - "post_id"
+      properties:
+        id:
+          type: "integer"
+        text:
+          type: "string"
+        post_id:
+          type: "integer"
+
+
+    GetLike:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: "integer"
+          created_at:
+            type: "integer"
+          author_id:
+            type: "integer"
+          post_id:
+            type: "integer"
+  
+    PostLike:
+      required:
+        - "post_id"
+      properties:
+        post_id:
+          type: "integer"
+
+
+    GetInclude:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: "integer"
+          created_at:
+            type: "integer"
+          link:
+            type: "string"
+          post_id:
+            type: "integer"
+  
+    PostInclude:
+      required:
+        - "post_id"
+        - "blob"
+      properties:
+        post_id:
+          type: "integer"
+        blob:
+          type: "string"
+
+
+    GetFavourite:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: "integer"
+          created_at:
+            type: "integer"
+          post_id:
+            type: "integer"
+  
+    PostFavourite:
+      required:
+        - "post_id"
+      properties:
+        post_id:
+          type: "integer"
+  
 
     ApiError:
       required:
@@ -178,4 +1148,3 @@ components:
       properties:
         message:
           type: "string"
-          description: ""

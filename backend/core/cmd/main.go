@@ -24,7 +24,7 @@ func main() {
 		{
 			auth.POST("/check", handlers.CheckAuth)
 			auth.POST("/logout", handlers.Logout)
-			auth.GET("/callback", hanlers.AuthCallback)
+			auth.GET("/callback", handlers.AuthCallback)
 			auth.POST("/logout/callback", handlers.LogoutCallback)
 		}
 	}

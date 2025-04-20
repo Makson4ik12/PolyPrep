@@ -1,31 +1,41 @@
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { authCallback, authCheck } from "../server-api/auth";
-import { useEffect } from "react";
+import { JSX, useEffect, useState } from "react";
+import Loader from "../components/Loader";
 
-export const LoginPage = () => {
+interface IProtectedPage {
+  page: JSX.Element
+  next_page: string
+}
+
+export const LoginPage = (params: IProtectedPage) => {
     const [searchParams, setSearchParams] = useSearchParams();
-    const navigate = useNavigate();
+    const [isLoading, setIsLoading] = useState(true);
   
     useEffect(() => {
       if (searchParams.get("code")) {
         (async () => {
-          await authCallback(searchParams.get("code") || "abc")
-          .then (() => navigate("/user"))
+          await authCallback(searchParams.get("code") || "abc", params.next_page)
+          .then(() => setIsLoading(false))
           .catch((err) => console.log(err));
         }) ();
-  
       } else {
         (async () => {
-          await authCheck()
-          .then((resp) => resp.redirect ? window.open(resp.url, "_self") : console.log("redirect = NULL"))
+          await authCheck(params.next_page)
+          .then((resp) => resp.redirect ? window.open(resp.url, "_self") : setIsLoading(false))
           .catch((err) => console.log(err));
         }) ();
       }
     }, []);
   
     return (
-      <div>
-        <h1>LOGINPAGE</h1>
-      </div>
+      <>
+      {
+        isLoading ? 
+          <Loader /> 
+        :
+          params.page
+      }
+      </>
     )
   }

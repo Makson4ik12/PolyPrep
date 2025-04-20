@@ -8,12 +8,12 @@ interface IAuthCheckResponse {
   redirect: boolean;
 }
 
-export const authCheck = async () => {
+export const authCheck = async (next_page: string) => {
   const tokens = store.getState().auth.authTokens;
 
   try {
       const response = await axios.post(
-        `${SERVER_ADDRESS}${SERVER_API_VERSION}auth/check`, tokens
+        `${SERVER_ADDRESS}${SERVER_API_VERSION}auth/check`, { ...tokens, next_page: next_page }
       );
   
       return response.data as IAuthCheckResponse;
@@ -36,13 +36,14 @@ export const authLogout = async () => {
     }
 }
 
-export const authCallback = async (code: string) => {
+export const authCallback = async (code: string, next_page: string) => {
   try {
       const response = await axios.get(
         `${SERVER_ADDRESS}${SERVER_API_VERSION}auth/callback`, 
         {
           params: {
-            code: code
+            code: code,
+            next_page: next_page
           }
         }
       );

@@ -4,6 +4,7 @@ import IconUser from '../icons/user.svg'
 import IconLike from '../icons/like.svg'
 import IconShare from '../icons/share.svg'
 import IconFavourite from '../icons/favourite.svg'
+import IconComments from '../icons/comments.svg'
 
 interface IUserData {
   author: string;
@@ -18,8 +19,12 @@ const Card = (data: IUserData) => {
   return (
     <div className={styles.container}>
       <div className={styles.top}>
-        <img src={IconUser} alt='user'></img>
-        <p>Автор: <b>Макс Пупкин</b> | 25.03.2025 в 18:00</p>
+        <div className={styles.lin_container}>
+          <img src={IconUser} alt='user' className={styles.user_icon}></img>
+          <p><b>Макс Пупкин</b> | 25.03.2025 в 18:00</p>
+        </div>
+      
+        <img src={IconFavourite} className={styles.btns} alt='favourite'></img>
       </div>
 
       <h1>Конспекты по кмзи от Пупки Лупкиной</h1>
@@ -28,15 +33,18 @@ const Card = (data: IUserData) => {
       <div className={styles.divider}></div>
 
       <div className={styles.bottom}>
-        <div className={styles.likes}>
-          <p>{data.likes}</p>
-          <img src={IconLike} className={styles.like_btn} alt='like'></img>
+        <div className={styles.lin_container}>
+          <div className={styles.likes}>
+            <p>{data.likes}</p>
+            <img src={IconLike} className={styles.like_btn} alt='like'></img>
+          </div>
+          <p>|</p>
+          <img src={IconComments} className={styles.btns} alt='comments'></img>
         </div>
 
-        <p>|</p>
+        
         <img src={IconShare} className={styles.btns} alt='share'></img>
-        <p>|</p>
-        <img src={IconFavourite} className={styles.btns} alt='favourite'></img>
+        
       </div>
     </div>
   )

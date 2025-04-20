@@ -30,13 +30,13 @@ interface IAuthState {
 }
   
 const initialState: IAuthState = {
-  authTokens: localStorage.getItem('authTokens') ? JSON.parse(localStorage.getItem('authTokens') as string) : { refresh: null, access: null },
+  authTokens: localStorage.getItem('authTokens') ? JSON.parse(localStorage.getItem('authTokens') as string) : { refresh_token: null, access_token: null },
   userData: {
-    user_mail: localStorage.getItem('authTokens') ? (jwtDecode(JSON.parse(localStorage.getItem('authTokens') as string).access) as IToken)?.email : null, 
-    first_name: localStorage.getItem('authTokens') ? (jwtDecode(JSON.parse(localStorage.getItem('authTokens') as string).access) as IToken)?.given_name : null,
-    last_name: localStorage.getItem('authTokens') ? (jwtDecode(JSON.parse(localStorage.getItem('authTokens') as string).access) as IToken)?.family_name : null,
-    email_verified: localStorage.getItem('authTokens') ? (jwtDecode(JSON.parse(localStorage.getItem('authTokens') as string).access) as IToken)?.email_verified : null,
-    preferred_username: localStorage.getItem('authTokens') ? (jwtDecode(JSON.parse(localStorage.getItem('authTokens') as string).access) as IToken)?.preferred_username : null
+    user_mail: localStorage.getItem('authTokens') ? (jwtDecode(JSON.parse(localStorage.getItem('authTokens') as string).access_token) as IToken)?.email : null, 
+    first_name: localStorage.getItem('authTokens') ? (jwtDecode(JSON.parse(localStorage.getItem('authTokens') as string).access_token) as IToken)?.given_name : null,
+    last_name: localStorage.getItem('authTokens') ? (jwtDecode(JSON.parse(localStorage.getItem('authTokens') as string).access_token) as IToken)?.family_name : null,
+    email_verified: localStorage.getItem('authTokens') ? (jwtDecode(JSON.parse(localStorage.getItem('authTokens') as string).access_token) as IToken)?.email_verified : null,
+    preferred_username: localStorage.getItem('authTokens') ? (jwtDecode(JSON.parse(localStorage.getItem('authTokens') as string).access_token) as IToken)?.preferred_username : null
   }
 }
 
