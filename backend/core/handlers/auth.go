@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
@@ -141,4 +142,24 @@ func getAuthURL(next_page string) string {
 		"&response_type=code" +
 		"&scope=openid profile" +
 		"&redirect_uri=" + config.RedirectURL + next_page
+}
+
+type TokenResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+func RefreshTokens(keycloakClient *gocloak.GoCloak, clientID, clientSecret, realm, refreshToken string) (*TokenResponse, error) {
+
+	ctx := context.Background()
+	token, err := keycloakClient.RefreshToken(ctx, refreshToken, clientID, clientSecret, realm)
+	if err != nil {
+		log.Printf("Failed to refresh tokens: %v", err)
+		return nil, err
+	}
+
+	return &TokenResponse{
+		AccessToken:  token.AccessToken,
+		RefreshToken: token.RefreshToken,
+	}, nil
 }
