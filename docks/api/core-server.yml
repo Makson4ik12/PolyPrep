@@ -940,6 +940,7 @@ components:
         - "id"
         - "created_at"
         - "updated_at"
+        - "scheduled_at"
         - "author_id"
         - "title"
         - "text"
@@ -955,6 +956,9 @@ components:
         updated_at:
           type: "integer"
           example: 12345679
+        scheduled_at:
+          type: "integer"
+          example: 12345679
         author_id:
           type: "integer"
           example: 1
@@ -968,8 +972,8 @@ components:
           type: "boolean"
           example: true
         hashtages:
-          type: "string"
-          example: "#hype #math #школанекул"
+          type: "array"
+          example: ["#hype", "#math", "#школанекул"]
 
     PostPost:
       required:
@@ -977,6 +981,7 @@ components:
         - "text"
         - "hashtages"
         - "public"
+        - "scheduled_at"
       properties:
         title:
           type: "string"
@@ -985,10 +990,13 @@ components:
           type: "string"
           example: "Блаблабла"
         hashtages:
-          type: "string"
-          example: "#hype #math #школанекул"
+          type: "array"
+          example: ["#hype", "#math", "#школанекул"]
         public:
           type: "boolean"
+        scheduled_at:
+          type: "integer"
+          example: 12345679
     
     PutPost:
       required:
@@ -997,6 +1005,7 @@ components:
         - "text"
         - "hashtages"
         - "public"
+        - "scheduled_at"
       properties:
         id:
           type: "integer"
@@ -1007,10 +1016,13 @@ components:
           type: "string"
           example: "Блаблабла"
         hashtages:
-          type: "string"
-          example: "#hype #math #школанекул"
+          type: "array"
+          example: ["#hype", "#math", "#школанекул"]
         public:
           type: "boolean"
+        scheduled_at:
+          type: "integer"
+          example: 12345679
 
     Search:
       type: array
