@@ -1,51 +1,33 @@
 import Card from '../components/Card';
 import styles from './MainPage.module.scss'
-import { Link } from 'react-router-dom';
-
-const Section = (params: {title: string}) => {
-  return (
-    <div className={styles.cards_container}>
-      <Card 
-        author='Макс Пупкин' 
-        title='Конспекты по кмзи от Пупки Лупкиной' 
-        time='25.03.2025 в 18:00'
-        text='Представляю вам свои гадкие конспекты по вышматы или не вышмату не знаб но не по кмзи точно<br></br>Да, именно так'
-        likes={15}
-        media={null}
-      />
-      <Card 
-        author='Макс Пупкин' 
-        title='Конспекты по кмзи от Пупки Лупкиной' 
-        time='25.03.2025 в 18:00'
-        text='Представляю вам свои гадкие конспекты по вышматы или не вышмату не знаб но не по кмзи точно<br></br>Да, именно так'
-        likes={15}
-        media={null}
-      />
-      <Card 
-        author='Макс Пупкин' 
-        title='Конспекты по кмзи от Пупки Лупкиной' 
-        time='25.03.2025 в 18:00'
-        text='Представляю вам свои гадкие конспекты по вышматы или не вышмату не знаб но не по кмзи точно<br></br>Да, именно так'
-        likes={15}
-        media={null}
-      />
-      <Card 
-        author='Макс Пупкин' 
-        title='Конспекты по кмзи от Пупки Лупкиной' 
-        time='25.03.2025 в 18:00'
-        text='Представляю вам свои гадкие конспекты по вышматы или не вышмату не знаб но не по кмзи точно<br></br>Да, именно так'
-        likes={15}
-        media={null}
-      />
-    </div>
-  );
-}
 
 const MainPage = () => {
   return (
     <div className={styles.container}>
-      <Section title='Вышмат' />
-      <Section title='Криптография' />
+      <div className={styles.cards_container}>
+      <Card 
+          id={1}
+          created_at={1745160699283}
+          updated_at={1745160699283}
+          scheduled_at={1745160699283}
+          author_id={1745160699283}
+          title='Конспекты по кмзи от Пупки Лупкиной' 
+          text='Представляю вам свои гадкие конспекты по вышматы или не вышмату не знаб но не по кмзи точно<br></br>Да, именно так'
+          public={true}
+          hashtages={["#hype", "#math", "#hochy5"]}
+        />
+        <Card 
+          id={1}
+          created_at={1745160699283}
+          updated_at={1745160699283}
+          scheduled_at={1745160699283}
+          author_id={1745160699283}
+          title='Конспекты по кмзи от Пупки Лупкиной' 
+          text='Представляю вам свои гадкие конспекты по вышматы или не вышмату не знаб но не по кмзи точно<br></br>Да, именно так'
+          public={true}
+          hashtages={["#hype", "#math", "#hochy5"]}
+        />
+      </div>
     </div>
   )
 }
