@@ -1,13 +1,18 @@
 package main
 
 import (
+	"polyprep/config"
 	"polyprep/handlers"
+	"polyprep/middleware"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+
+	cfg := config.LoadConfig()
+
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
@@ -27,7 +32,13 @@ func main() {
 			auth.GET("/callback", handlers.AuthCallback)
 			auth.POST("/logout/callback", handlers.LogoutCallback)
 		}
+
+		api.Use(middleware.AuthMiddleware())
+		{
+			api.GET("/user", handlers.GetUser)
+			api.GET("/user/posts", handlers.GetAllUserPosts)
+		}
 	}
 
-	r.Run(":8081")
+	r.Run(":" + cfg.ServerPort)
 }
