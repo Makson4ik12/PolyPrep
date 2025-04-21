@@ -3,8 +3,11 @@ import { Link } from 'react-router-dom';
 import IconUser from '../icons/user.svg'
 import IconSearch from '../icons/search.svg'
 import IconCreate from '../icons/create.svg'
+import store from '../redux-store/store';
 
 const Header = () => {
+  const userdata = store.getState().auth.userData;
+  
   return (
     <header className={styles.header_style}>
       <div className={styles.container} >
@@ -28,7 +31,7 @@ const Header = () => {
 
         <div className={styles.user}>
           <Link to="/user">
-            <p>Maks Pupkin</p>
+            <p> { userdata.preferred_username ? userdata.preferred_username : "Вход" }</p>
             <img src={IconUser} alt='user' />
           </Link>
         </div>

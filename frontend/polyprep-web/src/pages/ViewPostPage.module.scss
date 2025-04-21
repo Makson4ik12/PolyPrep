@@ -1,0 +1,199 @@
+.container {
+    width: var(--workzone-width);
+    height: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+
+    overflow-y: scroll;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 25px;
+
+    padding-bottom: 50px;
+
+    h2 {
+        font-weight: 500;
+    }
+
+    p {
+        font-size: 18px;
+    }
+
+    img {
+        width: 30px;
+        height: 30px;
+    }
+
+    .divider {
+        width: 100%;
+        border-bottom: 2px solid rgb(219, 219, 219);
+    }
+
+    .info_container {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 15px;
+
+        border-radius: 20px;
+        box-sizing: border-box;
+        box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.432);
+        padding: 20px;
+
+        .text {
+            width: 100%;
+            height: auto;
+            font-weight: 400;
+            word-wrap: normal;
+            overflow-wrap: break-word;
+            font-size: 20px;
+            font-weight: 500;
+            box-sizing: border-box;
+        }
+    }
+
+    .title_razdel {
+        width: auto;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        cursor: pointer;
+        transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+
+        border: 2px solid white;
+        border-radius: 20px;
+
+        padding: 5px 20px;
+
+        img {
+            width: 35px;
+            height: 35px;
+            border: 2px;
+            transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        
+        h2 {
+            transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        &:hover {
+            background-color: black;
+
+            h2 {
+                color: white;
+            }
+
+            img {
+                filter: invert(1);
+            }
+        }
+    }
+
+    .lin_container {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 10px;
+        width: auto;
+
+        img {
+            padding: 0;
+        }
+
+        .badge {
+            border: 2px solid black;
+            border-radius: 20px;
+            padding: 5px 15px;
+
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+    }
+
+    .includes_container {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 20px;
+
+        .include {
+            width: 100%;
+            font-size: 20px;
+            font-weight: 500;
+            box-sizing: border-box;
+
+            padding: 20px 20px;
+            outline: none;
+            border: 1px solid #cecece;
+            border-radius: 20px;
+
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        form {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px;
+
+            input {
+                width: 100%;
+                font-size: 20px;
+                font-weight: 500;
+                box-sizing: border-box;
+    
+                padding: 20px 20px;
+                outline: none;
+                border: 1px solid #cecece;
+                border-radius: 20px;
+                padding-right: 40px;
+            }
+
+            button {
+                background-color: white;
+                outline: none;
+                border: 2px solid white;
+                border-radius: 20px;
+                transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+                padding: 10px;
+
+                img {
+                    transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+                }
+
+                &:hover {
+                    background-color: black;
+
+                    img {
+                        filter: invert(1);
+                    }
+                }
+            }
+        }
+    }
+
+    .includes_container_hidden {
+        @extend .includes_container;
+
+        display: none;
+    }
+}

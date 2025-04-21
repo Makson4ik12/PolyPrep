@@ -22,6 +22,8 @@ tags:
 
   - name: "Избранное"
 
+  - name: "Пользователь"
+
 paths:
   /auth/check:
     post:
@@ -880,6 +882,76 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiError"
     
+  /user:
+    get:
+      description: "Получение данных какого-либо пользователя"
+      tags:
+        - "Пользователь"
+
+      parameters:
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+        
+        - in: query
+          name: id
+          description: Id пользователя
+          required: true
+          schema:
+            type: integer
+
+      responses:
+        200:
+          description: "Пользователь найдены"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetUser"
+        
+        403:
+          description: "Пользователь не найден"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    
+  /user/posts:
+    get:
+      description: "Получение постов текущего пользователя"
+      tags:
+        - "Пользователь"
+
+      parameters:
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: "Посты найдены"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetUserPosts"
+        
+        403:
+          description: "Посты не найден"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
 
 components:
   securitySchemes:
@@ -1141,6 +1213,55 @@ components:
         post_id:
           type: "integer"
   
+
+    GetUser:
+      required:
+        - "id"
+        - "username"
+        - "icon"
+      properties:
+        id:
+          type: "integer"
+          example: 1
+        username:
+          type: "string"
+          example: "KtotoAdmin"
+        icon:
+          type: "string"
+          example: "http://abc.png"
+    
+    GetUserPosts:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: "integer"
+            example: 1
+          created_at:
+            type: "integer"
+            example: 12345678
+          updated_at:
+            type: "integer"
+            example: 12345679
+          scheduled_at:
+            type: "integer"
+            example: 12345679
+          author_id:
+            type: "integer"
+            example: 1
+          title:
+            type: "string"
+            example: "Основы математики"
+          text:
+            type: "string"
+            example: "Блаблабла"
+          public:
+            type: "boolean"
+            example: true
+          hashtages:
+            type: "array"
+            example: ["#hype", "#math", "#школанекул"]
 
     ApiError:
       required:

@@ -10,6 +10,9 @@
     gap: 10px;
     box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.432);
 
+    -webkit-user-select: none;
+    user-select: none;
+    flex: 0 0 auto;
 
     .divider {
         width: 100%;
@@ -63,14 +66,31 @@
             display: flex;
             flex-direction: row;
             align-items: center;
+            justify-content: center;
             gap: 7px;
             border: 2px solid #cecece;
             border-radius: 20px;
-            padding: 7px;
+            padding: 3px 12px;
             box-sizing: border-box;
+            cursor: pointer;
+            transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
 
             p {
                 font-weight: 500;
+                transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+            }
+
+            &:hover {
+                background-color: black;
+                border: 2px solid black;
+
+                p {
+                    color: white;
+                }
+
+                img {
+                    filter: invert(1);
+                }
             }
         }
     }

@@ -94,6 +94,7 @@ const NewPostPage = () => {
           id="text" 
           name="text" 
           placeholder='Абв'
+          ref={textRef}
           onChange={handleTextChange}
           spellCheck={false}
           autoCapitalize='on'
