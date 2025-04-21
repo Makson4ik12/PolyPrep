@@ -5,13 +5,16 @@ import IconImage from '../icons/image.svg'
 import IconAudio from '../icons/audio.svg'
 import IconUser from '../icons/user.svg'
 import IconPrivate from '../icons/private.svg'
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { IComment } from '../server-api/comments';
 import { getDate, getTextColor } from '../utils/UtilFunctions';
 import IconArrowDown from '../icons/arrow_down.svg'
 import IconArrowUp from '../icons/arrow_up.svg'
 import IconDownload from '../icons/download.svg'
 import IconSend from '../icons/send.svg'
+import IconShare from '../icons/share.svg'
+import IconFavourite from '../icons/favourite.svg'
+import IconEdit from '../icons/edit.svg'
 
 interface IInclude {
   name: string;
@@ -31,7 +34,7 @@ const Include = (data: IInclude) => {
         } alt='inlude' />
         <p>{data.name}</p>
       </div>
-      <img src={IconDownload} alt='download' className={styles.img_button}/>
+      <img src={IconDownload} alt='download' className={styles.action_btn}/>
     </div>
   )
 }
@@ -57,16 +60,24 @@ const Badge = (data: IBadge) => {
 const Comment = (data: IComment) => {
   return (
     <div className={styles.info_container}>
-      <div className={styles.lin_container}>
-        <img src={IconUser} alt='usericon'/>
-        <p><b>Maks Pupkin</b> | { getDate(data.created_at) }</p>
+      <div className={styles.top_info}>
+        <div className={styles.lin_container}>
+          <img src={IconUser} alt='usericon'/>
+          <p><b>Maks Pupkin</b> | { getDate(data.created_at) }</p>
+        </div>
+
+        <div className={styles.lin_container}>
+          <img src={IconEdit} alt='edit' className={styles.action_btn}/>
+        </div>
       </div>
-      <div className={styles.divider} />
 
       <p className={styles.text}>{data.text}</p>
     </div>
   )
 }
+
+// TODO: добавить кнопку поделиться и добавить в избранное, а также редактировать для поста и комментариев
+// TODO: добавить поиск и страницу редактирования поста
 
 const ViewPostPage = () => {
   const location = useLocation();
@@ -74,30 +85,41 @@ const ViewPostPage = () => {
   const test_text = "Текст текст текстtransition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);transit\nТекст текст текстtransition: all 0.6s cubic-bezier(0.165, 0.84aa, 0.44, 1);transit\n"
 
   const [viewIncludes, setViewIncludes] = useState(true);
+  const navigate = useNavigate();
 
   return (
     <div className={styles.container}>
       <div className={styles.info_container}>
-        <div className={styles.lin_container}>
-          <img src={IconUser} alt='usericon'/>
-          <p><b>Maks Pupkin</b> | 23.04.2025 в 12:22</p>
+        <div className={styles.top_info}>
+          <div className={styles.lin_container}>
+            <img src={IconUser} alt='usericon'/>
+            <p><b>Maks Pupkin</b> | 23.04.2025 в 12:22</p>
 
-          <div className={styles.badge}>
-            <img src={IconPrivate} alt='private'/>
-            <p>Private</p>
+            <div className={styles.badge}>
+              <img src={IconPrivate} alt='private'/>
+              <p>Private</p>
+            </div>
+          </div>
+
+          <div className={styles.lin_container}>
+            <img src={IconFavourite} className={styles.action_btn} alt='favourite'/>
+            <img src={IconShare} className={styles.action_btn} alt='share'/>
+            <p>|</p>
+            <img src={IconEdit} className={styles.action_btn} alt='edit' onClick={() => navigate("/post/edit")}/>
           </div>
         </div>
+        
+        <h2 className={styles.title}>Заголовок какой либо тут должен быть</h2>
+
+        
+        <p className={styles.text}>{test_text}</p>
+        
 
         <div className={styles.lin_container}>
           <Badge text='#хочу5'/>
           <Badge text='#math'/>
           <Badge text='#криптография'/>
         </div>
-
-        <div className={styles.divider} />
-
-        <h2>Заголовок какой либо</h2>
-        <p className={styles.text}>{test_text}</p>
       </div>
 
       <div className={styles.title_razdel} onClick={() => setViewIncludes(prev => !prev)}>

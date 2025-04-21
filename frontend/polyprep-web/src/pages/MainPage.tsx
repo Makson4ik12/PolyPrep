@@ -5,7 +5,7 @@ const MainPage = () => {
   return (
     <div className={styles.container}>
       <div className={styles.cards_container}>
-      <Card 
+        <Card 
           id={1}
           created_at={1745160699283}
           updated_at={1745160699283}

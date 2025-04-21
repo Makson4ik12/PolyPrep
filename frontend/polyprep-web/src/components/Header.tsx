@@ -16,11 +16,13 @@ const Header = () => {
         </Link>
 
         <div className={styles.menu} >
-          <div className={styles.menu_item} >
-            <img src={IconSearch} alt='search' />
-            <p>Поиск</p>
+          <div className={styles.menu_item_link}>
+            <Link to="/search">
+              <img src={IconSearch} alt='search' />
+              <p>Поиск</p>
+            </Link>
           </div>
-
+          
           <div className={styles.menu_item_link} >
             <Link to="/post/new">
               <img src={IconCreate} alt='create' />

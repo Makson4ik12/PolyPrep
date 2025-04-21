@@ -1145,7 +1145,7 @@ components:
           type: "string"
         post_id:
           type: "integer"
-
+ 
 
     GetLike:
       type: array

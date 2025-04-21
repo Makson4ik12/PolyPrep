@@ -1,0 +1,44 @@
+.container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+
+    button{
+        display: flex;
+        flex-direction: row;
+        gap: 5px;
+        align-items: center;
+        justify-content: center;
+        align-content: center;
+        cursor: pointer;
+
+        border: 2px solid black;
+        border-radius: 20px;
+        padding: 7px 15px;
+        background-color: black;
+
+        width: 300px;
+        margin-top: 30px;
+
+        transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+
+        p {
+            font-size: 20px;
+            transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+            color: white;
+        }
+
+        &:hover {
+            background-color: white;
+
+            p {
+                color: black;
+            }
+        }
+    }
+}

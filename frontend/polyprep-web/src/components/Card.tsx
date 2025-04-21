@@ -23,10 +23,9 @@ const Card = (data: IPost) => {
       </div>
 
       <h1>{data.title}</h1>
-      <div className={styles.divider}></div>
+    
       <p>{data.text}</p>
-      <div className={styles.divider}></div>
-
+      
       <div className={styles.bottom}>
         <div className={styles.lin_container}>
           <div className={styles.likes}>

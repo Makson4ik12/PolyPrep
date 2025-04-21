@@ -7,6 +7,9 @@ import UserPage from './pages/UserPage';
 import { LoginPage } from './pages/LoginPage';
 import NewPostPage from './pages/NewPostPage';
 import ViewPostPage from './pages/ViewPostPage';
+import ErrorPage from './pages/ErrorPage';
+import SearchPage from './pages/SearchPage';
+import EditPostPage from './pages/EditPostPage';
 
 const App = () => {
   return (
@@ -15,8 +18,11 @@ const App = () => {
         <Header />
 
         <Routes>
+          <Route path="/search" element={<SearchPage />} />
+
           <Route path="/post/view/*" element={<ViewPostPage />} />
 
+          <Route path="/post/edit" element={<EditPostPage />} />
           <Route path="/post/new" element={<NewPostPage />} />
           <Route path="/post/new/test" element={<LoginPage page={<NewPostPage />} next_page="post/new" />} />
 
@@ -24,7 +30,7 @@ const App = () => {
           <Route path="/user/text" element={<LoginPage page={<UserPage />} next_page="user" />} />
 
           <Route path="/" element={<MainPage />} />
-          <Route path="*" element={<MainPage />} />
+          <Route path="*" element={<ErrorPage />} />
         </Routes>
 
         <Footer />
