@@ -27,6 +27,7 @@ const MainPage = () => {
           public={true}
           hashtages={["#hype", "#math", "#hochy5"]}
         />
+        
       </div>
     </div>
   )

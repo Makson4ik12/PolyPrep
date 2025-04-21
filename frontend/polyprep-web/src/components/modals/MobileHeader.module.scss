@@ -1,0 +1,207 @@
+@import "../Header.module.scss";
+
+.header_style {
+    .container {
+        .divider {
+            width: 100%;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .menu_item_link_black {
+            @extend .menu_item_link;
+
+            a {
+                border: 2px solid black;
+                background-color: black;
+
+                p {
+                    color: white;
+                }
+
+                img {
+                    filter: invert(1);
+                }
+
+                &:hover {
+                    background-color: white;
+
+                    p {
+                        color: black;
+                    }
+
+                    img {
+                        filter: invert(0);
+                    }
+                }
+            }
+        }
+    }
+}
+
+@media screen and (1200px < width <= 1540px) {
+    .header_style {
+        .container {
+            padding: 20px;
+        }
+    }
+}
+
+@media screen and (1000px < width <= 1200px) {
+    .header_style {
+        .container {
+            padding: 20px;
+        }
+    }
+}
+
+@media screen and (768px < width <= 1000px) {
+    .header_style {
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+
+        .container {
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+
+            align-items: center;
+            justify-content: space-between;
+            flex-direction: column;
+            gap: 20px;
+
+            .menu {
+                width: 100%;
+                flex-direction: column;
+                flex-grow: 3;
+
+                justify-content: flex-start;
+
+                .menu_item_link {
+                    width: 100%;
+                    box-sizing: border-box;
+
+                    a {
+                        width: 100%;
+                        box-sizing: border-box;
+                    }
+                }
+            }
+
+            .user {
+                a {
+                    gap: 15px;
+                }
+            }
+        }
+    }
+}
+
+@media screen and (480px < width <= 768px) {
+    .header_style {
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+
+        .container {
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+
+            align-items: center;
+            justify-content: space-between;
+            flex-direction: column;
+            gap: 20px;
+
+            .menu {
+                width: 100%;
+                flex-direction: column;
+                flex-grow: 3;
+
+                justify-content: flex-start;
+
+                .menu_item_link {
+                    width: 100%;
+                    box-sizing: border-box;
+
+                    a {
+                        width: 100%;
+                        box-sizing: border-box;
+                        outline: none;
+
+                        &:focus {
+                            outline: none;
+                            box-shadow: none;
+                        }
+                    }
+                }
+            }
+
+            .user {
+                a {
+                    gap: 15px;
+                    outline: none;
+
+                    &:focus {
+                        outline: none;
+                        box-shadow: none;
+                    }
+                }
+            }
+        }
+    }
+}
+
+@media screen and (width <= 480px) {
+    .header_style {
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+
+        .container {
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+
+            align-items: center;
+            justify-content: space-between;
+            flex-direction: column;
+            gap: 20px;
+
+            .menu {
+                width: 100%;
+                flex-direction: column;
+                flex-grow: 3;
+
+                justify-content: flex-start;
+
+                .menu_item_link {
+                    width: 100%;
+                    box-sizing: border-box;
+
+                    a {
+                        width: 100%;
+                        box-sizing: border-box;
+
+                        p {
+                            font-size: 16px;
+                        }
+                    }
+                }
+            }
+
+            .user {
+                a {
+                    gap: 15px;
+
+                    p {
+                        font-size: 16px;
+                    }
+                }
+            }
+        }
+    }
+}

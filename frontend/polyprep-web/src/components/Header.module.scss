@@ -52,6 +52,7 @@
             border: 2px solid black;
             border-radius: 20px;
             padding: 7px 15px;
+            background-color: white;
 
             width: 160px;
 
@@ -84,7 +85,7 @@
         }
 
         .menu_item_link {
-            a {
+            a, button {
                 @extend .menu_item
             }
         }
@@ -96,7 +97,7 @@
                 display: flex;
                 flex-direction: row;
                 align-items: center;
-                gap: 5px;
+                gap: 10px;
                 border: 2px solid white;
                 border-radius: 20px;
                 padding: 7px 15px;
@@ -111,7 +112,6 @@
                 img {
                     width: 25px;
                     height: 25px;
-                    padding: 5px;
                     transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
                     cursor: pointer;
                 }
@@ -121,5 +121,56 @@
                 }
             }
         } 
+
+        .mobile_menu_btn {
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+
+            &:hover {
+                transform: rotate(45deg);
+            }
+        }
     }
-  }
+}
+
+@media screen and (1200px < width <= 1540px) {
+    .header_style {
+        .container {
+            padding: 20px;
+        }
+    }
+}
+
+@media screen and (1000px < width <= 1200px) {
+    .header_style {
+        .container {
+            padding: 20px;
+        }
+    }
+}
+
+@media screen and (768px < width <= 1000px) {
+    .header_style {
+        .container {
+            padding: 20px;
+        }
+    }
+}
+
+@media screen and (480px < width <= 768px) {
+    .header_style {
+        .container {
+            padding: 20px;
+        }
+    }
+}
+
+@media screen and (width <= 480px) {
+    .header_style {
+        .container {
+            padding: 20px;
+        }
+    }
+}

@@ -8,6 +8,7 @@ import IconPrivate from '../icons/private.svg'
 import { useLocation, useNavigate } from 'react-router-dom';
 import { IComment } from '../server-api/comments';
 import { getDate, getTextColor } from '../utils/UtilFunctions';
+import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
 import IconArrowDown from '../icons/arrow_down.svg'
 import IconArrowUp from '../icons/arrow_up.svg'
 import IconDownload from '../icons/download.svg'
@@ -15,6 +16,7 @@ import IconSend from '../icons/send.svg'
 import IconShare from '../icons/share.svg'
 import IconFavourite from '../icons/favourite.svg'
 import IconEdit from '../icons/edit.svg'
+import IconContextMenu from '../icons/context_menu.svg'
 
 interface IInclude {
   name: string;
@@ -86,10 +88,11 @@ const ViewPostPage = () => {
 
   const [viewIncludes, setViewIncludes] = useState(true);
   const navigate = useNavigate();
+  const screenSize = HandleResponsiveView();
 
   return (
     <div className={styles.container}>
-      <div className={styles.info_container}>
+      <div className={styles.main_content}>
         <div className={styles.top_info}>
           <div className={styles.lin_container}>
             <img src={IconUser} alt='usericon'/>
@@ -100,13 +103,43 @@ const ViewPostPage = () => {
               <p>Private</p>
             </div>
           </div>
-
+          
           <div className={styles.lin_container}>
-            <img src={IconFavourite} className={styles.action_btn} alt='favourite'/>
-            <img src={IconShare} className={styles.action_btn} alt='share'/>
-            <p>|</p>
-            <img src={IconEdit} className={styles.action_btn} alt='edit' onClick={() => navigate("/post/edit")}/>
+            {
+              screenSize.width > screenSizes.__768.width ?
+                <>
+                  <img src={IconFavourite} className={styles.action_btn} alt='favourite'/>
+                  <img src={IconShare} className={styles.action_btn} alt='share'/>
+                  <p>|</p>
+                  <img src={IconEdit} className={styles.action_btn} alt='edit' onClick={() => navigate("/post/edit")}/>
+                </>
+              :
+              <div className={styles.dropdown}>
+                <img src={IconContextMenu} className={styles.action_btn} alt='context_menu'/>
+
+                <div className={styles.dropdown_content}>
+                  <button className={styles.action_item}>
+                    <img src={IconFavourite} className={styles.action_btn} alt='favourite'/>
+                    <p>В избранное</p>
+                  </button>
+
+                  <button className={styles.action_item}>
+                  <img src={IconShare} className={styles.action_btn} alt='share'/>
+                    <p>Поделиться</p>
+                  </button>
+                  
+                  <div className={styles.divider} />
+
+                  <button className={styles.action_item}>
+                  <img src={IconEdit} className={styles.action_btn} alt='edit' onClick={() => navigate("/post/edit")}/>
+                    <p>Редактировать</p>
+                  </button>
+                </div>
+              </div> 
+                
+            }
           </div>
+          
         </div>
         
         <h2 className={styles.title}>Заголовок какой либо тут должен быть</h2>

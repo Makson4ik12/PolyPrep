@@ -130,3 +130,55 @@
         gap: 7px;
     }
 }
+
+@media screen and (1200px < width <= 1540px) {
+    .container {
+        width: 48%;
+    }
+}
+
+@media screen and (1000px < width <= 1200px) {
+    .container {
+        width: 48%;
+    }
+}
+
+@media screen and (768px < width <= 1000px) {
+    .container {
+        width: 100%;
+    }
+}
+
+@media screen and (480px < width <= 768px) {
+    .container {
+        width: 100%;
+
+        h1 {
+            font-size: 22px;
+        }
+
+        .like_btn {
+            width: 30px;
+            height: 30px;
+        }
+    }
+}
+
+@media screen and (width <= 480px) {
+    .container {
+        width: 100%;
+
+        h1 {
+            font-size: 18px;
+        }
+
+        p {
+            font-size: 16px;
+        }
+
+        .like_btn {
+            width: 25px;
+            height: 25px;
+        }
+    }
+}

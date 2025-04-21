@@ -1,4 +1,5 @@
 import styles from './App.module.scss';
+import 'react-responsive-modal/styles.css';
 import { Route, BrowserRouter, Routes } from 'react-router-dom';
 import MainPage from './pages/MainPage';
 import Header from './components/Header';
@@ -10,13 +11,15 @@ import ViewPostPage from './pages/ViewPostPage';
 import ErrorPage from './pages/ErrorPage';
 import SearchPage from './pages/SearchPage';
 import EditPostPage from './pages/EditPostPage';
+import ScrollToTop from './utils/ScrollToTop';
 
 const App = () => {
   return (
     <BrowserRouter>
       <div className={styles.app}>
         <Header />
-
+        <ScrollToTop />
+        
         <Routes>
           <Route path="/search" element={<SearchPage />} />
 

@@ -16,7 +16,7 @@ const UserPage = () => {
   return (
     <div className={styles.container}>
       <div className={styles.lin_container}>
-        <img src={IconUser} alt='user' className={styles.user_icon}></img>
+        <img src={IconUser} alt='user' className={styles.user_image}></img>
 
         <div className={styles.data_container}>
           <div className={styles.title_container}>

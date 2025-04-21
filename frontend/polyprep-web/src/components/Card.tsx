@@ -7,16 +7,24 @@ import IconFavourite from '../icons/favourite.svg'
 import IconComments from '../icons/comments.svg'
 import { IPost } from '../server-api/post';
 import { getDate } from '../utils/UtilFunctions';
+import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
 
 const Card = (data: IPost) => {
   const navigate = useNavigate();
+  const screenSize = HandleResponsiveView();
 
   return (
     <div className={styles.container} onClick={() => navigate('/post/view/' + data.id)}>
       <div className={styles.top}>
         <div className={styles.lin_container}>
           <img src={IconUser} alt='user' className={styles.user_icon}></img>
-          <p><b>Макс Пупкин</b> | { getDate(data.created_at) }</p>
+          {
+            screenSize.width > screenSizes.__1200.width ?
+              <p><b>Макс Пупкин</b> | { getDate(data.created_at) }</p>
+            :
+              <p><b>Макс Пупкин</b><br></br>{ getDate(data.created_at) }</p>
+          }
+          
         </div>
       
         <img src={IconFavourite} className={styles.btns} alt='favourite'></img>
