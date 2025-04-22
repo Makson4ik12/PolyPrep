@@ -1,12 +1,5 @@
 package config
 
-import (
-	"log"
-	"os"
-
-	"github.com/joho/godotenv"
-)
-
 type Config struct {
 	ServerPort   string
 	KeycloakURL  string
@@ -16,31 +9,14 @@ type Config struct {
 	RedirectURL  string
 }
 
-func init() {
-	if err := godotenv.Load(); err != nil {
-		log.Print("No .env file found")
-	}
-}
-
 func LoadConfig() *Config {
 
-	if err := godotenv.Load(); err != nil {
-		log.Println("Note: .env file not found, using environment variables")
-	}
-
 	return &Config{
-		ServerPort:   GetEnv("SERVER_PORT"),
-		KeycloakURL:  GetEnv("KEYCLOAK_URL"),
-		ClientID:     GetEnv("CLIENT_ID"),
-		ClientSecret: GetEnv("CLIENT_SECRET"),
-		Realm:        GetEnv("REALM"),
-		RedirectURL:  GetEnv("REDIRECT_URI"),
+		ServerPort:   "8081",
+		KeycloakURL:  "http://90.156.170.153:8091",
+		ClientID:     "polyclient",
+		ClientSecret: "WYB2ObPJDY2xBDjpus9wQiWPo96b4Gcs",
+		Realm:        "master",
+		RedirectURL:  "http://90.156.170.153:3001/login",
 	}
-}
-func GetEnv(key string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		log.Fatalf("Critical: Environment variable %s is not set", key)
-	}
-	return value
 }
