@@ -31,6 +31,7 @@ func main() {
 			auth.POST("/logout", handlers.Logout)
 			auth.GET("/callback", handlers.AuthCallback)
 			auth.POST("/logout/callback", handlers.LogoutCallback)
+			auth.POST("/refresh", handlers.RefreshToken)
 		}
 
 		api.Use(middleware.AuthMiddleware())

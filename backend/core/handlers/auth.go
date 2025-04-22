@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"log"
 	"net/http"
 	"os"
@@ -144,22 +143,42 @@ func getAuthURL(next_page string) string {
 		"&redirect_uri=" + config.RedirectURL + next_page
 }
 
-type TokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
 }
 
-func RefreshTokens(keycloakClient *gocloak.GoCloak, clientID, clientSecret, realm, refreshToken string) (*TokenResponse, error) {
-
-	ctx := context.Background()
-	token, err := keycloakClient.RefreshToken(ctx, refreshToken, clientID, clientSecret, realm)
-	if err != nil {
-		log.Printf("Failed to refresh tokens: %v", err)
-		return nil, err
+func RefreshTokenHandler(c *gin.Context) {
+	var req RefreshTokenRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid request format",
+			"details": err.Error(),
+		})
+		return
 	}
 
-	return &TokenResponse{
-		AccessToken:  token.AccessToken,
-		RefreshToken: token.RefreshToken,
-	}, nil
+	cfg := config.LoadConfig()
+	keycloakClient := gocloak.NewClient(cfg.KeycloakURL)
+
+	tokens, err := keycloakClient.RefreshToken(
+		c.Request.Context(),
+		req.RefreshToken,
+		cfg.ClientID,
+		cfg.ClientSecret,
+		cfg.Realm,
+	)
+
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Failed to refresh tokens",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"access_token":  tokens.AccessToken,
+		"refresh_token": tokens.RefreshToken,
+		"expires_in":    tokens.ExpiresIn,
+	})
 }
