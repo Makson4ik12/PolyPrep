@@ -35,8 +35,8 @@ export async function getPost(post_id: number) {
     await validateTokens();
     
     const response = await axios.get(
-    `${SERVER_ADDRESS}${SERVER_API_VERSION}post`,
-    { headers: { Authorization: `Bearer ${store.getState().auth.authTokens.access_token}` }, params: { id: post_id } }
+    `${SERVER_ADDRESS}${SERVER_API_VERSION}post?id=${post_id}`,
+    { headers: { Authorization: `Bearer ${store.getState().auth.authTokens.access_token}` } }
     );
 
     return response.data;
@@ -80,8 +80,8 @@ export async function deletePost(post_id: number) {
     await validateTokens();
     
     const response = await axios.get(
-    `${SERVER_ADDRESS}${SERVER_API_VERSION}post/`,
-    { headers: { Authorization: `Bearer ${store.getState().auth.authTokens.access_token}` }, params: { id: post_id } }
+    `${SERVER_ADDRESS}${SERVER_API_VERSION}post?id=${post_id}`,
+    { headers: { Authorization: `Bearer ${store.getState().auth.authTokens.access_token}` }}
     );
 
     return response;

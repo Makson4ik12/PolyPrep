@@ -57,7 +57,7 @@ export const authCallback = async (code: string, next_page: string) => {
 
 export const authUpdateToken = async () => {
   try {
-    const response = await axios.post(`${SERVER_ADDRESS}${SERVER_API_VERSION}auth/refresh`, {refresh: store.getState().auth.authTokens.refresh_token});
+    const response = await axios.post(`${SERVER_ADDRESS}${SERVER_API_VERSION}auth/refresh`, {refresh_token: store.getState().auth.authTokens.refresh_token});
     const data = response.data as ITokens;
     store.dispatch(setStateLogin({ access_token: data.access_token, refresh_token: data.refresh_token }));
   } catch (error: any) {

@@ -46,7 +46,7 @@ const NewPostPage = () => {
   const [titleLen, setTitleLen] = useState(0);
   const [hashtagsLen, setHashtagsLen] = useState(0);
   const [isError, setIsError] = useState({ind: false, error: ""});
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const textRef = useRef<HTMLTextAreaElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
