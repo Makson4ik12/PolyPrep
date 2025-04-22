@@ -10,6 +10,18 @@ import (
 	"gorm.io/gorm"
 )
 
+//------------------------------STATUS CODE------------------------------//
+// 								200 : StatusOK							 //
+// 								400 : StatusBadRequest					 //
+// 								401 : StatusUnauthorized				 //
+// 								403	: StatusForbidden					 //
+// 								404	: StatusNotFound 					 //
+// 								405	: StatusMethodNotAllowed    		 //
+// 								500	: StatusInternalServerError    		 //
+//-----------------------------------------------------------------------//
+
+//------------------------------GET/user------------------------------//
+
 func GetUser(c *gin.Context) {
 	userID, err := strconv.ParseUint(c.Query("id"), 10, 32)
 	if err != nil || userID == 0 {
@@ -24,7 +36,7 @@ func GetUser(c *gin.Context) {
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{
+			c.JSON(http.StatusForbidden, gin.H{
 				"message": "User not found",
 			})
 		} else {
@@ -42,6 +54,8 @@ func GetUser(c *gin.Context) {
 	})
 }
 
+//------------------------------GET/user/posts------------------------------//
+
 func GetAllUserPosts(c *gin.Context) {
 
 	currentUserID := c.GetString("user_id")
@@ -56,7 +70,7 @@ func GetAllUserPosts(c *gin.Context) {
 	result := database.DB.Where("author_id = ?", currentUserID).Find(&posts)
 
 	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		c.JSON(http.StatusForbidden, gin.H{
 			"message": "Failed to get user posts",
 		})
 		return
