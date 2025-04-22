@@ -10,6 +10,7 @@ COPY polyprep-web/package*.json ./
 # 2. Устанавливаем зависимости
 RUN npm install && \
     npm install axios && \
+    npm install react-responsive-modal --legacy-peer-deps \
     npm install --save-dev @types/axios
 
 # 3. Копируем все файлы проекта
