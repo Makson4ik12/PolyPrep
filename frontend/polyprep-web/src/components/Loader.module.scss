@@ -15,7 +15,9 @@
     }
 
     .mini_loader {
-        border: 5px solid var(--color-accent);
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid var(--color-accent);
+        border-bottom: 5px solid var(--color-accent);
         border-radius: 50%;
         width: 20px;
         height: 20px;

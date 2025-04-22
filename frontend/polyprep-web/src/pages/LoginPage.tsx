@@ -1,5 +1,5 @@
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
-import { authCallback, authCheck } from "../server-api/auth";
+import { authCallback, authCheck, validateTokens } from "../server-api/auth";
 import { JSX, useEffect, useState } from "react";
 import Loader from "../components/Loader";
 
@@ -21,10 +21,19 @@ export const LoginPage = (params: IProtectedPage) => {
         }) ();
       } else {
         (async () => {
-          await authCheck(params.next_page)
-          .then((resp) => resp.redirect ? window.open(resp.url, "_self") : setIsLoading(false))
-          .catch((err) => console.log(err));
+          await validateTokens()
+          .catch((err) => {
+            (async () => {
+              await authCheck(params.next_page)
+              .then((resp) => resp.redirect ? window.open(resp.url, "_self") : setIsLoading(false))
+              .catch((err) => console.log(err));
+            }) ();
+          });
+    
+          setIsLoading(false);
         }) ();
+
+        
       }
     }, []);
   

@@ -16,6 +16,8 @@ import IconPrivate from '../icons/private.svg'
 import IconSuccess from '../icons/success.svg'
 import IconTime from '../icons/time.svg'
 import IconBolt from '../icons/bolt.svg'
+import Loader from '../components/Loader';
+import { postPost } from '../server-api/posts';
 
 interface IInclude {
   name: string;
@@ -37,10 +39,14 @@ const Include = (data: IInclude) => {
 
 const NewPostPage = () => {
   const [value, setValue] = useState("");
+
   const [isPrivate, setIsPrivate] = useState(false);
   const [isScheduled, setIsScheduled] = useState(false);
+
   const [titleLen, setTitleLen] = useState(0);
-  const [hashtagsLen, setHashtagsLen] = useState(0)
+  const [hashtagsLen, setHashtagsLen] = useState(0);
+  const [isError, setIsError] = useState({ind: false, error: ""});
+  const [isLoading, setIsLoading] = useState(true);
 
   const textRef = useRef<HTMLTextAreaElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
@@ -63,9 +69,37 @@ const NewPostPage = () => {
     setValue(val);
   };
 
+  const handleOnSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formElements = e.currentTarget.elements as typeof e.currentTarget.elements & {
+      title: HTMLInputElement,
+      text: HTMLTextAreaElement,
+      hashtags: HTMLInputElement,
+      data: HTMLInputElement
+    };
+
+    setIsLoading(true);
+
+    await postPost({
+      title: formElements.title.value,
+      text: formElements.text.value,
+      public: !isPrivate,
+      hashtages: formElements.title.value.split(" "),
+      scheduled_at: isScheduled ? new Date(formElements.data.value).getTime() : null
+    })
+    .then (() => {
+      setIsLoading(false);
+    })
+    .catch((error) => { 
+      setIsLoading(false);
+      setIsError({ind: true, error: "Ошибка - пост не создан("});
+    });
+  }
+
   return (
     <div className={styles.container}>
-      <form>
+      <form onSubmit={handleOnSubmit} autoComplete="off">
         <div className={styles.subheader}>
           <img src={IconTitle} alt='title' />
           <h2>Заголовок</h2>
@@ -112,6 +146,8 @@ const NewPostPage = () => {
             type='text' 
             placeholder='#матан #крипта #хочу_зачет_по_бип' 
             maxLength={150}
+            pattern="^(#[a-zA-Z0-9_]{2,}\s*)+$"
+            title="Хэштеги должны начинаться с # и содержать минимум 2 символа, используя только буквы, цифры и _"
             ref={hashtagsRef}
             onChange={handleHashtagsChange}
             required>
@@ -180,11 +216,15 @@ const NewPostPage = () => {
           <h2>Последний шаг</h2>
         </div>
 
-        <p></p>
-
-        <button type='submit'>
-          <p>Создать пост</p>
-        </button>
+        <p className={ isError.ind ? styles.incorrect_login : styles.incorrect_login_hidden }> {isError.error }</p>
+        
+        {
+          isLoading ? <Loader />
+          :
+          <button type='submit'>
+            <p>Создать пост</p>
+          </button>
+        }
       </form>
     </div>
   )

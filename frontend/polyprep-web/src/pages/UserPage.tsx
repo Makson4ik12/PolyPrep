@@ -6,8 +6,7 @@ import IconArrowDown from '../icons/arrow_down.svg'
 import IconArrowUp from '../icons/arrow_up.svg'
 import Card from "../components/Card";
 import React, { useEffect, useState } from "react";
-import { getPosts } from "../server-api/posts";
-import { IPost } from "../server-api/post";
+import { getPosts, IPost } from "../server-api/posts";
 import Loader from "../components/Loader";
 
 const UserPage = () => {

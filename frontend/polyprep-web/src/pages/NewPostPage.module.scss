@@ -26,6 +26,15 @@
         flex-wrap: wrap;
         gap: 20px;
 
+        .incorrect_login {
+            text-align: center;
+            color: red;
+        }
+
+        .incorrect_login_hidden {
+            display: none;
+        }
+
         img {
             width: 30px;
             height: 30px;
