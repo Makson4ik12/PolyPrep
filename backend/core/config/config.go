@@ -13,7 +13,7 @@ type Config struct {
 	ClientID     string
 	ClientSecret string
 	Realm        string
-	RedirectURI  string
+	RedirectURL  string
 }
 
 func init() {
@@ -34,7 +34,7 @@ func LoadConfig() *Config {
 		ClientID:     GetEnv("CLIENT_ID"),
 		ClientSecret: GetEnv("CLIENT_SECRET"),
 		Realm:        GetEnv("REALM"),
-		RedirectURI:  GetEnv("REDIRECT_URI"),
+		RedirectURL:  GetEnv("REDIRECT_URI"),
 	}
 }
 func GetEnv(key string) string {
