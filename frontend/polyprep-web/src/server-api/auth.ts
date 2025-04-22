@@ -1,7 +1,8 @@
 import store from "../redux-store/store";
 import axios from "axios";
-import { ITokens, setStateLogin, setStateLogout } from "../redux-store/user-auth";
+import { IToken, ITokens, setStateLogin, setStateLogout } from "../redux-store/user-auth";
 import { SERVER_ADDRESS, SERVER_API_VERSION } from "./config";
+import { jwtDecode } from "jwt-decode";
 
 interface IAuthCheckResponse {
   url: string;
@@ -52,4 +53,42 @@ export const authCallback = async (code: string, next_page: string) => {
     } catch (error: any) {
       throw error;
     }
+}
+
+export const authUpdateToken = async () => {
+  try {
+    const response = await axios.post(`${SERVER_ADDRESS}${SERVER_API_VERSION}auth/refresh`, {refresh: store.getState().auth.authTokens.refresh_token});
+    store.dispatch(setStateLogin({ access_token: response.data.access_token, refresh_token: response.data.refresh_token }));
+  } catch (error: any) {
+    store.dispatch(setStateLogout());
+    throw error;
+  }
+}
+
+export const validateTokens = async () => {
+  const tokens = store.getState().auth.authTokens;
+
+  if (tokens.refresh_token !== null){
+    const isExpiredAccess = Date.now() >= ((jwtDecode(tokens.access_token as string) as IToken).exp * 1000);
+
+    if (isExpiredAccess) {
+      const isExpiredRefresh = Date.now() >= ((jwtDecode(tokens.refresh_token as string) as IToken).exp * 1000);
+
+      if (!isExpiredRefresh) {
+        try {
+          const resp = await authUpdateToken();
+        } catch (error: any) {
+          store.dispatch(setStateLogout())
+          throw error;
+        }
+      } else {
+        store.dispatch(setStateLogout());
+        throw new Error("Tokens not valide");
+      }
+    } else {
+      return true;
+    }
+  } else {
+    throw new Error("Tokens are empty");
+  }
 }

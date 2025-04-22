@@ -1,0 +1,41 @@
+.badge {
+    border: 2px solid black;
+    border-radius: 20px;
+    padding: 5px 15px;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+@media screen and (480px < width <= 768px) {
+    .badge {
+        gap: 5px;
+
+        p {
+            font-size: 16px;
+        }
+
+        img {
+            width: 25px;
+            height: 25px;
+        }
+    }
+}
+
+@media screen and (width <= 480px) {
+    .badge {
+        gap: 5px;
+
+        p {
+            font-size: 14px;
+        }
+
+        img {
+            width: 20px;
+            height: 20px;
+        }
+    }
+}

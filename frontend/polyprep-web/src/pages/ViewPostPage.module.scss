@@ -124,6 +124,38 @@
             padding: 0;
         }
 
+        .likes {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 7px;
+            border: 2px solid #cecece;
+            border-radius: 20px;
+            padding: 3px 12px;
+            box-sizing: border-box;
+            cursor: pointer;
+            transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+
+            p {
+                font-weight: 500;
+                transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+            }
+
+            &:hover {
+                background-color: black;
+                border: 2px solid black;
+
+                p {
+                    color: white;
+                }
+
+                img {
+                    filter: invert(1);
+                }
+            }
+        }
+
         .badge {
             border: 2px solid black;
             border-radius: 20px;

@@ -8,6 +8,7 @@ import IconComments from '../icons/comments.svg'
 import { IPost } from '../server-api/post';
 import { getDate } from '../utils/UtilFunctions';
 import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
+import { Badge } from './Badge';
 
 const Card = (data: IPost) => {
   const navigate = useNavigate();
@@ -28,6 +29,12 @@ const Card = (data: IPost) => {
         </div>
       
         <img src={IconFavourite} className={styles.btns} alt='favourite'></img>
+      </div>
+
+      <div className={styles.lin_container}>
+        <Badge text='#хочу5'/>
+        <Badge text='#math'/>
+        <Badge text='#криптография'/>
       </div>
 
       <h1>{data.title}</h1>

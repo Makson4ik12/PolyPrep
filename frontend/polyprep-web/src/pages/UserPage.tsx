@@ -5,13 +5,32 @@ import IconMail from '../icons/mail.svg'
 import IconArrowDown from '../icons/arrow_down.svg'
 import IconArrowUp from '../icons/arrow_up.svg'
 import Card from "../components/Card";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { getPosts } from "../server-api/posts";
+import { IPost } from "../server-api/post";
+import Loader from "../components/Loader";
 
 const UserPage = () => {
   const current_state = store.getState().auth;
 
   const [viewFavourites, setViewFavourites] = useState(true);
   const [viewMyPosts, setViewMyPosts] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [userPosts, setUserPosts] = useState<IPost[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      setIsLoading(true);
+
+      await getPosts()
+      .then((resp) => {
+        setUserPosts(resp as IPost[]);
+      })
+      .catch((error) => console.log("cannot load user posts"));
+
+      setIsLoading(false);
+    }) ()
+  }, []);
   
   return (
     <div className={styles.container}>
@@ -52,28 +71,6 @@ const UserPage = () => {
           public={true}
           hashtages={["#hype", "#math", "#hochy5"]}
         />
-        <Card 
-          id={1}
-          created_at={1745160699283}
-          updated_at={1745160699283}
-          scheduled_at={1745160699283}
-          author_id={1745160699283}
-          title='Конспекты по кмзи от Пупки Лупкиной' 
-          text='Представляю вам свои гадкие конспекты по вышматы или не вышмату не знаб но не по кмзи точно<br></br>Да, именно так.Представляю вам свои гадкие конспекты по вышматы или не вышмату не знаб но не по кмзи точно<br></br>Да, именно так Представляю вам свои гадкие конспекты по вышматы или не вышмату не знаб но не по кмзи точно<br></br>Да, именно так.Представляю вам свои гадкие конспекты по вышматы или не вышмату не знаб но не по кмзи точно' 
-          public={true}
-          hashtages={["#hype", "#math", "#hochy5"]}
-        />
-        <Card 
-          id={1}
-          created_at={1745160699283}
-          updated_at={1745160699283}
-          scheduled_at={1745160699283}
-          author_id={1745160699283}
-          title='Конспекты по кмзи от Пупки Лупкиной' 
-          text='Представляю вам свои гадкие конспекты по вышматы или не вышмату не знаб но не по кмзи точно<br></br>Да, именно так'
-          public={true}
-          hashtages={["#hype", "#math", "#hochy5"]}
-        />
       </div>
 
       <div className={styles.title_razdel} onClick={() => setViewMyPosts(prev => !prev)}>
@@ -82,28 +79,30 @@ const UserPage = () => {
       </div>
 
       <div className={viewMyPosts ? styles.cards_container : styles.cards_container_hidden}>
-        <Card 
-          id={1}
-          created_at={1745160699283}
-          updated_at={1745160699283}
-          scheduled_at={1745160699283}
-          author_id={1745160699283}
-          title='Конспекты по кмзи от Пупки Лупкиной' 
-          text='Представляю вам свои гадкие конспекты по вышматы или не вышмату не знаб но не по кмзи точно<br></br>Да, именно так'
-          public={true}
-          hashtages={["#hype", "#math", "#hochy5"]}
-        />
-        <Card 
-          id={1}
-          created_at={1745160699283}
-          updated_at={1745160699283}
-          scheduled_at={1745160699283}
-          author_id={1745160699283}
-          title='Конспекты по кмзи от Пупки Лупкиной' 
-          text='Представляю вам свои гадкие конспекты по вышматы или не вышмату не знаб но не по кмзи точно<br></br>Да, именно так'
-          public={true}
-          hashtages={["#hype", "#math", "#hochy5"]}
-        />
+        {
+          isLoading ?
+            <Loader />
+          :
+            userPosts?.length === 0 ? <p>У вас еще нет постов</p>
+              :
+            <>
+              {
+                userPosts?.map((item) => 
+                  <Card 
+                    id={item.id}
+                    created_at={item.created_at}
+                    updated_at={item.updated_at}
+                    scheduled_at={item.scheduled_at}
+                    author_id={item.author_id}
+                    title={item.title} 
+                    text={item.text}
+                    public={item.public}
+                    hashtages={item.hashtages}
+                  />
+                )
+              }
+            </>
+        }
       </div>
     </div>
   );
