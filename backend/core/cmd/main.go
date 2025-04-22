@@ -18,8 +18,8 @@ func main() {
 	r.Use(cors.New(cors.Config{
 		AllowOrigins: []string{
 			cfg.RedirectURL,
-			"http://localhost:3000",
-			"http://127.0.0.1:3000"},
+			"http://localhost:3001",
+			"http://127.0.0.1:3001"},
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE"},
 		AllowHeaders: []string{
 			"Origin",
