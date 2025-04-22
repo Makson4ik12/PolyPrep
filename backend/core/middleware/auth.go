@@ -24,10 +24,17 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		accessToken := strings.TrimPrefix(authHeader, "Bearer ")
-		if accessToken == authHeader {
+		if !strings.HasPrefix(authHeader, "Bearer ") {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"message": "Bearer token not found in Authorization header",
+				"message": "Authorization header must start with 'Bearer '",
+			})
+			return
+		}
+
+		accessToken := strings.TrimPrefix(authHeader, "Bearer ")
+		if accessToken == "" || accessToken == "*" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"message": "Invalid token format",
 			})
 			return
 		}
@@ -40,7 +47,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"message": "Invalid or expired access token",
+				"message": "Invalid or expired token",
 				"error":   err.Error(),
 			})
 			return
@@ -48,7 +55,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		if token == nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"message": "Token is nil",
+				"message": "Token is invalid",
 			})
 			return
 		}
