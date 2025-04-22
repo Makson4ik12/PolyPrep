@@ -23,14 +23,11 @@ const App = () => {
         <Routes>
           <Route path="/search" element={<SearchPage />} />
 
-          <Route path="/post/view/*" element={<ViewPostPage />} />
+          <Route path="/post/edit" element={<EditPostPage /> } />
+          <Route path="/post/view/*" element={<ViewPostPage /> } />
+          <Route path="/post/new" element={<LoginPage page={<NewPostPage />} next_page="post/new" />} />
 
-          <Route path="/post/edit" element={<EditPostPage />} />
-          <Route path="/post/new" element={<NewPostPage />} />
-          <Route path="/post/new/test" element={<LoginPage page={<NewPostPage />} next_page="post/new" />} />
-
-          <Route path="/user" element={<UserPage />} />
-          <Route path="/user/text" element={<LoginPage page={<UserPage />} next_page="user" />} />
+          <Route path="/user" element={<LoginPage page={<UserPage />} next_page="user" />} />
 
           <Route path="/" element={<MainPage />} />
           <Route path="*" element={<ErrorPage />} />

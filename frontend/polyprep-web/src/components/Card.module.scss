@@ -61,6 +61,8 @@
         align-items: center;
         justify-content: flex-start;
         gap: 7px;
+        width: auto;
+        flex-wrap: wrap;
 
         .likes {
             display: flex;

@@ -7,7 +7,7 @@ import IconUser from '../icons/user.svg'
 import IconPrivate from '../icons/private.svg'
 import { useLocation, useNavigate } from 'react-router-dom';
 import { IComment } from '../server-api/comments';
-import { getDate, getTextColor } from '../utils/UtilFunctions';
+import { getDate } from '../utils/UtilFunctions';
 import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
 import IconArrowDown from '../icons/arrow_down.svg'
 import IconArrowUp from '../icons/arrow_up.svg'
@@ -17,14 +17,11 @@ import IconShare from '../icons/share.svg'
 import IconFavourite from '../icons/favourite.svg'
 import IconEdit from '../icons/edit.svg'
 import IconContextMenu from '../icons/context_menu.svg'
+import { Badge } from '../components/Badge';
+import IconUnlike from '../icons/unlike.svg'
 
 interface IInclude {
   name: string;
-}
-
-interface IBadge {
-  text: string;
-  icon?: string
 }
 
 const Include = (data: IInclude) => {
@@ -37,24 +34,6 @@ const Include = (data: IInclude) => {
         <p>{data.name}</p>
       </div>
       <img src={IconDownload} alt='download' className={styles.action_btn}/>
-    </div>
-  )
-}
-
-const Badge = (data: IBadge) => {
-  const [colors, setColors] = useState<{bgColor: string, textColor: string}>({bgColor: "white", textColor: "black"});
-
-  useEffect(() => {
-    const bgColor = "#" + ((1 << 24) * Math.random() | 0).toString(16).padStart(6, "0");
-    setColors({bgColor: bgColor, textColor: getTextColor(bgColor)});
-  }, []);
-
-  return (
-    <div className={styles.badge} style={{backgroundColor: colors.bgColor}}>
-      {
-        data.icon ? <img src={data.icon} alt='icon'/> : <></>
-      }
-      <p style={{color: colors.textColor}}>{data.text}</p>
     </div>
   )
 }
@@ -86,7 +65,7 @@ const ViewPostPage = () => {
   const post_id = location.pathname.slice(location.pathname.lastIndexOf('/') + 1, location.pathname.length);
   const test_text = "Текст текст текстtransition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);transit\nТекст текст текстtransition: all 0.6s cubic-bezier(0.165, 0.84aa, 0.44, 1);transit\n"
 
-  const [viewIncludes, setViewIncludes] = useState(true);
+  const [viewIncludes, setViewIncludes] = useState(false);
   const navigate = useNavigate();
   const screenSize = HandleResponsiveView();
 
@@ -144,14 +123,21 @@ const ViewPostPage = () => {
         
         <h2 className={styles.title}>Заголовок какой либо тут должен быть</h2>
 
-        
         <p className={styles.text}>{test_text}</p>
         
-
         <div className={styles.lin_container}>
           <Badge text='#хочу5'/>
           <Badge text='#math'/>
           <Badge text='#криптография'/>
+        </div>
+        
+        <div className={styles.divider} />
+
+        <div className={styles.lin_container}>
+          <div className={styles.likes}>
+            <p>1</p>
+            <img src={IconUnlike} className={styles.like_btn} alt='like'></img>
+          </div>
         </div>
       </div>
 

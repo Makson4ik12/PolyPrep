@@ -120,7 +120,6 @@ const NewPostPage = () => {
           <p>{hashtagsLen} / 150</p>
         </div>
         
-
         <div className={styles.subheader}>
           <img src={IconInclude} alt='include' />
           <h2>Вложения</h2>
@@ -130,6 +129,7 @@ const NewPostPage = () => {
           <Include name='text.pdf' />
           <Include name='myrecords.mp3' />
           <Include name='photo-2002020.png' />
+
           <button type='button'>
             <img src={IconCreate} alt='create' />
             <p>Добавить вложение</p>
@@ -179,6 +179,8 @@ const NewPostPage = () => {
           <img src={IconBolt} alt='settings' />
           <h2>Последний шаг</h2>
         </div>
+
+        <p></p>
 
         <button type='submit'>
           <p>Создать пост</p>
