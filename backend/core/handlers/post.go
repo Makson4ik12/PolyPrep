@@ -66,7 +66,7 @@ func GetPost(c *gin.Context) {
 		"title":        post.Title,
 		"text":         post.Text,
 		"public":       post.Public,
-		"hashtags":     post.Hashtags,
+		"hashtages":    post.Hashtages,
 	})
 }
 
@@ -74,7 +74,7 @@ func GetPost(c *gin.Context) {
 type CreatePostRequest struct {
 	Title       string   `json:"title" binding:"required"`
 	Text        string   `json:"text" binding:"required"`
-	Hashtags    []string `json:"hashtags" binding:"required"`
+	Hashtages   []string `json:"hashtages" binding:"required"`
 	Public      bool     `json:"public"`
 	ScheduledAt int64    `json:"scheduled_at"`
 }
@@ -101,7 +101,7 @@ func CreatePost(c *gin.Context) {
 	post := models.Post{ //take struct
 		Title:       req.Title,
 		Text:        req.Text,
-		Hashtags:    req.Hashtags,
+		Hashtages:   req.Hashtages,
 		Public:      req.Public,
 		AuthorID:    authorID,
 		ScheduledAt: time.Unix(req.ScheduledAt, 0),
@@ -118,7 +118,7 @@ func CreatePost(c *gin.Context) {
 		"id":           post.ID,
 		"title":        post.Title,
 		"text":         post.Text,
-		"hashtags":     post.Hashtags,
+		"hashtages":    post.Hashtages,
 		"public":       post.Public,
 		"scheduled_at": post.ScheduledAt.Unix(),
 		"author_id":    post.AuthorID,
@@ -133,7 +133,7 @@ type UpdatePostRequest struct {
 	ID          uint     `json:"id" binding:"required"`
 	Title       string   `json:"title"`
 	Text        string   `json:"text"`
-	Hashtags    []string `json:"hashtags"`
+	Hashtages   []string `json:"hashtages"`
 	Public      *bool    `json:"public"`
 	ScheduledAt int64    `json:"scheduled_at"`
 }
@@ -185,8 +185,8 @@ func UpdatePost(c *gin.Context) {
 	if req.Text != "" {
 		post.Text = req.Text
 	}
-	if req.Hashtags != nil {
-		post.Hashtags = req.Hashtags
+	if req.Hashtages != nil {
+		post.Hashtages = req.Hashtages
 	}
 	if req.Public != nil {
 		post.Public = *req.Public
@@ -206,7 +206,7 @@ func UpdatePost(c *gin.Context) {
 		"id":           post.ID,
 		"title":        post.Title,
 		"text":         post.Text,
-		"hashtags":     post.Hashtags,
+		"hashtages":    post.Hashtages,
 		"public":       post.Public,
 		"scheduled_at": post.ScheduledAt.Unix(),
 		"updated_at":   post.UpdatedAt.Unix(),
@@ -301,7 +301,7 @@ func SearchPosts(c *gin.Context) {
 
 	var posts []models.Post
 	query := database.DB.Where( //find post
-		"public = true AND (title ILIKE ? OR text ILIKE ? OR hashtags ILIKE ?)",
+		"public = true AND (title ILIKE ? OR text ILIKE ? OR hashtages ILIKE ?)",
 		"%"+searchText+"%",
 		"%"+searchText+"%",
 		"%"+searchText+"%",

@@ -100,7 +100,7 @@ func GetAllUserPosts(c *gin.Context) {
 			"title":        post.Title,
 			"text":         post.Text,
 			"public":       post.Public,
-			"hashtags":     post.Hashtags,
+			"hashtags":     post.Hashtages,
 		}
 	}
 

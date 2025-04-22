@@ -13,7 +13,7 @@ type Post struct {
 	Title       string    `gorm:"size:255;not null" json:"title"`
 	Text        string    `gorm:"type:text;not null" json:"text"`
 	Public      bool      `gorm:"default:true" json:"public"`
-	Hashtags    []string  `gorm:"type:text[]" json:"hashtags"`
+	Hashtages   []string  `gorm:"type:text[]" json:"hashtages"`
 }
 
 type Include struct {
