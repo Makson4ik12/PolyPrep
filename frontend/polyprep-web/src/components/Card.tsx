@@ -5,10 +5,10 @@ import IconUnlike from '../icons/unlike.svg'
 import IconShare from '../icons/share.svg'
 import IconFavourite from '../icons/favourite.svg'
 import IconComments from '../icons/comments.svg'
-import { IPost } from '../server-api/post';
 import { getDate } from '../utils/UtilFunctions';
 import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
 import { Badge } from './Badge';
+import { IPost } from '../server-api/posts';
 
 const Card = (data: IPost) => {
   const navigate = useNavigate();
@@ -21,9 +21,9 @@ const Card = (data: IPost) => {
           <img src={IconUser} alt='user' className={styles.user_icon}></img>
           {
             screenSize.width > screenSizes.__1200.width ?
-              <p><b>Макс Пупкин</b> | { getDate(data.created_at) }</p>
+              <p><b>Макс Пупкин</b> | { data.created_at ? getDate(data.created_at) : "null" }</p>
             :
-              <p><b>Макс Пупкин</b><br></br>{ getDate(data.created_at) }</p>
+              <p><b>Макс Пупкин</b><br></br>{ data.created_at ? getDate(data.created_at) : "null" }</p>
           }
           
         </div>
