@@ -12,10 +12,22 @@ import (
 	"gorm.io/gorm"
 )
 
+//------------------------------STATUS CODE------------------------------//
+// 								200 : StatusOK							 //
+// 								400 : StatusBadRequest					 //
+// 								401 : StatusUnauthorized				 //
+// 								403	: StatusForbidden					 //
+// 								404	: StatusNotFound 					 //
+// 								405	: StatusMethodNotAllowed    		 //
+// 								500	: StatusInternalServerError    		 //
+//-----------------------------------------------------------------------//
+
+//------------------------------GET/post------------------------------//
+
 func GetPost(c *gin.Context) {
 
-	postID, err := strconv.Atoi(c.Query("id"))
-	if err != nil || postID <= 0 {
+	postID, err := strconv.Atoi(c.Query("id")) //get id(integer)
+	if err != nil || postID <= 0 {             //check id, return 400
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Invalid post ID",
 		})
@@ -23,14 +35,14 @@ func GetPost(c *gin.Context) {
 	}
 
 	var post models.Post
-	result := database.DB.First(&post, postID)
+	result := database.DB.First(&post, postID) //get post from db
 	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{
+		if result.Error == gorm.ErrRecordNotFound { //if not found return 403
+			c.JSON(http.StatusForbidden, gin.H{
 				"message": "Post not found",
 			})
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{
+			c.JSON(http.StatusInternalServerError, gin.H{ //return 500
 				"message": "Database error",
 			})
 		}
@@ -38,14 +50,14 @@ func GetPost(c *gin.Context) {
 	}
 
 	currentUserID := c.GetString("user_id")
-	if !post.Public && post.AuthorID != currentUserID {
-		c.JSON(http.StatusForbidden, gin.H{
+	if !post.Public && post.AuthorID != currentUserID { //check "Public", return 405
+		c.JSON(http.StatusMethodNotAllowed, gin.H{
 			"message": "No access to private post",
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusOK, gin.H{ //return 200
 		"id":           post.ID,
 		"created_at":   post.CreatedAt.Unix(),
 		"updated_at":   post.UpdatedAt.Unix(),
@@ -58,6 +70,7 @@ func GetPost(c *gin.Context) {
 	})
 }
 
+// ------------------------------POST/post------------------------------//
 type CreatePostRequest struct {
 	Title       string   `json:"title" binding:"required"`
 	Text        string   `json:"text" binding:"required"`
@@ -69,23 +82,23 @@ type CreatePostRequest struct {
 func CreatePost(c *gin.Context) {
 
 	var req CreatePostRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+	if err := c.ShouldBindJSON(&req); err != nil { //get data
+		c.JSON(http.StatusBadRequest, gin.H{ //if not return 400
 			"message": "Invalid request data",
 			"details": err.Error(),
 		})
 		return
 	}
 
-	authorID := c.GetString("user_id")
+	authorID := c.GetString("user_id") //get user_id
 	if authorID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{
+		c.JSON(http.StatusUnauthorized, gin.H{ //if not return 401
 			"message": "User not authenticated",
 		})
 		return
 	}
 
-	post := models.Post{
+	post := models.Post{ //take struct
 		Title:       req.Title,
 		Text:        req.Text,
 		Hashtags:    req.Hashtags,
@@ -94,14 +107,14 @@ func CreatePost(c *gin.Context) {
 		ScheduledAt: time.Unix(req.ScheduledAt, 0),
 	}
 
-	if err := database.DB.Create(&post).Error; err != nil {
+	if err := database.DB.Create(&post).Error; err != nil { //create, if err return 500
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed to create post",
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusOK, gin.H{ //return 200
 		"id":           post.ID,
 		"title":        post.Title,
 		"text":         post.Text,
@@ -113,6 +126,8 @@ func CreatePost(c *gin.Context) {
 		"updated_at":   post.UpdatedAt.Unix(),
 	})
 }
+
+//------------------------------PUT/post------------------------------//
 
 type UpdatePostRequest struct {
 	ID          uint     `json:"id" binding:"required"`
@@ -127,38 +142,38 @@ func UpdatePost(c *gin.Context) {
 
 	var req UpdatePostRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusBadRequest, gin.H{ //if err return 400
 			"message": "Invalid request data",
 			"details": err.Error(),
 		})
 		return
 	}
 
-	currentUserID := c.GetString("user_id")
+	currentUserID := c.GetString("user_id") //get user_id
 	if currentUserID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{
+		c.JSON(http.StatusUnauthorized, gin.H{ //return 401
 			"message": "User not authenticated",
 		})
 		return
 	}
 
 	var post models.Post
-	result := database.DB.First(&post, req.ID)
+	result := database.DB.First(&post, req.ID) //search post in db
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{
+			c.JSON(http.StatusNotFound, gin.H{ //return 404
 				"message": "Post not found",
 			})
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{
+			c.JSON(http.StatusInternalServerError, gin.H{ //return 500
 				"message": "Database error",
 			})
 		}
 		return
 	}
 
-	if post.AuthorID != currentUserID {
-		c.JSON(http.StatusForbidden, gin.H{
+	if post.AuthorID != currentUserID { //check "Public"
+		c.JSON(http.StatusMethodNotAllowed, gin.H{ //405
 			"message": "You can only edit your own posts",
 		})
 		return
@@ -180,14 +195,14 @@ func UpdatePost(c *gin.Context) {
 		post.ScheduledAt = time.Unix(req.ScheduledAt, 0)
 	}
 
-	if err := database.DB.Save(&post).Error; err != nil {
+	if err := database.DB.Save(&post).Error; err != nil { //save post
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed to update post",
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusOK, gin.H{ //200
 		"id":           post.ID,
 		"title":        post.Title,
 		"text":         post.Text,
@@ -198,60 +213,62 @@ func UpdatePost(c *gin.Context) {
 	})
 }
 
+//------------------------------DELETE/post------------------------------//
+
 func DeletePost(c *gin.Context) {
 
-	postID, err := strconv.ParseUint(c.Query("id"), 10, 32)
+	postID, err := strconv.ParseUint(c.Query("id"), 10, 32) //get id(integer)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusBadRequest, gin.H{ //400
 			"message": "Invalid post ID format",
 		})
 		return
 	}
 
-	currentUserID := c.GetString("user_id")
+	currentUserID := c.GetString("user_id") //get id_user
 	if currentUserID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{
+		c.JSON(http.StatusUnauthorized, gin.H{ //401
 			"message": "Authentication required",
 		})
 		return
 	}
 
 	var post models.Post
-	result := database.DB.First(&post, postID)
+	result := database.DB.First(&post, postID) //get post
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{
+			c.JSON(http.StatusNotFound, gin.H{ //404
 				"message": "Post not found",
 			})
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{
+			c.JSON(http.StatusInternalServerError, gin.H{ //500
 				"message": "Database error",
 			})
 		}
 		return
 	}
 
-	if post.AuthorID != currentUserID {
+	if post.AuthorID != currentUserID { //check "Public"
 		if !post.Public {
-			c.JSON(http.StatusMethodNotAllowed, gin.H{
+			c.JSON(http.StatusMethodNotAllowed, gin.H{ //405
 				"message": "No access to private post",
 			})
 		} else {
-			c.JSON(http.StatusForbidden, gin.H{
+			c.JSON(http.StatusForbidden, gin.H{ //403
 				"message": "You don't have permission to delete this post",
 			})
 		}
 		return
 	}
 
-	if err := database.DB.Delete(&post).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+	if err := database.DB.Delete(&post).Error; err != nil { //delete post
+		c.JSON(http.StatusInternalServerError, gin.H{ //500
 			"message": "Failed to delete post",
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusOK, gin.H{ //200
 		"message": "Post deleted successfully",
 		"data": gin.H{
 			"post_id":    post.ID,
@@ -260,14 +277,16 @@ func DeletePost(c *gin.Context) {
 	})
 }
 
+//------------------------------GET/post/search------------------------------//
+
 func SearchPosts(c *gin.Context) {
 
-	searchText := strings.TrimSpace(c.Query("text"))
-	from, errFrom := strconv.Atoi(c.Query("from"))
-	to, errTo := strconv.Atoi(c.Query("to"))
+	searchText := strings.TrimSpace(c.Query("text")) //get text(string)
+	from, errFrom := strconv.Atoi(c.Query("from"))   //get from(string)
+	to, errTo := strconv.Atoi(c.Query("to"))         //get to(string)
 
-	if searchText == "" || errFrom != nil || errTo != nil || from < 0 || to <= from {
-		c.JSON(http.StatusBadRequest, gin.H{
+	if searchText == "" || errFrom != nil || errTo != nil || from < 0 || to <= from { //check valid
+		c.JSON(http.StatusBadRequest, gin.H{ //400
 			"message": "Invalid search parameters",
 			"details": map[string]interface{}{
 				"required": map[string]string{
@@ -281,33 +300,33 @@ func SearchPosts(c *gin.Context) {
 	}
 
 	var posts []models.Post
-	query := database.DB.Where(
+	query := database.DB.Where( //find post
 		"public = true AND (title ILIKE ? OR text ILIKE ? OR hashtags ILIKE ?)",
 		"%"+searchText+"%",
 		"%"+searchText+"%",
 		"%"+searchText+"%",
 	).Order("created_at DESC")
 
-	var total int64
+	var total int64 //пагинация
 	query.Model(&models.Post{}).Count(&total)
 	result := query.Offset(from).Limit(to - from).Find(&posts)
 
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+	if result.Error != nil { //check result
+		c.JSON(http.StatusInternalServerError, gin.H{ //500
 			"message": "Database error",
 		})
 		return
 	}
 
 	if len(posts) == 0 {
-		c.JSON(http.StatusNotFound, gin.H{
+		c.JSON(http.StatusForbidden, gin.H{ //403
 			"message": "No posts found",
 			"search":  searchText,
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusOK, gin.H{ //200
 		"total":   total,
 		"from":    from,
 		"to":      from + len(posts),
@@ -315,38 +334,40 @@ func SearchPosts(c *gin.Context) {
 	})
 }
 
+//------------------------------GET/random------------------------------//
+
 func GetRandomPosts(c *gin.Context) {
 
 	countStr := c.Query("count")
-	count, err := strconv.Atoi(countStr)
+	count, err := strconv.Atoi(countStr) //get count(integer)
 	if err != nil || count <= 0 || count > 100 {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Invalid count parameter (must be integer between 1 and 100)",
+		c.JSON(http.StatusBadRequest, gin.H{ //400
+			"message": "Invalid count parameter (must be integer, N)",
 		})
 		return
 	}
 
 	var posts []models.Post
-	result := database.DB.Where("public = true").
-		Order("RANDOM()").
-		Limit(count).
-		Find(&posts)
+	result := database.DB.Where("public = true"). //get RANDOM post
+							Order("RANDOM()").
+							Limit(count).
+							Find(&posts)
 
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+	if result.Error != nil { //check result
+		c.JSON(http.StatusInternalServerError, gin.H{ //500
 			"message": "Database error",
 		})
 		return
 	}
 
 	if len(posts) == 0 {
-		c.JSON(http.StatusNotFound, gin.H{
+		c.JSON(http.StatusNotFound, gin.H{ //404
 			"message": "No public posts available",
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusOK, gin.H{ //200
 		"count": len(posts),
 		"posts": posts,
 	})
