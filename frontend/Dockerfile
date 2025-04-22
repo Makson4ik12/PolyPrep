@@ -9,7 +9,7 @@ COPY polyprep-web/package*.json ./
 
 # 2. Устанавливаем зависимости
 RUN npm install && \
-    npm install react-responsive-modal --legacy-peer-deps && \
+    npm install react-responsive-modal --legacy-peer-deps --no-save && \
     npm install axios && \
     npm install --save-dev @types/axios
 
