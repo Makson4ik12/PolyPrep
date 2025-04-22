@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"polyprep/database"
 	models "polyprep/model"
@@ -70,9 +71,16 @@ func GetAllUserPosts(c *gin.Context) {
 	result := database.DB.Where("author_id = ?", currentUserID).Find(&posts)
 
 	if result.Error != nil {
-		c.JSON(http.StatusForbidden, gin.H{
-			"message": "Failed to get user posts",
-		})
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{
+				"message": "No posts found",
+			})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Database error",
+				"error":   result.Error.Error(),
+			})
+		}
 		return
 	}
 

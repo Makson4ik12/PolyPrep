@@ -16,7 +16,6 @@ func AuthMiddleware() gin.HandlerFunc {
 	keycloakClient := gocloak.NewClient(cfg.KeycloakURL)
 
 	return func(c *gin.Context) {
-
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
@@ -25,7 +24,20 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"message": "Authorization header must start with 'Bearer '",
+			})
+			return
+		}
+
 		accessToken := strings.TrimPrefix(authHeader, "Bearer ")
+		if accessToken == "" || accessToken == "*" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"message": "Invalid token format",
+			})
+			return
+		}
 
 		token, _, err := keycloakClient.DecodeAccessToken(
 			c.Request.Context(),
@@ -33,16 +45,31 @@ func AuthMiddleware() gin.HandlerFunc {
 			cfg.Realm,
 		)
 
-		if err != nil || token == nil {
+		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"message": "Invalid or expired access token",
+				"message": "Invalid or expired token",
+				"error":   err.Error(),
 			})
 			return
 		}
 
-		claims := token.Claims.(jwt.MapClaims)
-		userID := claims["sub"].(string)
-		if userID == "" {
+		if token == nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"message": "Token is invalid",
+			})
+			return
+		}
+
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"message": "Invalid token claims",
+			})
+			return
+		}
+
+		userID, ok := claims["sub"].(string)
+		if !ok || userID == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"message": "User ID not found in token",
 			})
