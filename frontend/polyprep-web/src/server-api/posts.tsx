@@ -20,7 +20,7 @@ export async function postPost(data: IPost) {
     await validateTokens();
     
     const response = await axios.post(
-    `${SERVER_ADDRESS}${SERVER_API_VERSION}post/`, data,
+    `${SERVER_ADDRESS}${SERVER_API_VERSION}post`, data,
     { headers: { Authorization: `Bearer ${store.getState().auth.authTokens.access_token}` } }
     );
 
