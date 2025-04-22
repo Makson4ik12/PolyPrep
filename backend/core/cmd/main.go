@@ -16,9 +16,15 @@ func main() {
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{cfg.RedirectURL, "http://localhost:3000", "http://127.0.0.1:3000"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		AllowAllOrigins: true,
+		AllowMethods:    []string{"GET", "POST", "PUT", "DELETE"},
+		AllowHeaders: []string{
+			"Origin",
+			"Content-Type",
+			"Authorization",
+			"Accept",
+			"X-Requested-With",
+		},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 	}))
@@ -59,9 +65,9 @@ func main() {
 			api.POST("/includes", handlers.LoadIncludes)
 			api.DELETE("/includes", handlers.DeleteIncludes)
 
-			api.GET("/includes", handlers.GetFavorite)
-			api.POST("/includes", handlers.MakeFavorite)
-			api.DELETE("/includes", handlers.DeleteFromFavorite)
+			api.GET("/favourite", handlers.GetFavorite)
+			api.POST("/favourite", handlers.MakeFavorite)
+			api.DELETE("/favourite", handlers.DeleteFromFavorite)
 		}
 	}
 
