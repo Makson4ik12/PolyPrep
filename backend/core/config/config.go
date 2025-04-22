@@ -17,6 +17,6 @@ func LoadConfig() *Config {
 		ClientID:     "polyclient",
 		ClientSecret: "WYB2ObPJDY2xBDjpus9wQiWPo96b4Gcs",
 		Realm:        "master",
-		RedirectURL:  "http://90.156.170.153:3001/login",
+		RedirectURL:  "http://90.156.170.153:3001/",
 	}
 }
