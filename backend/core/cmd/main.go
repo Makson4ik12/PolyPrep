@@ -16,7 +16,7 @@ func main() {
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://90.156.170.153:3001"},
+		AllowOrigins:     []string{cfg.RedirectURL},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -31,10 +31,27 @@ func main() {
 			auth.POST("/logout", handlers.Logout)
 			auth.GET("/callback", handlers.AuthCallback)
 			auth.POST("/logout/callback", handlers.LogoutCallback)
+			auth.POST("/refresh", handlers.RefreshToken)
 		}
 
 		api.Use(middleware.AuthMiddleware())
 		{
+			api.GET("/post", handlers.GetPost)
+			api.POST("/post", handlers.CreatePost)
+			api.PUT("/post", handlers.UpdatePost)
+			api.DELETE("/post", handlers.DeletePost)
+			api.GET("/post/search", handlers.SearchPosts)
+			api.GET("/post/random", handlers.GetRandomPosts)
+
+			api.GET("/comment", handlers.GetComments)
+			api.POST("/comment", handlers.CreateComment)
+			api.PUT("/comment", handlers.UpdateComment)
+			api.DELETE("/comment", handlers.DeleteComment)
+
+			api.GET("/like", handlers.GetLikes)
+			api.POST("/like", handlers.LikePost)
+			api.DELETE("/like", handlers.DeleteLike)
+
 			api.GET("/user", handlers.GetUser)
 			api.GET("/user/posts", handlers.GetAllUserPosts)
 		}

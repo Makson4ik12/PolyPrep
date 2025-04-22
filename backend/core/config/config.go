@@ -13,29 +13,34 @@ type Config struct {
 	ClientID     string
 	ClientSecret string
 	Realm        string
-	RedirectURI  string
+	RedirectURL  string
+}
+
+func init() {
+	if err := godotenv.Load(); err != nil {
+		log.Print("No .env file found")
+	}
 }
 
 func LoadConfig() *Config {
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("No .env file found")
+
+	if err := godotenv.Load(); err != nil {
+		log.Println("Note: .env file not found, using environment variables")
 	}
 
 	return &Config{
-		ServerPort:   getEnv("SERVER_PORT", "8081"),
-		KeycloakURL:  getEnv("KEYCLOAK_URL", "http://90.156.170.153:8091"),
-		ClientID:     getEnv("CLIENT_ID", "polyclient"),
-		ClientSecret: getEnv("CLIENT_SECRET", "WYB2ObPJDY2xBDjpus9wQiWPo96b4Gcs"),
-		Realm:        getEnv("REALM", "master"),
-		RedirectURI:  getEnv("REDIRECT_URI", "http://90.156.170.153:3001/login"),
+		ServerPort:   GetEnv("SERVER_PORT"),
+		KeycloakURL:  GetEnv("KEYCLOAK_URL"),
+		ClientID:     GetEnv("CLIENT_ID"),
+		ClientSecret: GetEnv("CLIENT_SECRET"),
+		Realm:        GetEnv("REALM"),
+		RedirectURL:  GetEnv("REDIRECT_URI"),
 	}
 }
-
-func getEnv(key, defaultValue string) string {
-	value, exists := os.LookupEnv(key)
-	if !exists {
-		return defaultValue
+func GetEnv(key string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		log.Fatalf("Critical: Environment variable %s is not set", key)
 	}
 	return value
 }
