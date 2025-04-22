@@ -8,7 +8,7 @@ WORKDIR /app
 COPY polyprep-web/package*.json ./
 
 # 2. Устанавливаем зависимости
-RUN npm install && \
+RUN npm install --legacy-peer-deps && \
     npm install axios && \
     npm install --save-dev @types/axios
 
