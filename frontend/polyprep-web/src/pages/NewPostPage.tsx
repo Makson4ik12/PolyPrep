@@ -85,7 +85,7 @@ const NewPostPage = () => {
       title: formElements.title.value,
       text: formElements.text.value,
       public: !isPrivate,
-      hashtages: formElements.title.value.split(" "),
+      hashtages: formElements.hashtags.value.split(" "),
       scheduled_at: isScheduled ? new Date(formElements.data.value).getTime() : null
     })
     .then (() => {
