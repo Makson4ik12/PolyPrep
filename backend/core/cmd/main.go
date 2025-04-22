@@ -54,6 +54,14 @@ func main() {
 
 			api.GET("/user", handlers.GetUser)
 			api.GET("/user/posts", handlers.GetAllUserPosts)
+
+			api.GET("/includes", handlers.GetIncludes)
+			api.POST("/includes", handlers.LoadIncludes)
+			api.DELETE("/includes", handlers.DeleteIncludes)
+
+			api.GET("/includes", handlers.GetFavorite)
+			api.POST("/includes", handlers.MakeFavorite)
+			api.DELETE("/includes", handlers.DeleteFromFavorite)
 		}
 	}
 
