@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
@@ -101,7 +102,7 @@ func CreatePost(c *gin.Context) {
 	post := models.Post{ //take struct
 		Title:       req.Title,
 		Text:        req.Text,
-		Hashtages:   req.Hashtages,
+		Hashtages:   pq.StringArray(req.Hashtages),
 		Public:      req.Public,
 		AuthorID:    authorID,
 		ScheduledAt: time.Unix(req.ScheduledAt, 0),

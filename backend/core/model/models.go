@@ -2,18 +2,20 @@ package models
 
 import (
 	"time"
+
+	"github.com/lib/pq"
 )
 
 type Post struct {
-	ID          uint      `gorm:"primaryKey" json:"id"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	ScheduledAt time.Time `json:"scheduled_at"`
-	AuthorID    string    `gorm:"not null" json:"author_id"`
-	Title       string    `gorm:"size:255;not null" json:"title"`
-	Text        string    `gorm:"type:text;not null" json:"text"`
-	Public      bool      `gorm:"default:true" json:"public"`
-	Hashtages   []string  `gorm:"type:text[]" json:"hashtages"`
+	ID          uint           `gorm:"primaryKey" json:"id"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	ScheduledAt time.Time      `json:"scheduled_at"`
+	AuthorID    string         `gorm:"not null" json:"author_id"`
+	Title       string         `gorm:"size:255;not null" json:"title"`
+	Text        string         `gorm:"type:text;not null" json:"text"`
+	Public      bool           `gorm:"default:true" json:"public"`
+	Hashtages   pq.StringArray `gorm:"type:text[]" json:"hashtages"`
 }
 
 type Include struct {
