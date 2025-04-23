@@ -110,6 +110,7 @@ func CreatePost(c *gin.Context) {
 	if err := database.DB.Create(&post).Error; err != nil { //create, if err return 500
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed to create post",
+			"error":   err.Error(),
 		})
 		return
 	}
