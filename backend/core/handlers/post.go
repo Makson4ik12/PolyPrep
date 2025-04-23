@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 	"polyprep/database"
 	models "polyprep/model"
@@ -338,39 +339,58 @@ func SearchPosts(c *gin.Context) {
 
 //------------------------------GET/random------------------------------//
 
-func GetRandomPosts(c *gin.Context) {
+//------------------------------GET/random------------------------------//
 
+func GetRandomPosts(c *gin.Context) {
 	countStr := c.Query("count")
-	count, err := strconv.Atoi(countStr) //get count(integer)
+	count, err := strconv.Atoi(countStr)
 	if err != nil || count <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{ //400
-			"message": "Invalid count parameter (must be integer, N)",
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid count parameter (must be integer between 1 and 100)",
 		})
 		return
 	}
 
 	var posts []models.Post
-	result := database.DB.Where("public = true"). //get RANDOM post
-							Order("RANDOM()").
-							Limit(count).
-							Find(&posts)
+	result := database.DB.Where("public = true").
+		Order("RANDOM()").
+		Limit(count).
+		Find(&posts)
 
-	if result.Error != nil { //check result
-		c.JSON(http.StatusInternalServerError, gin.H{ //500
+	if result.Error != nil {
+		log.Printf("Database error: %v", result.Error)
+		c.JSON(http.StatusForbidden, gin.H{
 			"message": "Database error",
+			"error":   result.Error.Error(),
 		})
 		return
 	}
 
 	if len(posts) == 0 {
-		c.JSON(http.StatusNotFound, gin.H{ //404
-			"message": "No public posts available",
+		c.JSON(http.StatusOK, gin.H{
+			"count": 0,
+			"posts": []interface{}{},
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{ //200
+	formattedPosts := make([]gin.H, len(posts))
+	for i, post := range posts {
+		formattedPosts[i] = gin.H{
+			"id":           post.ID,
+			"title":        post.Title,
+			"text":         post.Text,
+			"hashtages":    post.Hashtages,
+			"public":       post.Public,
+			"scheduled_at": post.ScheduledAt.Unix(),
+			"created_at":   post.CreatedAt.Unix(),
+			"updated_at":   post.UpdatedAt.Unix(),
+			"author_id":    post.AuthorID,
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
 		"count": len(posts),
-		"posts": posts,
+		"posts": formattedPosts,
 	})
 }
