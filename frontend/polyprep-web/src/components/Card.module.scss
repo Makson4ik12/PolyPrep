@@ -95,6 +95,30 @@
                 }
             }
         }
+
+        .likes_liked {
+            @extend .likes;
+
+            border: 2px solid black;
+            background-color: black;
+
+            p {
+                color: white;
+            }
+
+            img {
+                filter: invert(1);
+            }
+
+            &:hover {
+                background-color: white;
+                border: 2px solid #cecece;
+
+                p {
+                    color: black;
+                }
+            }
+        }
     }
 
     .top {

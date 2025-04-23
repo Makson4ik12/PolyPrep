@@ -74,33 +74,33 @@ const EditPostPage = () => {
   };
 
   const handleOnSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-  
-      const formElements = e.currentTarget.elements as typeof e.currentTarget.elements & {
-        title: HTMLInputElement,
-        text: HTMLTextAreaElement,
-        hashtages: HTMLInputElement,
-        data: HTMLInputElement
-      };
-  
-      setIsLoadingPost(true);
-  
-      await putPost({
-        title: formElements.title.value,
-        text: formElements.text.value,
-        public: !isPrivate,
-        hashtages: formElements.hashtages.value.split(" "),
-        scheduled_at: isScheduled ? new Date(formElements.data.value).getTime() : null
-      })
-      .then ((resp) => {
-        setIsLoadingPost(false);
-        navigate("/post/view/" + (resp as IPost).id);
-      })
-      .catch((error) => { 
-        setIsLoadingPost(false);
-        setIsError({ind: true, error: "Ошибка - пост не обновлен("});
-      });
-    }
+    e.preventDefault();
+
+    const formElements = e.currentTarget.elements as typeof e.currentTarget.elements & {
+      title: HTMLInputElement,
+      text: HTMLTextAreaElement,
+      hashtages: HTMLInputElement,
+      data: HTMLInputElement
+    };
+
+    setIsLoadingPost(true);
+
+    await putPost({
+      title: formElements.title.value,
+      text: formElements.text.value,
+      public: !isPrivate,
+      hashtages: formElements.hashtages.value.split(" "),
+      scheduled_at: isScheduled ? new Date(formElements.data.value).getTime() : null
+    })
+    .then ((resp) => {
+      setIsLoadingPost(false);
+      navigate("/post/view/" + (resp as IPost).id);
+    })
+    .catch((error) => { 
+      setIsLoadingPost(false);
+      setIsError({ind: true, error: "Ошибка - пост не обновлен("});
+    });
+  }
 
   useEffect(() => {
     (async () => {
@@ -135,7 +135,7 @@ const EditPostPage = () => {
             maxLength={150}
             ref={titleRef}
             onChange={handleTitleChange}
-            value={ postData?.title }
+            defaultValue={ postData?.title }
             required>
           </input>
 
@@ -154,7 +154,7 @@ const EditPostPage = () => {
           ref={textRef}
           onChange={handleTextChange}
           spellCheck={false}
-          value={ postData?.text }
+          defaultValue={ postData?.text }
           autoCapitalize='on'
           required
           >
@@ -173,7 +173,7 @@ const EditPostPage = () => {
             maxLength={150}
             ref={hashtagesRef}
             onChange={handleHashtagsChange}
-            value={ postData?.hashtages.join(" ") }
+            defaultValue={ postData?.hashtages.join(" ") }
             required>
           </input>
 

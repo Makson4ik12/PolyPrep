@@ -881,7 +881,42 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
-    
+  
+  /favourite/check:
+    get:
+      description: "Проверка, является ли пост избранным у пользователя"
+      tags:
+        - "Избранное"
+
+      parameters:
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+
+        - in: query
+          name: id
+          description: Id поста
+          required: true
+          schema:
+            type: integer
+
+      responses:
+        200:
+          description: "Является"
+        
+        404:
+          description: "Не является"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
   /user:
     get:
       description: "Получение данных какого-либо пользователя"

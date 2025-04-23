@@ -5,7 +5,7 @@ import { getRandomPosts, IPost } from '../server-api/posts';
 import Loader from '../components/Loader';
 
 const MainPage = () => {
-  const [posts, setPosts] = useState<IPost[]>([]);
+  const [randomPosts, setRandomPosts] = useState<IPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
     useEffect(() => {
@@ -14,7 +14,7 @@ const MainPage = () => {
   
         await getRandomPosts(10)
         .then((resp) => {
-          setPosts(resp as IPost[]);
+          setRandomPosts(resp as IPost[]);
         })
         .catch((error) => console.log("cannot load user posts"));
   
@@ -29,11 +29,11 @@ const MainPage = () => {
             isLoading ?
               <Loader />
             :
-              posts?.length === 0 ? <p>Постов пока нет :(</p>
+              randomPosts?.length === 0 ? <p>Постов пока нет :(</p>
                 :
               <>
                 {
-                  posts?.map((item) => 
+                  randomPosts?.map((item) => 
                     <Card 
                       id={item.id}
                       created_at={item.created_at}
