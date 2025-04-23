@@ -54,6 +54,7 @@ func GetUser(c *gin.Context) {
 			})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   err.Error(),
 				"message": "Database error",
 			})
 		}
