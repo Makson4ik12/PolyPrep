@@ -191,8 +191,10 @@ func TokenCallback(c *gin.Context) {
 	cfg := config.LoadConfig()
 
 	// redirectURI := cfg.RedirectURL
+	redirectURI := ""
 	if nextPage != "" {
-		redirectURI += "?next_page=" + url.QueryEscape(nextPage)
+		// redirectURI += "?next_page=" + url.QueryEscape(nextPage)
+		redirectURI += url.QueryEscape(nextPage)
 	}
 
 	token, err := keycloakClient.GetToken(c.Request.Context(), cfg.Realm, gocloak.TokenOptions{
@@ -208,7 +210,6 @@ func TokenCallback(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":        "failed to exchange code for token",
 			"details":      err.Error(),
-			// "redirect_uri": redirectURI,
 			"redirect_uri": redirectURI,
 			"keycloak_url": cfg.KeycloakURL,
 		})
