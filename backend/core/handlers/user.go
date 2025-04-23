@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"polyprep/database"
 	models "polyprep/model"
@@ -24,45 +25,38 @@ import (
 //------------------------------GET/user------------------------------//
 
 func GetUser(c *gin.Context) {
-
 	userUUID := c.Query("id")
 
 	if userUUID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "User ID is required",
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "User ID is required"})
 		return
 	}
 
-	_, err := uuid.Parse(userUUID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Invalid user ID format (expected UUID)",
-		})
+	if _, err := uuid.Parse(userUUID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid user ID format"})
 		return
 	}
 
 	var user models.User
 	result := database.DB.Select("id", "username", "icon").
-		Where("id = ?", userUUID).
+		Where("uuid = ?", userUUID).
 		First(&user)
 
 	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusForbidden, gin.H{
-				"message": "User not found",
-			})
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"message": "User not found"})
 		} else {
+			log.Printf("Database error: %v", result.Error)
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"error":   err.Error(),
 				"message": "Database error",
+				"error":   result.Error.Error(),
 			})
 		}
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"id":       user.ID,
+		"id":       user.UUID,
 		"username": user.Username,
 		"icon":     user.Icon,
 	})

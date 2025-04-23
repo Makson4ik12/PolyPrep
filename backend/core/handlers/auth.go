@@ -106,12 +106,7 @@ func AuthCallback(c *gin.Context) {
 		return
 	}
 
-	// 2. Получаем информацию о пользователе из Keycloak
-	userInfo, err := keycloakClient.GetUserInfo(
-		c.Request.Context(),
-		token.AccessToken,
-		cfg.Realm,
-	)
+	userInfo, err := keycloakClient.GetUserInfo(c, token.AccessToken, cfg.Realm)
 	if err != nil {
 		log.Printf("Failed to get user info: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get user info"})
@@ -124,15 +119,8 @@ func AuthCallback(c *gin.Context) {
 		Email:    *userInfo.Email,
 	}
 
-	result := database.DB.
-		Where(models.User{UUID: user.UUID}).
-		Assign(user).
-		FirstOrCreate(&user)
-
-	if result.Error != nil {
-		log.Printf("Failed to save user: %v", result.Error)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save user"})
-		return
+	if err := database.DB.Where("uuid = ?", user.UUID).FirstOrCreate(&user).Error; err != nil {
+		log.Printf("Failed to save user: %v", err)
 	}
 
 	c.JSON(http.StatusOK, gin.H{

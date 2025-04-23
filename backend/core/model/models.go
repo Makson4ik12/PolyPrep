@@ -43,7 +43,7 @@ type Comment struct {
 
 type User struct {
 	ID       uint   `gorm:"primaryKey" json:"id"`
-	UUID     string `gorm:"type:varchar(36);uniqueIndex;not null" json:"uuid"`
+	UUID     string `gorm:"type:uuid;uniqueIndex;not null" json:"uuid"`
 	Username string `gorm:"size:50;not null;unique" json:"username"`
 	Email    string `gorm:"size:100" json:"email"`
 	Icon     string `gorm:"type:text" json:"icon"`
