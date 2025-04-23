@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"net/url"
 	"polyprep/config"
+	"polyprep/database"
+	models "polyprep/model"
 	"strings"
 
 	"github.com/Nerzal/gocloak/v13"
@@ -101,6 +103,35 @@ func AuthCallback(c *gin.Context) {
 	if err != nil {
 		log.Printf("Failed to get token: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get token"})
+		return
+	}
+
+	// 2. Получаем информацию о пользователе из Keycloak
+	userInfo, err := keycloakClient.GetUserInfo(
+		c.Request.Context(),
+		token.AccessToken,
+		cfg.Realm,
+	)
+	if err != nil {
+		log.Printf("Failed to get user info: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get user info"})
+		return
+	}
+
+	user := models.User{
+		UUID:     *userInfo.Sub,
+		Username: *userInfo.PreferredUsername,
+		Email:    *userInfo.Email,
+	}
+
+	result := database.DB.
+		Where(models.User{UUID: user.UUID}).
+		Assign(user).
+		FirstOrCreate(&user)
+
+	if result.Error != nil {
+		log.Printf("Failed to save user: %v", result.Error)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save user"})
 		return
 	}
 
