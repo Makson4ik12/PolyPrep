@@ -1,5 +1,5 @@
 import styles from './ViewPostPage.module.scss'
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import IconDoc from '../icons/doc.svg'
 import IconImage from '../icons/image.svg'
 import IconAudio from '../icons/audio.svg'
@@ -7,7 +7,7 @@ import IconUser from '../icons/user.svg'
 import IconPrivate from '../icons/private.svg'
 import IconPublic from '../icons/public.svg'
 import { useLocation, useNavigate } from 'react-router-dom';
-import { IComment } from '../server-api/comments';
+import { getPostComments, IComment, postComment } from '../server-api/comments';
 import { getDate } from '../utils/UtilFunctions';
 import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
 import IconArrowDown from '../icons/arrow_down.svg'
@@ -23,6 +23,8 @@ import IconUnlike from '../icons/unlike.svg'
 import { getPost, IPost } from '../server-api/posts';
 import store from '../redux-store/store';
 import Loader from '../components/Loader';
+import { deleteLike, postLike } from '../server-api/likes';
+import useAutosizeTextArea from '../utils/CustomHooks';
 
 interface IInclude {
   name: string;
@@ -43,17 +45,25 @@ const Include = (data: IInclude) => {
 }
 
 const Comment = (data: IComment) => {
+  const userData = store.getState().auth.userData;
+
   return (
     <div className={styles.info_container}>
       <div className={styles.top_info}>
         <div className={styles.lin_container}>
           <img src={IconUser} alt='usericon'/>
-          <p><b>Maks Pupkin</b> | { getDate(data.created_at) }</p>
+          <p><b>{ data?.author_id === userData.uid ? "You" : "SomeUser" }</b> | { getDate(data.created_at || 0) }</p>
         </div>
 
-        <div className={styles.lin_container}>
-          <img src={IconEdit} alt='edit' className={styles.action_btn}/>
-        </div>
+        {
+          data?.author_id === userData.uid ?
+            <div className={styles.lin_container}>
+              <img src={IconEdit} alt='edit' className={styles.action_btn}/>
+            </div>
+          :
+            <></>
+        }
+        
       </div>
 
       <p className={styles.text}>{data.text}</p>
@@ -66,12 +76,73 @@ const ViewPostPage = () => {
   const post_id = Number(location.pathname.slice(location.pathname.lastIndexOf('/') + 1, location.pathname.length) || -1);
   const userData = store.getState().auth.userData;
 
-  const [isLoadingPost, setIsLoadingPost] = useState(true);
   const [postData, setPostData] = useState<IPost>();
+  const [postComments, setPostComments] = useState<IComment[]>();
+  const [userLike, setUserLike] = useState(false);
+
+  const [isUpdate, updateComponent] = useState<boolean>(false);
+  const [isUpdateComments, updateComments] = useState<boolean>(false);
+
+  const [isLoadingPost, setIsLoadingPost] = useState(true);
+  const [isLoadingComments, setIsLoadingComments] = useState(true);
 
   const [viewIncludes, setViewIncludes] = useState(false);
   const navigate = useNavigate();
   const screenSize = HandleResponsiveView();
+  const [value, setValue] = useState("");
+
+  const commentRef = useRef<HTMLTextAreaElement>(null);
+
+  useAutosizeTextArea(commentRef.current, value);
+
+  const handleOnClick = async (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (userLike) {
+      await deleteLike(postData?.id || -1)
+      .then((resp) => {
+        setUserLike(false);
+        updateComponent(prev => !prev);
+      })
+      .catch((error) => console.log("cannot dislike post"));
+    } else {
+      await postLike(postData?.id || -1)
+      .then((resp) => {
+        setUserLike(true);
+        updateComponent(prev => !prev);
+      })
+      .catch((error) => console.log("cannot like post"));
+    }
+  }
+
+  const handleCommentChange = (evt: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = evt.target?.value;
+    setValue(val);
+  };
+
+  const handleOnSubmitComment = async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+  
+      const formElements = e.currentTarget.elements as typeof e.currentTarget.elements & {
+        comment: HTMLTextAreaElement
+      };
+  
+      setIsLoadingComments(true);
+  
+      await postComment({
+        text: formElements.comment.value,
+        post_id: postData?.id || -1
+      })
+      .then ((resp) => {
+        setIsLoadingComments(false);
+        updateComments(prev => !prev);
+      })
+      .catch((error) => { 
+        setIsLoadingComments(false);
+        console.log("comment not created");
+      });
+    }
 
   useEffect(() => {
     (async () => {
@@ -84,6 +155,20 @@ const ViewPostPage = () => {
       .catch((error) => console.log("cannot load post"));
 
       setIsLoadingPost(false);
+    }) ()
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      setIsLoadingComments(true);
+
+      await getPostComments(post_id)
+      .then((resp) => {
+        setPostComments(resp as IComment[]);
+      })
+      .catch((error) => console.log("cannot load post comments"));
+
+      setIsLoadingComments(false);
     }) ()
   }, []);
 
@@ -100,7 +185,7 @@ const ViewPostPage = () => {
 
                 <div className={styles.badge}>
                   {
-                    postData?.public ?
+                    !postData?.public ?
                     <>
                       <img src={IconPrivate} alt='private'/>
                       <p>Private</p>
@@ -121,8 +206,15 @@ const ViewPostPage = () => {
                     <>
                       <img src={IconFavourite} className={styles.action_btn} alt='favourite'/>
                       <img src={IconShare} className={styles.action_btn} alt='share'/>
-                      <p>|</p>
-                      <img src={IconEdit} className={styles.action_btn} alt='edit' onClick={() => navigate("/post/edit/" + postData?.id)}/>
+                      {
+                        postData?.author_id === userData.uid ?
+                          <>
+                            <p>|</p>
+                            <img src={IconEdit} className={styles.action_btn} alt='edit' onClick={() => navigate("/post/edit/" + postData?.id)}/>
+                          </>
+                        :
+                          <></>
+                      }
                     </>
                   :
                   <div className={styles.dropdown}>
@@ -176,7 +268,7 @@ const ViewPostPage = () => {
             <div className={styles.divider} />
 
             <div className={styles.lin_container}>
-              <div className={styles.likes}>
+              <div className={ userLike ? styles.likes_liked : styles.likes} onClick={(e) => handleOnClick(e)}>
                 <p>1</p>
                 <img src={IconUnlike} className={styles.like_btn} alt='like'></img>
               </div>
@@ -198,14 +290,19 @@ const ViewPostPage = () => {
       <h2>Комментарии</h2>
 
       <div className={styles.includes_container}>
-        <form>
-          <input 
-            name='comment' 
-            type='text' 
+        <form onSubmit={handleOnSubmitComment}>
+          <textarea 
+            id="comment" 
+            name="comment" 
             placeholder='Крутой конспект!' 
             maxLength={350}
-            required>
-          </input>
+            required
+            ref={commentRef}
+            onChange={handleCommentChange}
+            spellCheck={false}
+            autoCapitalize='on'
+            >
+          </textarea>
 
           <button type='submit'>
             <img src={IconSend} alt='send' />
@@ -214,9 +311,27 @@ const ViewPostPage = () => {
         
         <div className={styles.divider} />
 
-        <Comment id={1} created_at={1745160699283} updated_at={1745160699283} author_id={1} post_id={1} text='Апупенный конспект ставлю лике однозначно!' />
-        <Comment id={1} created_at={1745160699283} updated_at={1745160699283} author_id={1} post_id={1} text='Конспект кал собачий...' />
-        <Comment id={1} created_at={1745160699283} updated_at={1745160699283} author_id={1} post_id={1} text='Апупенный конспект ставлю лике однозначно!' />
+        {
+            isLoadingComments ?
+              <Loader />
+            :
+              postComments?.length === 0 ? <p>Комментариев пока нет :(</p>
+                :
+              <>
+                {
+                  postComments?.map((item) => 
+                    <Comment 
+                      id={item.id}
+                      created_at={item.created_at} 
+                      updated_at={item.updated_at} 
+                      author_id={item.author_id} 
+                      post_id={item.post_id} 
+                      text={item.text}
+                    />
+                  )
+                }
+              </>
+          }
       </div>
     </div>
   )

@@ -156,6 +156,30 @@
             }
         }
 
+        .likes_liked {
+            @extend .likes;
+
+            border: 2px solid black;
+            background-color: black;
+
+            p {
+                color: white;
+            }
+
+            img {
+                filter: invert(1);
+            }
+
+            &:hover {
+                background-color: white;
+                border: 2px solid #cecece;
+
+                p {
+                    color: black;
+                }
+            }
+        }
+
         .badge {
             border: 2px solid black;
             border-radius: 20px;
@@ -292,7 +316,7 @@
             justify-content: flex-start;
             gap: 10px;
 
-            input {
+            textarea {
                 width: 100%;
                 font-size: 20px;
                 font-weight: 500;
@@ -303,6 +327,10 @@
                 border: 1px solid #cecece;
                 border-radius: 20px;
                 padding-right: 40px;
+
+                resize: vertical;
+                display: block;
+                white-space: nowrap;
             }
 
             button {
@@ -399,7 +427,7 @@
             form {
                 gap: 5px;
     
-                input {
+                textarea {
                     width: 100%;
                     font-size: 18px;
                     padding: 15px 20px;
@@ -488,7 +516,7 @@
             form {
                 gap: 3px;
     
-                input {
+                textarea {
                     width: 100%;
                     font-size: 16px;
                     padding: 10px 20px;

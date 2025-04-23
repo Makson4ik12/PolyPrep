@@ -51,7 +51,7 @@ export async function deleteLike(post_id: number) {
   try {
     await validateTokens();
     
-    const response = await axios.get(
+    const response = await axios.delete(
     `${SERVER_ADDRESS}${SERVER_API_VERSION}like?id=${post_id}`,
     { headers: { Authorization: `Bearer ${store.getState().auth.authTokens.access_token}` }}
     );

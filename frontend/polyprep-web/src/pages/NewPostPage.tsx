@@ -135,6 +135,7 @@ const NewPostPage = () => {
           onChange={handleTextChange}
           spellCheck={false}
           autoCapitalize='on'
+          required
           >
         </textarea>
 
