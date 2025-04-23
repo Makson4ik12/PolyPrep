@@ -43,7 +43,7 @@ const MainPage = () => {
                       title={item.title} 
                       text={item.text}
                       public={item.public}
-                      hashtags={item.hashtags}
+                      hashtages={item.hashtages}
                     />
                   )
                 }

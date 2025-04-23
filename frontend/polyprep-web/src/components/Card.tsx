@@ -35,7 +35,7 @@ const Card = (data: IPost) => {
 
       <div className={styles.lin_container}>
         {
-          data.hashtags.map((item) => 
+          data.hashtages.map((item) => 
             <Badge text={item}/>
           )
         }

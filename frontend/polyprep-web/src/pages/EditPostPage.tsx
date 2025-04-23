@@ -17,7 +17,7 @@ import IconSuccess from '../icons/success.svg'
 import IconTime from '../icons/time.svg'
 import IconBolt from '../icons/bolt.svg'
 import { getPost, IPost, putPost } from '../server-api/posts';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 interface IInclude {
   name: string;
@@ -38,18 +38,19 @@ const Include = (data: IInclude) => {
 }
 
 const EditPostPage = () => {
+  const location = useLocation();
   const post_id = Number(location.pathname.slice(location.pathname.lastIndexOf('/') + 1, location.pathname.length) || -1);
 
   const [value, setValue] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
   const [isScheduled, setIsScheduled] = useState(false);
   const [titleLen, setTitleLen] = useState(0);
-  const [hashtagsLen, setHashtagsLen] = useState(0);
+  const [hashtagesLen, setHashtagsLen] = useState(0);
   const [isError, setIsError] = useState({ind: false, error: ""});
 
   const textRef = useRef<HTMLTextAreaElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
-  const hashtagsRef = useRef<HTMLInputElement>(null);
+  const hashtagesRef = useRef<HTMLInputElement>(null);
 
   const [isLoadingPost, setIsLoadingPost] = useState(true);
   const [postData, setPostData] = useState<IPost>();
@@ -78,7 +79,7 @@ const EditPostPage = () => {
       const formElements = e.currentTarget.elements as typeof e.currentTarget.elements & {
         title: HTMLInputElement,
         text: HTMLTextAreaElement,
-        hashtags: HTMLInputElement,
+        hashtages: HTMLInputElement,
         data: HTMLInputElement
       };
   
@@ -88,7 +89,7 @@ const EditPostPage = () => {
         title: formElements.title.value,
         text: formElements.text.value,
         public: !isPrivate,
-        hashtags: formElements.hashtags.value.split(" "),
+        hashtages: formElements.hashtages.value.split(" "),
         scheduled_at: isScheduled ? new Date(formElements.data.value).getTime() : null
       })
       .then ((resp) => {
@@ -160,23 +161,23 @@ const EditPostPage = () => {
         </textarea>
 
         <div className={styles.subheader}>
-          <img src={IconHashtag} alt='hashtags' />
+          <img src={IconHashtag} alt='hashtages' />
           <h2>Хэштеги</h2>
         </div>
         
         <div className={styles.input_wrapper}>
           <input 
-            name='hashtags' 
+            name='hashtages' 
             type='text' 
             placeholder='#матан #крипта #хочу_зачет_по_бип' 
             maxLength={150}
-            ref={hashtagsRef}
+            ref={hashtagesRef}
             onChange={handleHashtagsChange}
-            value={ postData?.hashtags.join(" ") }
+            value={ postData?.hashtages.join(" ") }
             required>
           </input>
 
-          <p>{hashtagsLen} / 150</p>
+          <p>{hashtagesLen} / 150</p>
         </div>
         
 

@@ -167,7 +167,7 @@ const ViewPostPage = () => {
             
             <div className={styles.lin_container}>
               {
-                postData?.hashtags.map((item) => 
+                postData?.hashtages.map((item) => 
                   <Badge text={item}/>
                 )
               }

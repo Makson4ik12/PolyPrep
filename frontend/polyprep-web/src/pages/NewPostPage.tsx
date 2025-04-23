@@ -46,13 +46,13 @@ const NewPostPage = () => {
   const [isScheduled, setIsScheduled] = useState(false);
 
   const [titleLen, setTitleLen] = useState(0);
-  const [hashtagsLen, setHashtagsLen] = useState(0);
+  const [hashtagesLen, setHashtagsLen] = useState(0);
   const [isError, setIsError] = useState({ind: false, error: ""});
   const [isLoading, setIsLoading] = useState(false);
 
   const textRef = useRef<HTMLTextAreaElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
-  const hashtagsRef = useRef<HTMLInputElement>(null);
+  const hashtagesRef = useRef<HTMLInputElement>(null);
 
   useAutosizeTextArea(textRef.current, value);
 
@@ -77,7 +77,7 @@ const NewPostPage = () => {
     const formElements = e.currentTarget.elements as typeof e.currentTarget.elements & {
       title: HTMLInputElement,
       text: HTMLTextAreaElement,
-      hashtags: HTMLInputElement,
+      hashtages: HTMLInputElement,
       data: HTMLInputElement
     };
 
@@ -87,7 +87,7 @@ const NewPostPage = () => {
       title: formElements.title.value,
       text: formElements.text.value,
       public: !isPrivate,
-      hashtags: formElements.hashtags.value.split(" "),
+      hashtages: formElements.hashtages.value.split(" "),
       scheduled_at: isScheduled ? new Date(formElements.data.value).getTime() : null
     })
     .then ((resp) => {
@@ -139,24 +139,24 @@ const NewPostPage = () => {
         </textarea>
 
         <div className={styles.subheader}>
-          <img src={IconHashtag} alt='hashtags' />
+          <img src={IconHashtag} alt='hashtages' />
           <h2>Хэштеги</h2>
         </div>
         
         <div className={styles.input_wrapper}>
           <input 
-            name='hashtags' 
+            name='hashtages' 
             type='text' 
             placeholder='#матан #крипта #хочу_зачет_по_бип' 
             maxLength={150}
             pattern="^(#[a-zA-Z0-9_]{2,}\s*)+$"
             title="Хэштеги должны начинаться с # и содержать минимум 2 символа, используя только буквы, цифры и _"
-            ref={hashtagsRef}
+            ref={hashtagesRef}
             onChange={handleHashtagsChange}
             required>
           </input>
 
-          <p>{hashtagsLen} / 150</p>
+          <p>{hashtagesLen} / 150</p>
         </div>
         
         <div className={styles.subheader}>

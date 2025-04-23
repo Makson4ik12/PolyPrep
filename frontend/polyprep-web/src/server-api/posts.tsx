@@ -12,7 +12,7 @@ export interface IPost {
   title: string;
   text: string;
   public: boolean;
-  hashtags: string[];
+  hashtages: string[];
 }
   
 export async function postPost(data: IPost) {
