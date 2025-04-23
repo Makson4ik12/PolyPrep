@@ -29,11 +29,11 @@ const MainPage = () => {
             isLoading ?
               <Loader />
             :
-              posts.length === 0 ? <p>Постов пока нет :(</p>
+              posts?.length === 0 ? <p>Постов пока нет :(</p>
                 :
               <>
                 {
-                  posts.map((item) => 
+                  posts?.map((item) => 
                     <Card 
                       id={item.id}
                       created_at={item.created_at}
