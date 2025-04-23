@@ -3,6 +3,7 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"net/url"
 	"polyprep/config"
 	"strings"
 
@@ -154,4 +155,54 @@ func RefreshToken(c *gin.Context) {
 		"refresh_token": tokens.RefreshToken,
 		"expires_in":    tokens.ExpiresIn,
 	})
+}
+
+func TokenCallback(c *gin.Context) {
+
+	code := c.Query("code")
+	nextPage := c.Query("next_page")
+
+	if code == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "authorization code is required",
+		})
+		return
+	}
+
+	cfg := config.LoadConfig()
+
+	redirectURI := cfg.RedirectURL
+	if nextPage != "" {
+		redirectURI += "?next_page=" + url.QueryEscape(nextPage)
+	}
+
+	token, err := keycloakClient.GetToken(c.Request.Context(), cfg.Realm, gocloak.TokenOptions{
+		GrantType:    gocloak.StringP("authorization_code"),
+		Code:         &code,
+		ClientID:     &cfg.ClientID,
+		ClientSecret: &cfg.ClientSecret,
+		RedirectURI:  &redirectURI,
+	})
+
+	if err != nil {
+		log.Printf("Error to get token: %v\nRedirectURI used: %s", err, redirectURI)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":        "failed to exchange code for token",
+			"details":      err.Error(),
+			"redirect_uri": redirectURI,
+			"keycloak_url": cfg.KeycloakURL,
+		})
+		return
+	}
+
+	response := gin.H{
+		"access_token":  token.AccessToken,
+		"refresh_token": token.RefreshToken,
+	}
+
+	if nextPage != "" {
+		response["next_page"] = nextPage
+	}
+
+	c.JSON(http.StatusOK, response)
 }
