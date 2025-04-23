@@ -5,6 +5,7 @@ import IconImage from '../icons/image.svg'
 import IconAudio from '../icons/audio.svg'
 import IconUser from '../icons/user.svg'
 import IconPrivate from '../icons/private.svg'
+import IconPublic from '../icons/public.svg'
 import { useLocation, useNavigate } from 'react-router-dom';
 import { IComment } from '../server-api/comments';
 import { getDate } from '../utils/UtilFunctions';
@@ -20,6 +21,8 @@ import IconContextMenu from '../icons/context_menu.svg'
 import { Badge } from '../components/Badge';
 import IconUnlike from '../icons/unlike.svg'
 import { getPost, IPost } from '../server-api/posts';
+import store from '../redux-store/store';
+import Loader from '../components/Loader';
 
 interface IInclude {
   name: string;
@@ -61,8 +64,9 @@ const Comment = (data: IComment) => {
 const ViewPostPage = () => {
   const location = useLocation();
   const post_id = Number(location.pathname.slice(location.pathname.lastIndexOf('/') + 1, location.pathname.length) || -1);
+  const userData = store.getState().auth.userData;
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingPost, setIsLoadingPost] = useState(true);
   const [postData, setPostData] = useState<IPost>();
 
   const [viewIncludes, setViewIncludes] = useState(false);
@@ -71,7 +75,7 @@ const ViewPostPage = () => {
 
   useEffect(() => {
     (async () => {
-      setIsLoading(true);
+      setIsLoadingPost(true);
 
       await getPost(post_id)
       .then((resp) => {
@@ -79,83 +83,98 @@ const ViewPostPage = () => {
       })
       .catch((error) => console.log("cannot load post"));
 
-      setIsLoading(false);
+      setIsLoadingPost(false);
     }) ()
   }, []);
 
   return (
     <div className={styles.container}>
-      <div className={styles.main_content}>
-        <div className={styles.top_info}>
-          <div className={styles.lin_container}>
-            <img src={IconUser} alt='usericon'/>
-            <p><b>User{postData?.author_id}</b> | { getDate(postData?.created_at || 0) }</p>
+      {
+        isLoadingPost ? <Loader />
+        :
+          <div className={styles.main_content}>
+            <div className={styles.top_info}>
+              <div className={styles.lin_container}>
+                <img src={IconUser} alt='usericon'/>
+                <p><b>{ postData?.author_id === userData.uid ? "You" : "SomeUser" }</b> | { getDate(postData?.created_at || 0) }</p>
 
-            <div className={styles.badge}>
-              <img src={IconPrivate} alt='private'/>
-              <p>Private</p>
+                <div className={styles.badge}>
+                  {
+                    postData?.public ?
+                    <>
+                      <img src={IconPrivate} alt='private'/>
+                      <p>Private</p>
+                    </>
+                    :
+                    <>
+                      <img src={IconPublic} alt='public'/>
+                      <p>Public</p>
+                    </>
+                  }
+                  
+                </div>
+              </div>
+              
+              <div className={styles.lin_container}>
+                {
+                  screenSize.width > screenSizes.__768.width ?
+                    <>
+                      <img src={IconFavourite} className={styles.action_btn} alt='favourite'/>
+                      <img src={IconShare} className={styles.action_btn} alt='share'/>
+                      <p>|</p>
+                      <img src={IconEdit} className={styles.action_btn} alt='edit' onClick={() => navigate("/post/edit")}/>
+                    </>
+                  :
+                  <div className={styles.dropdown}>
+                    <img src={IconContextMenu} className={styles.action_btn} alt='context_menu'/>
+
+                    <div className={styles.dropdown_content}>
+                      <button className={styles.action_item}>
+                        <img src={IconFavourite} className={styles.action_btn} alt='favourite'/>
+                        <p>В избранное</p>
+                      </button>
+
+                      <button className={styles.action_item}>
+                      <img src={IconShare} className={styles.action_btn} alt='share'/>
+                        <p>Поделиться</p>
+                      </button>
+                      
+                      <div className={styles.divider} />
+
+                      <button className={styles.action_item}>
+                      <img src={IconEdit} className={styles.action_btn} alt='edit' onClick={() => navigate("/post/edit")}/>
+                        <p>Редактировать</p>
+                      </button>
+                    </div>
+                  </div> 
+                    
+                }
+              </div>
+              
+            </div>
+            
+            <h2 className={styles.title}>{ postData?.title }</h2>
+
+            <p className={styles.text}>{ postData?.text }</p>
+            
+            <div className={styles.lin_container}>
+              {
+                postData?.hashtages?.map((item) => 
+                  <Badge text={item}/>
+                )
+              }
+            </div>
+            
+            <div className={styles.divider} />
+
+            <div className={styles.lin_container}>
+              <div className={styles.likes}>
+                <p>1</p>
+                <img src={IconUnlike} className={styles.like_btn} alt='like'></img>
+              </div>
             </div>
           </div>
-          
-          <div className={styles.lin_container}>
-            {
-              screenSize.width > screenSizes.__768.width ?
-                <>
-                  <img src={IconFavourite} className={styles.action_btn} alt='favourite'/>
-                  <img src={IconShare} className={styles.action_btn} alt='share'/>
-                  <p>|</p>
-                  <img src={IconEdit} className={styles.action_btn} alt='edit' onClick={() => navigate("/post/edit")}/>
-                </>
-              :
-              <div className={styles.dropdown}>
-                <img src={IconContextMenu} className={styles.action_btn} alt='context_menu'/>
-
-                <div className={styles.dropdown_content}>
-                  <button className={styles.action_item}>
-                    <img src={IconFavourite} className={styles.action_btn} alt='favourite'/>
-                    <p>В избранное</p>
-                  </button>
-
-                  <button className={styles.action_item}>
-                  <img src={IconShare} className={styles.action_btn} alt='share'/>
-                    <p>Поделиться</p>
-                  </button>
-                  
-                  <div className={styles.divider} />
-
-                  <button className={styles.action_item}>
-                  <img src={IconEdit} className={styles.action_btn} alt='edit' onClick={() => navigate("/post/edit")}/>
-                    <p>Редактировать</p>
-                  </button>
-                </div>
-              </div> 
-                
-            }
-          </div>
-          
-        </div>
-        
-        <h2 className={styles.title}>{ postData?.title }</h2>
-
-        <p className={styles.text}>{ postData?.text }</p>
-        
-        <div className={styles.lin_container}>
-          {
-            postData?.hashtages?.map((item) => 
-              <Badge text={item}/>
-            )
-          }
-        </div>
-        
-        <div className={styles.divider} />
-
-        <div className={styles.lin_container}>
-          <div className={styles.likes}>
-            <p>1</p>
-            <img src={IconUnlike} className={styles.like_btn} alt='like'></img>
-          </div>
-        </div>
-      </div>
+      }
 
       <div className={styles.title_razdel} onClick={() => setViewIncludes(prev => !prev)}>
         <h2>Вложения</h2>

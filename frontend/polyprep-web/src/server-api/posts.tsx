@@ -8,7 +8,7 @@ export interface IPost {
   created_at?: number;
   updated_at?: number;
   scheduled_at?: number | null;
-  author_id?: number;
+  author_id?: string;
   title: string;
   text: string;
   public: boolean;

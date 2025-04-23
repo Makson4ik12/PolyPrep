@@ -9,6 +9,7 @@ export interface IToken {
   email: string;
   email_verified: boolean;
   preferred_username: string;
+  sub: string;
 }
 
 export interface ITokens{
@@ -22,6 +23,7 @@ interface IUserData {
   last_name: string | null;
   email_verified: boolean | null;
   preferred_username: string | null;
+  uid: string | null;
 }
 
 interface IAuthState {
@@ -36,7 +38,8 @@ const initialState: IAuthState = {
     first_name: localStorage.getItem('authTokens') ? (jwtDecode(JSON.parse(localStorage.getItem('authTokens') as string).access_token) as IToken)?.given_name : null,
     last_name: localStorage.getItem('authTokens') ? (jwtDecode(JSON.parse(localStorage.getItem('authTokens') as string).access_token) as IToken)?.family_name : null,
     email_verified: localStorage.getItem('authTokens') ? (jwtDecode(JSON.parse(localStorage.getItem('authTokens') as string).access_token) as IToken)?.email_verified : null,
-    preferred_username: localStorage.getItem('authTokens') ? (jwtDecode(JSON.parse(localStorage.getItem('authTokens') as string).access_token) as IToken)?.preferred_username : null
+    preferred_username: localStorage.getItem('authTokens') ? (jwtDecode(JSON.parse(localStorage.getItem('authTokens') as string).access_token) as IToken)?.preferred_username : null,
+    uid: localStorage.getItem('authTokens') ? (jwtDecode(JSON.parse(localStorage.getItem('authTokens') as string).access_token) as IToken)?.sub : null
   }
 }
 
@@ -50,7 +53,8 @@ export const authSlice = createSlice({
         first_name: (jwtDecode(data.payload.access_token as string) as IToken).given_name,
         last_name: (jwtDecode(data.payload.access_token as string) as IToken).family_name,
         email_verified: (jwtDecode(data.payload.access_token as string) as IToken).email_verified,
-        preferred_username: (jwtDecode(data.payload.access_token as string) as IToken).preferred_username
+        preferred_username: (jwtDecode(data.payload.access_token as string) as IToken).preferred_username,
+        uid: (jwtDecode(data.payload.access_token as string) as IToken).sub
       };
       state.authTokens = data.payload;
       localStorage.setItem('authTokens', JSON.stringify(data.payload));
@@ -61,7 +65,8 @@ export const authSlice = createSlice({
         first_name: null,
         last_name: null,
         email_verified: null,
-        preferred_username: null
+        preferred_username: null,
+        uid: null
       };
       state.authTokens = {refresh_token: null, access_token: null};
       localStorage.removeItem('authTokens');

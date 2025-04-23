@@ -9,10 +9,12 @@ import { getDate } from '../utils/UtilFunctions';
 import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
 import { Badge } from './Badge';
 import { IPost } from '../server-api/posts';
+import store from '../redux-store/store';
 
 const Card = (data: IPost) => {
   const navigate = useNavigate();
   const screenSize = HandleResponsiveView();
+  const userData = store.getState().auth.userData;
 
   return (
     <div className={styles.container} onClick={() => navigate('/post/view/' + data.id)}>
@@ -21,9 +23,9 @@ const Card = (data: IPost) => {
           <img src={IconUser} alt='user' className={styles.user_icon}></img>
           {
             screenSize.width > screenSizes.__1200.width ?
-              <p><b>Макс Пупкин</b> | { data.created_at ? getDate(data.created_at) : "null" }</p>
+              <p><b>{ data.author_id === userData.uid ? "You" : "SomeUser" }</b> | { data.created_at ? getDate(data.created_at) : "null" }</p>
             :
-              <p><b>Макс Пупкин</b><br></br>{ data.created_at ? getDate(data.created_at) : "null" }</p>
+              <p><b>{ data.author_id === userData.uid ? "You" : "SomeUser" }</b><br></br>{ data.created_at ? getDate(data.created_at) : "null" }</p>
           }
           
         </div>
@@ -32,9 +34,11 @@ const Card = (data: IPost) => {
       </div>
 
       <div className={styles.lin_container}>
-        <Badge text='#хочу5'/>
-        <Badge text='#math'/>
-        <Badge text='#криптография'/>
+        {
+          data.hashtages.map((item) => 
+            <Badge text={item}/>
+          )
+        }
       </div>
 
       <h1>{data.title}</h1>
