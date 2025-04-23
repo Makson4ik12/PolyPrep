@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"polyprep/database"
 	models "polyprep/model"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -24,16 +24,28 @@ import (
 //------------------------------GET/user------------------------------//
 
 func GetUser(c *gin.Context) {
-	userID, err := strconv.ParseUint(c.Query("id"), 10, 32)
-	if err != nil || userID == 0 {
+
+	userUUID := c.Query("id")
+
+	if userUUID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Invalid user ID",
+			"message": "User ID is required",
+		})
+		return
+	}
+
+	_, err := uuid.Parse(userUUID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid user ID format (expected UUID)",
 		})
 		return
 	}
 
 	var user models.User
-	result := database.DB.Select("id", "username", "icon").First(&user, userID)
+	result := database.DB.Select("id", "username", "icon").
+		Where("id = ?", userUUID).
+		First(&user)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
