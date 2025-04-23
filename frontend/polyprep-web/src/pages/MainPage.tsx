@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import Card from '../components/Card';
 import styles from './MainPage.module.scss'
-import { getRandomPosts, IPost } from '../server-api/posts';
+import { getRandomPosts, IPost, IRandomPosts } from '../server-api/posts';
 import Loader from '../components/Loader';
 
 const MainPage = () => {
-  const [randomPosts, setRandomPosts] = useState<IPost[]>([]);
+  const [randomPosts, setRandomPosts] = useState<IRandomPosts>();
   const [isLoading, setIsLoading] = useState(true);
   
     useEffect(() => {
@@ -14,7 +14,7 @@ const MainPage = () => {
   
         await getRandomPosts(10)
         .then((resp) => {
-          setRandomPosts(resp as IPost[]);
+          setRandomPosts(resp as IRandomPosts);
         })
         .catch((error) => console.log("cannot load user posts"));
   
@@ -29,11 +29,11 @@ const MainPage = () => {
             isLoading ?
               <Loader />
             :
-              randomPosts?.length === 0 ? <p>Постов пока нет :(</p>
+              randomPosts?.count === 0 ? <p>Постов пока нет :(</p>
                 :
               <>
                 {
-                  randomPosts?.map((item) => 
+                  randomPosts?.posts.map((item) => 
                     <Card 
                       id={item.id}
                       created_at={item.created_at}

@@ -14,6 +14,11 @@ export interface IPost {
   public: boolean;
   hashtages: string[];
 }
+
+export interface IRandomPosts {
+  count: number;
+  posts: IPost[];
+}
   
 export async function postPost(data: IPost) {
   try {

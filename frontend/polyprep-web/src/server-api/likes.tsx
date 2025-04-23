@@ -6,8 +6,15 @@ import store from "../redux-store/store";
 export interface ILike {
   id: number;
   created_at: number;
-  author_id: string;
+  user_id: string;
   post_id: number;
+}
+
+export interface ILikes {
+    count: number;
+    likes: ILike[];
+    post_id: number;
+    created_at: number;
 }
   
 export async function postLike(post_id: number) {
