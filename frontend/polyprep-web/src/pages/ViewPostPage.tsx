@@ -7,12 +7,13 @@ import IconUser from '../icons/user.svg'
 import IconPrivate from '../icons/private.svg'
 import IconPublic from '../icons/public.svg'
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getPostComments, IComment, postComment } from '../server-api/comments';
+import { deleteComment, getPostComments, IComment, postComment } from '../server-api/comments';
 import { getDate } from '../utils/UtilFunctions';
 import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
 import IconArrowDown from '../icons/arrow_down.svg'
 import IconArrowUp from '../icons/arrow_up.svg'
 import IconDownload from '../icons/download.svg'
+import IconDelete from '../icons/trash.svg'
 import IconSend from '../icons/send.svg'
 import IconShare from '../icons/share.svg'
 import IconFavourite from '../icons/favourite.svg'
@@ -44,8 +45,25 @@ const Include = (data: IInclude) => {
   )
 }
 
-const Comment = (data: IComment) => {
+interface ICommentMeta {
+  setIsLoading: (val: boolean) => void;
+  updateComments: () => void;
+}
+
+const Comment = (data: IComment & ICommentMeta) => {
   const userData = store.getState().auth.userData;
+
+  const handleOnDelete = async () => {
+    data.setIsLoading(true);
+
+    await deleteLike(data.id || -1)
+    .then((resp) => {
+      data.updateComments();
+    })
+    .catch((error) => console.log("cannot delete post"));
+
+    data.setIsLoading(false);
+  }
 
   return (
     <div className={styles.info_container}>
@@ -59,6 +77,7 @@ const Comment = (data: IComment) => {
           data?.author_id === userData.uid ?
             <div className={styles.lin_container}>
               <img src={IconEdit} alt='edit' className={styles.action_btn}/>
+              <img src={IconDelete} alt='delete' onClick={() => handleOnDelete()}/>
             </div>
           :
             <></>
@@ -321,12 +340,15 @@ const ViewPostPage = () => {
                 {
                   postComments?.map((item) => 
                     <Comment 
+                      key={item.id}
                       id={item.id}
                       created_at={item.created_at} 
                       updated_at={item.updated_at} 
                       author_id={item.author_id} 
                       post_id={item.post_id} 
                       text={item.text}
+                      setIsLoading={setIsLoadingComments}
+                      updateComments={() => updateComments(prev => !prev)}
                     />
                   )
                 }

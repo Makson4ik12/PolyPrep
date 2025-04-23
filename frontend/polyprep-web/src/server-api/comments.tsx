@@ -32,7 +32,7 @@ export async function getPostComments(comment_id: number) {
     await validateTokens();
     
     const response = await axios.get(
-    `${SERVER_ADDRESS}${SERVER_API_VERSION}comments?id=${comment_id}`,
+    `${SERVER_ADDRESS}${SERVER_API_VERSION}comment?id=${comment_id}`,
     { headers: { Authorization: `Bearer ${store.getState().auth.authTokens.access_token}` } }
     );
 

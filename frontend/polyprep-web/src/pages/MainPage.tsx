@@ -35,6 +35,7 @@ const MainPage = () => {
                 {
                   randomPosts?.posts.map((item) => 
                     <Card 
+                      key={item.id}
                       id={item.id}
                       created_at={item.created_at}
                       updated_at={item.updated_at}
