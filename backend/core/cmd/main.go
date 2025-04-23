@@ -2,6 +2,7 @@ package main
 
 import (
 	"polyprep/config"
+	"polyprep/database"
 	"polyprep/handlers"
 	"polyprep/middleware"
 
@@ -11,6 +12,7 @@ import (
 
 func main() {
 
+	database.ConnectDB()
 	cfg := config.LoadConfig()
 
 	r := gin.Default()
