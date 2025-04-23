@@ -194,7 +194,7 @@ func TokenCallback(c *gin.Context) {
 	redirectURI := ""
 	if nextPage != "" {
 		// redirectURI += "?next_page=" + url.QueryEscape(nextPage)
-		redirectURI += url.QueryEscape(nextPage)
+		redirectURI += url.QueryEscape(nextPage) + "next_page=user"
 	}
 
 	token, err := keycloakClient.GetToken(c.Request.Context(), cfg.Realm, gocloak.TokenOptions{
