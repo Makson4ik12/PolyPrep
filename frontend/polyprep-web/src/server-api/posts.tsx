@@ -12,7 +12,7 @@ export interface IPost {
   title: string;
   text: string;
   public: boolean;
-  hashtages: string[];
+  hashtags: string[];
 }
   
 export async function postPost(data: IPost) {
@@ -84,7 +84,7 @@ export async function putPost(data: IPost) {
     { headers: { Authorization: `Bearer ${store.getState().auth.authTokens.access_token}` } }
     );
 
-    return response;
+    return response.data;
   } catch (error: any) {
     throw error;
   }

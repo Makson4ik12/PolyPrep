@@ -1,6 +1,6 @@
 import { JsxElement } from 'typescript';
 import styles from './NewPostPage.module.scss'
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import useAutosizeTextArea from '../utils/CustomHooks';
 import IconTitle from '../icons/title.svg'
 import IconText from '../icons/text.svg'
@@ -16,6 +16,8 @@ import IconPrivate from '../icons/private.svg'
 import IconSuccess from '../icons/success.svg'
 import IconTime from '../icons/time.svg'
 import IconBolt from '../icons/bolt.svg'
+import { getPost, IPost, putPost } from '../server-api/posts';
+import { useNavigate } from 'react-router-dom';
 
 interface IInclude {
   name: string;
@@ -36,15 +38,22 @@ const Include = (data: IInclude) => {
 }
 
 const EditPostPage = () => {
+  const post_id = Number(location.pathname.slice(location.pathname.lastIndexOf('/') + 1, location.pathname.length) || -1);
+
   const [value, setValue] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
   const [isScheduled, setIsScheduled] = useState(false);
   const [titleLen, setTitleLen] = useState(0);
-  const [hashtagsLen, setHashtagsLen] = useState(0)
+  const [hashtagsLen, setHashtagsLen] = useState(0);
+  const [isError, setIsError] = useState({ind: false, error: ""});
 
   const textRef = useRef<HTMLTextAreaElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
   const hashtagsRef = useRef<HTMLInputElement>(null);
+
+  const [isLoadingPost, setIsLoadingPost] = useState(true);
+  const [postData, setPostData] = useState<IPost>();
+  const navigate = useNavigate();
 
   useAutosizeTextArea(textRef.current, value);
 
@@ -63,9 +72,55 @@ const EditPostPage = () => {
     setValue(val);
   };
 
+  const handleOnSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+  
+      const formElements = e.currentTarget.elements as typeof e.currentTarget.elements & {
+        title: HTMLInputElement,
+        text: HTMLTextAreaElement,
+        hashtags: HTMLInputElement,
+        data: HTMLInputElement
+      };
+  
+      setIsLoadingPost(true);
+  
+      await putPost({
+        title: formElements.title.value,
+        text: formElements.text.value,
+        public: !isPrivate,
+        hashtags: formElements.hashtags.value.split(" "),
+        scheduled_at: isScheduled ? new Date(formElements.data.value).getTime() : null
+      })
+      .then ((resp) => {
+        setIsLoadingPost(false);
+        navigate("/post/view/" + (resp as IPost).id);
+      })
+      .catch((error) => { 
+        setIsLoadingPost(false);
+        setIsError({ind: true, error: "Ошибка - пост не обновлен("});
+      });
+    }
+
+  useEffect(() => {
+    (async () => {
+      setIsLoadingPost(true);
+
+      await getPost(post_id)
+      .then((resp) => {
+        setPostData(resp as IPost);
+
+        if (!postData?.public)
+          setIsPrivate(true);
+      })
+      .catch((error) => console.log("cannot update post"));
+
+      setIsLoadingPost(false);
+    }) ()
+  }, []);
+
   return (
     <div className={styles.container}>
-      <form>
+      <form onSubmit={handleOnSubmit}>
         <div className={styles.subheader}>
           <img src={IconTitle} alt='title' />
           <h2>Заголовок</h2>
@@ -79,6 +134,7 @@ const EditPostPage = () => {
             maxLength={150}
             ref={titleRef}
             onChange={handleTitleChange}
+            value={ postData?.title }
             required>
           </input>
 
@@ -97,7 +153,9 @@ const EditPostPage = () => {
           ref={textRef}
           onChange={handleTextChange}
           spellCheck={false}
+          value={ postData?.text }
           autoCapitalize='on'
+          required
           >
         </textarea>
 
@@ -114,6 +172,7 @@ const EditPostPage = () => {
             maxLength={150}
             ref={hashtagsRef}
             onChange={handleHashtagsChange}
+            value={ postData?.hashtags.join(" ") }
             required>
           </input>
 

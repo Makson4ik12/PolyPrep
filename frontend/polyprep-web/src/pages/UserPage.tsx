@@ -68,7 +68,7 @@ const UserPage = () => {
           title='Конспекты по кмзи от Пупки Лупкиной' 
           text='Представляю вам свои гадкие конспекты по вышматы или не вышмату не знаб но не по кмзи точно<br></br>Да, именно так'
           public={true}
-          hashtages={["#hype", "#math", "#hochy5"]}
+          hashtags={["#hype", "#math", "#hochy5"]}
         />
       </div>
 
@@ -96,7 +96,7 @@ const UserPage = () => {
                     title={item.title} 
                     text={item.text}
                     public={item.public}
-                    hashtages={item.hashtages}
+                    hashtags={item.hashtags}
                   />
                 )
               }

@@ -23,7 +23,7 @@ const App = () => {
         <Routes>
           <Route path="/search" element={<SearchPage />} />
 
-          <Route path="/post/edit" element={<EditPostPage /> } />
+          <Route path="/post/edit/*" element={<EditPostPage /> } />
           <Route path="/post/view/*" element={<ViewPostPage /> } />
           <Route path="/post/new" element={<LoginPage page={<NewPostPage />} next_page="post/new" />} />
 

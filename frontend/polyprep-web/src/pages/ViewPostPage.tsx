@@ -139,12 +139,20 @@ const ViewPostPage = () => {
                         <p>Поделиться</p>
                       </button>
                       
-                      <div className={styles.divider} />
+                      {
+                        postData?.author_id === userData.uid ?
+                          <>
+                            <div className={styles.divider} />
 
-                      <button className={styles.action_item}>
-                      <img src={IconEdit} className={styles.action_btn} alt='edit' onClick={() => navigate("/post/edit")}/>
-                        <p>Редактировать</p>
-                      </button>
+                            <button className={styles.action_item}>
+                              <img src={IconEdit} className={styles.action_btn} alt='edit' onClick={() => navigate("/post/edit")}/>
+                              <p>Редактировать</p>
+                            </button>
+                          </>
+                        :
+                          <></>
+                      }
+                      
                     </div>
                   </div> 
                     
@@ -159,7 +167,7 @@ const ViewPostPage = () => {
             
             <div className={styles.lin_container}>
               {
-                postData?.hashtages?.map((item) => 
+                postData?.hashtags.map((item) => 
                   <Badge text={item}/>
                 )
               }
