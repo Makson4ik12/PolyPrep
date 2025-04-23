@@ -19,6 +19,7 @@ import IconEdit from '../icons/edit.svg'
 import IconContextMenu from '../icons/context_menu.svg'
 import { Badge } from '../components/Badge';
 import IconUnlike from '../icons/unlike.svg'
+import { getPost, IPost } from '../server-api/posts';
 
 interface IInclude {
   name: string;
@@ -57,17 +58,30 @@ const Comment = (data: IComment) => {
   )
 }
 
-// TODO: добавить кнопку поделиться и добавить в избранное, а также редактировать для поста и комментариев
-// TODO: добавить поиск и страницу редактирования поста
-
 const ViewPostPage = () => {
   const location = useLocation();
-  const post_id = location.pathname.slice(location.pathname.lastIndexOf('/') + 1, location.pathname.length);
-  const test_text = "Текст текст текстtransition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);transit\nТекст текст текстtransition: all 0.6s cubic-bezier(0.165, 0.84aa, 0.44, 1);transit\n"
+  const post_id = Number(location.pathname.slice(location.pathname.lastIndexOf('/') + 1, location.pathname.length) || -1);
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [postData, setPostData] = useState<IPost>();
 
   const [viewIncludes, setViewIncludes] = useState(false);
   const navigate = useNavigate();
   const screenSize = HandleResponsiveView();
+
+  useEffect(() => {
+    (async () => {
+      setIsLoading(true);
+
+      await getPost(post_id)
+      .then((resp) => {
+        setPostData(resp as IPost);
+      })
+      .catch((error) => console.log("cannot load post"));
+
+      setIsLoading(false);
+    }) ()
+  }, []);
 
   return (
     <div className={styles.container}>
@@ -75,7 +89,7 @@ const ViewPostPage = () => {
         <div className={styles.top_info}>
           <div className={styles.lin_container}>
             <img src={IconUser} alt='usericon'/>
-            <p><b>Maks Pupkin</b> | 23.04.2025 в 12:22</p>
+            <p><b>User{postData?.author_id}</b> | { getDate(postData?.created_at || 0) }</p>
 
             <div className={styles.badge}>
               <img src={IconPrivate} alt='private'/>
@@ -121,14 +135,16 @@ const ViewPostPage = () => {
           
         </div>
         
-        <h2 className={styles.title}>Заголовок какой либо тут должен быть</h2>
+        <h2 className={styles.title}>{ postData?.title }</h2>
 
-        <p className={styles.text}>{test_text}</p>
+        <p className={styles.text}>{ postData?.text }</p>
         
         <div className={styles.lin_container}>
-          <Badge text='#хочу5'/>
-          <Badge text='#math'/>
-          <Badge text='#криптография'/>
+          {
+            postData?.hashtages?.map((item) => 
+              <Badge text={item}/>
+            )
+          }
         </div>
         
         <div className={styles.divider} />

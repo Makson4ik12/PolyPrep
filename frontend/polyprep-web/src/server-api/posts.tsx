@@ -24,7 +24,7 @@ export async function postPost(data: IPost) {
     { headers: { Authorization: `Bearer ${store.getState().auth.authTokens.access_token}` } }
     );
 
-    return response;
+    return response.data;
   } catch (error: any) {
     throw error;
   }
@@ -51,6 +51,21 @@ export async function getPosts() {
     
     const response = await axios.get(
     `${SERVER_ADDRESS}${SERVER_API_VERSION}user/posts`,
+    { headers: { Authorization: `Bearer ${store.getState().auth.authTokens.access_token}` } }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    throw error;
+  }
+}
+
+export async function getRandomPosts(count: number) {
+  try {
+    await validateTokens();
+    
+    const response = await axios.get(
+    `${SERVER_ADDRESS}${SERVER_API_VERSION}post/random?count=${count}`,
     { headers: { Authorization: `Bearer ${store.getState().auth.authTokens.access_token}` } }
     );
 

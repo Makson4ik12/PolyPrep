@@ -1,33 +1,54 @@
+import { useEffect, useState } from 'react';
 import Card from '../components/Card';
 import styles from './MainPage.module.scss'
+import { getRandomPosts, IPost } from '../server-api/posts';
+import Loader from '../components/Loader';
 
 const MainPage = () => {
+  const [posts, setPosts] = useState<IPost[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+    useEffect(() => {
+      (async () => {
+        setIsLoading(true);
+  
+        await getRandomPosts(10)
+        .then((resp) => {
+          setPosts(resp as IPost[]);
+        })
+        .catch((error) => console.log("cannot load user posts"));
+  
+        setIsLoading(false);
+      }) ()
+    }, []);
+    
   return (
     <div className={styles.container}>
       <div className={styles.cards_container}>
-        <Card 
-          id={1}
-          created_at={1745160699283}
-          updated_at={1745160699283}
-          scheduled_at={1745160699283}
-          author_id={1745160699283}
-          title='Конспекты по кмзи от Пупки Лупкиной' 
-          text='Представляю вам свои гадкие конспекты по вышматы или не вышмату не знаб но не по кмзи точно<br></br>Да, именно так'
-          public={true}
-          hashtages={["#hype", "#math", "#hochy5"]}
-        />
-        <Card 
-          id={1}
-          created_at={1745160699283}
-          updated_at={1745160699283}
-          scheduled_at={1745160699283}
-          author_id={1745160699283}
-          title='Конспекты по кмзи от Пупки Лупкиной' 
-          text='Представляю вам свои гадкие конспекты по вышматы или не вышмату не знаб но не по кмзи точно<br></br>Да, именно так'
-          public={true}
-          hashtages={["#hype", "#math", "#hochy5"]}
-        />
-        
+        {
+            isLoading ?
+              <Loader />
+            :
+              posts?.length === 0 ? <p>Постов пока нет :(</p>
+                :
+              <>
+                {
+                  posts?.map((item) => 
+                    <Card 
+                      id={item.id}
+                      created_at={item.created_at}
+                      updated_at={item.updated_at}
+                      scheduled_at={item.scheduled_at}
+                      author_id={item.author_id}
+                      title={item.title} 
+                      text={item.text}
+                      public={item.public}
+                      hashtages={item.hashtages}
+                    />
+                  )
+                }
+              </>
+          }
       </div>
     </div>
   )

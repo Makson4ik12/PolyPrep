@@ -1,5 +1,5 @@
 export const getDate = (timestamp: number) => {
-  const data = new Date(timestamp);
+  const data = new Date(timestamp * 1000);
   return data.getDate() + "." + (data.getMonth() + 1) + "." + data.getFullYear() + " в " + data.getHours() + ":" + data.getMinutes();
 }
 

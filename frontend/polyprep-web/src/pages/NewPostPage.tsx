@@ -17,7 +17,8 @@ import IconSuccess from '../icons/success.svg'
 import IconTime from '../icons/time.svg'
 import IconBolt from '../icons/bolt.svg'
 import Loader from '../components/Loader';
-import { postPost } from '../server-api/posts';
+import { IPost, postPost } from '../server-api/posts';
+import { useNavigate } from 'react-router-dom';
 
 interface IInclude {
   name: string;
@@ -39,6 +40,7 @@ const Include = (data: IInclude) => {
 
 const NewPostPage = () => {
   const [value, setValue] = useState("");
+  const navigate = useNavigate();
 
   const [isPrivate, setIsPrivate] = useState(false);
   const [isScheduled, setIsScheduled] = useState(false);
@@ -88,8 +90,9 @@ const NewPostPage = () => {
       hashtages: formElements.hashtags.value.split(" "),
       scheduled_at: isScheduled ? new Date(formElements.data.value).getTime() : null
     })
-    .then (() => {
+    .then ((resp) => {
       setIsLoading(false);
+      navigate("/post/view/" + (resp as IPost).id);
     })
     .catch((error) => { 
       setIsLoading(false);
