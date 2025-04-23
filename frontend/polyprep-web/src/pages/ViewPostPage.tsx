@@ -122,7 +122,7 @@ const ViewPostPage = () => {
                       <img src={IconFavourite} className={styles.action_btn} alt='favourite'/>
                       <img src={IconShare} className={styles.action_btn} alt='share'/>
                       <p>|</p>
-                      <img src={IconEdit} className={styles.action_btn} alt='edit' onClick={() => navigate("/post/edit")}/>
+                      <img src={IconEdit} className={styles.action_btn} alt='edit' onClick={() => navigate("/post/edit/" + postData?.id)}/>
                     </>
                   :
                   <div className={styles.dropdown}>
