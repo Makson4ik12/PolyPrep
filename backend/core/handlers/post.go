@@ -342,7 +342,7 @@ func GetRandomPosts(c *gin.Context) {
 
 	countStr := c.Query("count")
 	count, err := strconv.Atoi(countStr) //get count(integer)
-	if err != nil || count <= 0 || count > 100 {
+	if err != nil || count <= 0 {
 		c.JSON(http.StatusBadRequest, gin.H{ //400
 			"message": "Invalid count parameter (must be integer, N)",
 		})
