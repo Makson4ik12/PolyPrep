@@ -44,7 +44,7 @@ const Card = (data: IPost) => {
     e.stopPropagation();
 
     if (userLike) {
-      await deleteLike(data.id || -1)
+      await deleteLike(likes?.likes.find(item => item.user_id === userData.uid)?.id || -1)
       .then((resp) => {
         setUserLike(false);
         updateComponent(prev => !prev);
@@ -59,7 +59,6 @@ const Card = (data: IPost) => {
       .catch((error) => console.log("cannot like post"));
     }
   }
-
 
   return (
     <div className={styles.container} onClick={() => navigate('/post/view/' + data.id)}>
@@ -85,7 +84,7 @@ const Card = (data: IPost) => {
             <div className={styles.lin_container}>
               {
                 data.hashtages.map((item) => 
-                  <Badge text={item}/>
+                  <Badge text={item} key={item}/>
                 )
               }
             </div>

@@ -24,7 +24,7 @@ import IconUnlike from '../icons/unlike.svg'
 import { getPost, IPost } from '../server-api/posts';
 import store from '../redux-store/store';
 import Loader from '../components/Loader';
-import { deleteLike, postLike } from '../server-api/likes';
+import { deleteLike, getPostLikes, ILikes, postLike } from '../server-api/likes';
 import useAutosizeTextArea from '../utils/CustomHooks';
 
 interface IInclude {
@@ -98,6 +98,7 @@ const ViewPostPage = () => {
   const [postData, setPostData] = useState<IPost>();
   const [postComments, setPostComments] = useState<IComment[]>();
   const [userLike, setUserLike] = useState(false);
+  const [likes, setLikes] = useState<ILikes>();
 
   const [isUpdate, updateComponent] = useState<boolean>(false);
   const [isUpdateComments, updateComments] = useState<boolean>(false);
@@ -119,7 +120,7 @@ const ViewPostPage = () => {
     e.stopPropagation();
 
     if (userLike) {
-      await deleteLike(postData?.id || -1)
+      await deleteLike(likes?.likes.find(item => item.user_id === userData.uid)?.id || -1)
       .then((resp) => {
         setUserLike(false);
         updateComponent(prev => !prev);
@@ -189,7 +190,22 @@ const ViewPostPage = () => {
 
       setIsLoadingComments(false);
     }) ()
-  }, []);
+  }, [isUpdateComments]);
+
+  useEffect(() => {
+      (async () => {
+        setIsLoadingPost(true);
+  
+        await getPostLikes(postData?.id || -1)
+        .then((resp) => {
+          setLikes(resp as ILikes);
+          setUserLike(((resp as ILikes).likes).some(item => item.user_id === userData.uid));
+        })
+        .catch((error) => console.log("cannot load post likes"));
+  
+        setIsLoadingPost(false);
+      }) ()
+    }, [isUpdate]);
 
   return (
     <div className={styles.container}>
@@ -279,7 +295,7 @@ const ViewPostPage = () => {
             <div className={styles.lin_container}>
               {
                 postData?.hashtages.map((item) => 
-                  <Badge text={item}/>
+                  <Badge text={item} key={item}/>
                 )
               }
             </div>
