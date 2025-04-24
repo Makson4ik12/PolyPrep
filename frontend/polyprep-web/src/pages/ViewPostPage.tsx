@@ -194,16 +194,12 @@ const ViewPostPage = () => {
 
   useEffect(() => {
       (async () => {
-        setIsLoadingPost(true);
-  
         await getPostLikes(post_id)
         .then((resp) => {
           setLikes(resp as ILikes);
           setUserLike(((resp as ILikes).likes).some(item => item.user_id === userData.uid));
         })
         .catch((error) => console.log("cannot load post likes"));
-  
-        setIsLoadingPost(false);
       }) ()
     }, [isUpdate]);
 
