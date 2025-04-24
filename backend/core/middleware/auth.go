@@ -89,15 +89,18 @@ func VariableAuthMiddleware() gin.HandlerFunc {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			c.Next()
+			return
 		}
 
 		if !strings.HasPrefix(authHeader, "Bearer ") {
 			c.Next()
+			return
 		}
 
 		accessToken := strings.TrimPrefix(authHeader, "Bearer ")
 		if accessToken == "" || accessToken == "*" || accessToken == "null" {
 			c.Next()
+			return
 		}
 
 		token, _, err := keycloakClient.DecodeAccessToken(
