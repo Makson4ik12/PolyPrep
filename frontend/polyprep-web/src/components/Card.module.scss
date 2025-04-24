@@ -1,5 +1,5 @@
 .container {
-    width: 49%;
+    width: 100%;
     background-color: var(--color-card);
     padding: 20px;
     border-radius: 20px;
@@ -12,11 +12,12 @@
 
     -webkit-user-select: none;
     user-select: none;
-    flex: 0 0 auto;
+    
 
     .divider {
         width: 100%;
         border-top: 2px solid #cecece;
+        box-sizing: border-box;
     }
 
     h1 {
@@ -64,6 +65,7 @@
         gap: 7px;
         width: auto;
         flex-wrap: wrap;
+        box-sizing: border-box;
 
         .likes {
             display: flex;
@@ -128,6 +130,7 @@
         justify-content: space-between;
         flex-direction: row;
         gap: 10px;
+        box-sizing: border-box;
 
         h2 {
             font-size: 18px;
@@ -155,30 +158,40 @@
         align-items: center;
         justify-content: space-between;
         gap: 7px;
+        box-sizing: border-box;
     }
 }
 
-@media screen and (1200px < width <= 1540px) {
-    .container {
-        width: 48%;
-    }
+.card_wrapper {
+    width: 50%;
+    box-sizing: border-box;
 }
 
-@media screen and (1000px < width <= 1200px) {
-    .container {
-        width: 48%;
+@media screen and (1200px < width) {
+    // .container {
+    //     width: 48%;
+    // }
+}
+
+@media screen and (width <= 1200px) {
+    // .container {
+    //     width: 48%;
+    // }
+
+    .card_wrapper {
+        width: 100%;
     }
 }
 
 @media screen and (768px < width <= 1000px) {
-    .container {
-        width: 100%;
-    }
+    // .container {
+    //     width: 100%;
+    // }
 }
 
 @media screen and (480px < width <= 768px) {
     .container {
-        width: 100%;
+        //width: 100%;
 
         h1 {
             font-size: 22px;
@@ -193,7 +206,7 @@
 
 @media screen and (width <= 480px) {
     .container {
-        width: 100%;
+        //width: 100%;
 
         h1 {
             font-size: 18px;

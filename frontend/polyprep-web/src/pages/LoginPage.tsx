@@ -22,6 +22,7 @@ export const LoginPage = (params: IProtectedPage) => {
       } else {
         (async () => {
           await validateTokens()
+          .then((resp) => setIsLoading(false))
           .catch((err) => {
             (async () => {
               await authCheck(params.next_page)

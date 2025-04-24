@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import Card from '../components/Card';
 import styles from './MainPage.module.scss'
+import cardStyles from '../components/Card.module.scss'
 import { getRandomPosts, IPost, IRandomPosts } from '../server-api/posts';
 import Loader from '../components/Loader';
+import Masonry from 'react-layout-masonry';
 
 const MainPage = () => {
   const [randomPosts, setRandomPosts] = useState<IRandomPosts>();
@@ -24,7 +26,7 @@ const MainPage = () => {
     
   return (
     <div className={styles.container}>
-      <div className={styles.cards_container}>
+      {/* <div className={styles.cards_container}>
         {
             isLoading ?
               <Loader />
@@ -50,7 +52,38 @@ const MainPage = () => {
                 }
               </>
           }
-      </div>
+      </div> */}
+      
+      {
+        isLoading ?
+          <Loader />
+        :
+          <Masonry
+            columns={{640:1, 1200: 2}}
+            gap={20}
+            className={styles.cards_container}
+            columnProps={{
+              className: cardStyles.card_wrapper
+            }}
+          >
+            {
+              randomPosts?.posts.map((item) => 
+                <Card 
+                  key={item.id}
+                  id={item.id}
+                  created_at={item.created_at}
+                  updated_at={item.updated_at}
+                  scheduled_at={item.scheduled_at}
+                  author_id={item.author_id}
+                  title={item.title} 
+                  text={item.text}
+                  public={item.public}
+                  hashtages={item.hashtages}
+                />
+              )
+            }
+          </Masonry>
+        }
     </div>
   )
 }

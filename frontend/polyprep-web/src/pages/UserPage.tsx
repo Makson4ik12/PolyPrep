@@ -8,6 +8,8 @@ import Card from "../components/Card";
 import React, { useEffect, useState } from "react";
 import { getPosts, IPost } from "../server-api/posts";
 import Loader from "../components/Loader";
+import Masonry from "react-layout-masonry";
+import cardStyles from '../components/Card.module.scss'
 
 const UserPage = () => {
   const current_state = store.getState().auth;
@@ -59,17 +61,7 @@ const UserPage = () => {
       </div>
       
       <div className={viewFavourites ? styles.cards_container : styles.cards_container_hidden}>
-        <Card 
-          id={1}
-          created_at={1745160699283}
-          updated_at={1745160699283}
-          scheduled_at={1745160699283}
-          author_id="123"
-          title='Конспекты по кмзи от Пупки Лупкиной' 
-          text='Представляю вам свои гадкие конспекты по вышматы или не вышмату не знаб но не по кмзи точно<br></br>Да, именно так'
-          public={true}
-          hashtages={["#hype", "#math", "#hochy5"]}
-        />
+        {/* TODO */}
       </div>
 
       <div className={styles.title_razdel} onClick={() => setViewMyPosts(prev => !prev)}>
@@ -77,33 +69,38 @@ const UserPage = () => {
         <img src={!viewMyPosts ? IconArrowDown : IconArrowUp} alt='arrow' />
       </div>
 
-      <div className={viewMyPosts ? styles.cards_container : styles.cards_container_hidden}>
-        {
-          isLoading ?
-            <Loader />
-          :
-            userPosts?.length === 0 ? <p>У вас еще нет постов</p>
-              :
-            <>
-              {
-                userPosts?.map((item) => 
-                  <Card 
-                    key={item.id}
-                    id={item.id}
-                    created_at={item.created_at}
-                    updated_at={item.updated_at}
-                    scheduled_at={item.scheduled_at}
-                    author_id={item.author_id}
-                    title={item.title} 
-                    text={item.text}
-                    public={item.public}
-                    hashtages={item.hashtages}
-                  />
-                )
-              }
-            </>
+      {
+        isLoading ?
+          <Loader />
+        :
+          userPosts?.length === 0 ? <p>У вас еще нет постов</p>
+            :
+              <Masonry
+                columns={{640:1, 1200: 2}}
+                gap={20}
+                className={viewMyPosts ? styles.cards_container : styles.cards_container_hidden}
+                columnProps={{
+                  className: cardStyles.card_wrapper
+                }}
+              >
+                {
+                  userPosts?.map((item) => 
+                    <Card 
+                      key={item.id}
+                      id={item.id}
+                      created_at={item.created_at}
+                      updated_at={item.updated_at}
+                      scheduled_at={item.scheduled_at}
+                      author_id={item.author_id}
+                      title={item.title} 
+                      text={item.text}
+                      public={item.public}
+                      hashtages={item.hashtages}
+                    />
+                  )
+                }
+              </Masonry>
         }
-      </div>
     </div>
   );
 }
