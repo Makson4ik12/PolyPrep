@@ -12,7 +12,7 @@ import { IPost } from '../server-api/posts';
 import store from '../redux-store/store';
 import { deleteLike, getPostLikes, ILike, ILikes, postLike } from '../server-api/likes';
 import { useEffect, useState } from 'react';
-import Loader from './Loader';
+import Loader, { MiniLoader } from './Loader';
 
 const Card = (data: IPost) => {
   const navigate = useNavigate();
@@ -62,55 +62,54 @@ const Card = (data: IPost) => {
 
   return (
     <div className={styles.container} onClick={() => navigate('/post/view/' + data.id)}>
-      {
-        isLoading ? <Loader />
-        :
-          <>
-            <div className={styles.top}>
-              <div className={styles.lin_container}>
-                <img src={IconUser} alt='user' className={styles.user_icon}></img>
-                {
-                  screenSize.width > screenSizes.__1200.width ?
-                    <p><b>{ data.author_id === userData.uid ? "You" : "SomeUser" }</b> | { data.created_at ? getDate(data.created_at) : "null" }</p>
-                  :
-                    <p><b>{ data.author_id === userData.uid ? "You" : "SomeUser" }</b><br></br>{ data.created_at ? getDate(data.created_at) : "null" }</p>
-                }
-                
-              </div>
-            
-              <img src={IconFavourite} className={styles.btns} alt='favourite'></img>
-            </div>
-
-            <div className={styles.lin_container}>
-              {
-                data.hashtages.map((item) => 
-                  <Badge text={item} key={item}/>
-                )
-              }
-            </div>
-
-            <h1>{data.title}</h1>
+      <div className={styles.top}>
+        <div className={styles.lin_container}>
+          <img src={IconUser} alt='user' className={styles.user_icon}></img>
+          {
+            screenSize.width > screenSizes.__1200.width ?
+              <p><b>{ data.author_id === userData.uid ? "You" : "SomeUser" }</b> | { data.created_at ? getDate(data.created_at) : "null" }</p>
+            :
+              <p><b>{ data.author_id === userData.uid ? "You" : "SomeUser" }</b><br></br>{ data.created_at ? getDate(data.created_at) : "null" }</p>
+          }
           
-            <p>{data.text}</p>
-            
-            <div className={styles.bottom}>
-              <div className={styles.lin_container}>
-                <div className={ userLike ? styles.likes_liked : styles.likes} onClick={(e) => handleOnClick(e)}                >
-                  <p>{ likes?.count }</p>
-                  <img src={IconUnlike} className={styles.like_btn} alt='like'></img>
-                </div>
-                <p>|</p>
-                
-                <img src={IconComments} className={styles.btns} alt='comments'></img>
-              </div>
-
-              
-              <img src={IconShare} className={styles.btns} alt='share'></img>
-              
-            </div>
-          </>
-      }
+        </div>
       
+        <img src={IconFavourite} className={styles.btns} alt='favourite'></img>
+      </div>
+
+      <div className={styles.lin_container}>
+        {
+          data.hashtages.map((item) => 
+            <Badge text={item} key={item}/>
+          )
+        }
+      </div>
+
+      <h1>{data.title}</h1>
+    
+      <p>{data.text}</p>
+      
+      <div className={styles.bottom}>
+        <div className={styles.lin_container}>
+          {
+            isLoading ? <MiniLoader/>
+              :
+            <>
+              <div className={ userLike ? styles.likes_liked : styles.likes} onClick={(e) => handleOnClick(e)}                >
+                <p>{ likes?.count }</p>
+                <img src={IconUnlike} className={styles.like_btn} alt='like'></img>
+              </div>
+              <p>|</p>
+              
+              <img src={IconComments} className={styles.btns} alt='comments'></img>
+            </>
+          }
+          
+        </div>
+        
+        <img src={IconShare} className={styles.btns} alt='share'></img>
+        
+      </div>
     </div>
   )
 }

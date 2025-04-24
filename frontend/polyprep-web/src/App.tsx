@@ -18,7 +18,8 @@ import { validateTokens } from './server-api/auth';
 const App = () => {
   useEffect(() => {
       (async () => {
-        await validateTokens();
+        await validateTokens()
+        .catch((err) => console.log("non authorized"));
       }) ()
     }, []);
     
