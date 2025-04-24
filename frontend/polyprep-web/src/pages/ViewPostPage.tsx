@@ -56,7 +56,7 @@ const Comment = (data: IComment & ICommentMeta) => {
   const handleOnDelete = async () => {
     data.setIsLoading(true);
 
-    await deleteLike(data.id || -1)
+    await deleteComment(data.id || -1)
     .then((resp) => {
       data.updateComments();
     })
@@ -304,7 +304,7 @@ const ViewPostPage = () => {
 
             <div className={styles.lin_container}>
               <div className={ userLike ? styles.likes_liked : styles.likes} onClick={(e) => handleOnClick(e)}>
-                <p>1</p>
+                <p>{ likes?.count }</p>
                 <img src={IconUnlike} className={styles.like_btn} alt='like'></img>
               </div>
             </div>

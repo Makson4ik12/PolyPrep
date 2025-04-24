@@ -150,7 +150,7 @@ const NewPostPage = () => {
             type='text' 
             placeholder='#матан #крипта #хочу_зачет_по_бип' 
             maxLength={150}
-            pattern="^(#[a-zA-Z0-9_]{2,}\s*)+$"
+            pattern="^(#[a-zA-Zа-яА-ЯёЁ0-9_]{2,}\s*)+$"
             title="Хэштеги должны начинаться с # и содержать минимум 2 символа, используя только буквы, цифры и _"
             ref={hashtagesRef}
             onChange={handleHashtagsChange}
