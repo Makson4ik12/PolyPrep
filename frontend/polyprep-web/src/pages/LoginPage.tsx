@@ -29,8 +29,6 @@ export const LoginPage = (params: IProtectedPage) => {
               .catch((err) => console.log(err));
             }) ();
           });
-    
-          setIsLoading(false);
         }) ();
 
         

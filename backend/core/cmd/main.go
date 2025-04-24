@@ -42,28 +42,31 @@ func main() {
 			auth.POST("/refresh", handlers.RefreshToken)
 		}
 
+		api.GET("/post", handlers.GetPost)
+		api.GET("/post/search", handlers.SearchPosts)
+		api.GET("/post/random", handlers.GetRandomPosts)
+
+		api.GET("/comment", handlers.GetComments)
+		api.GET("/like", handlers.GetLikes)
+		api.GET("/user", handlers.GetUser)
+		api.GET("/includes", handlers.GetIncludes)
+
 		api.Use(middleware.AuthMiddleware())
 		{
-			api.GET("/post", handlers.GetPost)
+
 			api.POST("/post", handlers.CreatePost)
 			api.PUT("/post", handlers.UpdatePost)
 			api.DELETE("/post", handlers.DeletePost)
-			api.GET("/post/search", handlers.SearchPosts)
-			api.GET("/post/random", handlers.GetRandomPosts)
 
-			api.GET("/comment", handlers.GetComments)
 			api.POST("/comment", handlers.CreateComment)
 			api.PUT("/comment", handlers.UpdateComment)
 			api.DELETE("/comment", handlers.DeleteComment)
 
-			api.GET("/like", handlers.GetLikes)
 			api.POST("/like", handlers.LikePost)
 			api.DELETE("/like", handlers.DeleteLike)
 
-			api.GET("/user", handlers.GetUser)
 			api.GET("/user/posts", handlers.GetAllUserPosts)
 
-			api.GET("/includes", handlers.GetIncludes)
 			api.POST("/includes", handlers.LoadIncludes)
 			api.DELETE("/includes", handlers.DeleteIncludes)
 

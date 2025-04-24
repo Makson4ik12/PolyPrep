@@ -12,8 +12,16 @@ import ErrorPage from './pages/ErrorPage';
 import SearchPage from './pages/SearchPage';
 import EditPostPage from './pages/EditPostPage';
 import ScrollToTop from './utils/ScrollToTop';
+import { useEffect } from 'react';
+import { validateTokens } from './server-api/auth';
 
 const App = () => {
+  useEffect(() => {
+      (async () => {
+        await validateTokens();
+      }) ()
+    }, []);
+    
   return (
     <BrowserRouter>
       <div className={styles.app}>
