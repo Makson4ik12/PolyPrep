@@ -96,7 +96,7 @@ func VariableAuthMiddleware() gin.HandlerFunc {
 		}
 
 		accessToken := strings.TrimPrefix(authHeader, "Bearer ")
-		if accessToken == "" || accessToken == "*" {
+		if accessToken == "" || accessToken == "*" || accessToken == "null" {
 			c.Next()
 		}
 

@@ -12,7 +12,8 @@ import { IPost } from '../server-api/posts';
 import store from '../redux-store/store';
 import { deleteLike, getPostLikes, ILike, ILikes, postLike } from '../server-api/likes';
 import { useEffect, useState } from 'react';
-import Loader, { MiniLoader } from './Loader';
+import IconPrivate from '../icons/private.svg'
+import IconPublic from '../icons/public.svg'
 
 const Card = (data: IPost) => {
   const navigate = useNavigate();
@@ -66,7 +67,10 @@ const Card = (data: IPost) => {
             :
               <p><b>{ data.author_id === userData.uid ? "You" : "SomeUser" }</b><br></br>{ data.created_at ? getDate(data.created_at) : "null" }</p>
           }
-          
+
+          { 
+            data?.public ? <img src={IconPrivate} className={styles.private_icon} alt='private'/> : <></>
+          }
         </div>
       
         <img src={IconFavourite} className={styles.btns} alt='favourite'></img>

@@ -18,6 +18,7 @@ import IconTime from '../icons/time.svg'
 import IconBolt from '../icons/bolt.svg'
 import { getPost, IPost, putPost } from '../server-api/posts';
 import { useLocation, useNavigate } from 'react-router-dom';
+import Loader from '../components/Loader';
 
 interface IInclude {
   name: string;
@@ -42,7 +43,7 @@ const EditPostPage = () => {
   const post_id = Number(location.pathname.slice(location.pathname.lastIndexOf('/') + 1, location.pathname.length) || -1);
 
   const [value, setValue] = useState("");
-  const [isPrivate, setIsPrivate] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(true);
   const [isScheduled, setIsScheduled] = useState(false);
   const [titleLen, setTitleLen] = useState(0);
   const [hashtagesLen, setHashtagsLen] = useState(0);
@@ -111,8 +112,8 @@ const EditPostPage = () => {
       .then((resp) => {
         setPostData(resp as IPost);
 
-        if (!postData?.public)
-          setIsPrivate(true);
+        if ((resp as IPost).public)
+          setIsPrivate(false);
       })
       .catch((error) => console.log("cannot update post"));
 
@@ -240,10 +241,15 @@ const EditPostPage = () => {
           <img src={IconBolt} alt='settings' />
           <h2>Последний шаг</h2>
         </div>
-
-        <button type='submit'>
-          <p>Сохранить изменения</p>
-        </button>
+        
+        {
+          isLoadingPost ? <Loader />
+          :
+            <button type='submit'>
+              <p>Сохранить изменения</p>
+            </button>
+        }
+        
       </form>
     </div>
   )
