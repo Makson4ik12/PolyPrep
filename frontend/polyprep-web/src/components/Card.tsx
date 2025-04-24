@@ -21,21 +21,16 @@ const Card = (data: IPost) => {
 
   const [likes, setLikes] = useState<ILikes>();
   const [userLike, setUserLike] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [isUpdate, updateComponent] = useState<boolean>(false);
   
   useEffect(() => {
     (async () => {
-      setIsLoading(true);
-
       await getPostLikes(data.id || -1)
       .then((resp) => {
         setLikes(resp as ILikes);
         setUserLike(((resp as ILikes).likes).some(item => item.user_id === userData.uid));
       })
       .catch((error) => console.log("cannot load post likes"));
-
-      setIsLoading(false);
     }) ()
   }, [isUpdate]);
 
@@ -91,20 +86,13 @@ const Card = (data: IPost) => {
       
       <div className={styles.bottom}>
         <div className={styles.lin_container}>
-          {
-            isLoading ? <MiniLoader/>
-              :
-            <>
-              <div className={ userLike ? styles.likes_liked : styles.likes} onClick={(e) => handleOnClick(e)}                >
-                <p>{ likes?.count }</p>
-                <img src={IconUnlike} className={styles.like_btn} alt='like'></img>
-              </div>
-              <p>|</p>
-              
-              <img src={IconComments} className={styles.btns} alt='comments'></img>
-            </>
-          }
+          <div className={ userLike ? styles.likes_liked : styles.likes} onClick={(e) => handleOnClick(e)}                >
+            <p>{ likes?.count }</p>
+            <img src={IconUnlike} className={styles.like_btn} alt='like'></img>
+          </div>
+          <p>|</p>
           
+          <img src={IconComments} className={styles.btns} alt='comments'></img>
         </div>
         
         <img src={IconShare} className={styles.btns} alt='share'></img>
