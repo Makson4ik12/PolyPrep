@@ -196,7 +196,7 @@ const ViewPostPage = () => {
       (async () => {
         setIsLoadingPost(true);
   
-        await getPostLikes(postData?.id || -1)
+        await getPostLikes(post_id)
         .then((resp) => {
           setLikes(resp as ILikes);
           setUserLike(((resp as ILikes).likes).some(item => item.user_id === userData.uid));
@@ -272,7 +272,7 @@ const ViewPostPage = () => {
                             <div className={styles.divider} />
 
                             <button className={styles.action_item}>
-                              <img src={IconEdit} className={styles.action_btn} alt='edit' onClick={() => navigate("/post/edit")}/>
+                              <img src={IconEdit} className={styles.action_btn} alt='edit' onClick={() => navigate("/post/edit/" + postData?.id)}/>
                               <p>Редактировать</p>
                             </button>
                           </>

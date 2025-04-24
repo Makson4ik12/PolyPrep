@@ -86,6 +86,7 @@ const EditPostPage = () => {
     setIsLoadingPost(true);
 
     await putPost({
+      id: post_id,
       title: formElements.title.value,
       text: formElements.text.value,
       public: !isPrivate,
