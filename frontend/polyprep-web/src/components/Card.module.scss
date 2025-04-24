@@ -121,6 +121,19 @@
                 }
             }
         }
+
+        .comments {
+            @extend .likes_liked;
+
+            &:hover {
+                background-color: black;
+                border: 2px solid black;
+
+                p {
+                    color: white;
+                }
+            }
+        }
     }
 
     .top {

@@ -14,6 +14,7 @@ import { deleteLike, getPostLikes, ILike, ILikes, postLike } from '../server-api
 import { useEffect, useState } from 'react';
 import IconPrivate from '../icons/private.svg'
 import IconPublic from '../icons/public.svg'
+import { getPostComments, IComment } from '../server-api/comments';
 
 const Card = (data: IPost) => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const Card = (data: IPost) => {
   const userData = store.getState().auth.userData;
 
   const [likes, setLikes] = useState<ILikes>();
+  const [comments, setComments] = useState<number>(0);
   const [userLike, setUserLike] = useState(false);
   const [isUpdate, updateComponent] = useState<boolean>(false);
   
@@ -34,6 +36,16 @@ const Card = (data: IPost) => {
       .catch((error) => console.log("cannot load post likes"));
     }) ()
   }, [isUpdate]);
+
+  useEffect(() => {
+    (async () => {
+      await getPostComments(data.id || -1)
+      .then((resp) => {
+        setComments((resp as IComment[]).length);
+      })
+      .catch((error) => console.log("cannot load post comments"));
+    }) ()
+  }, []);
 
   const handleOnClick = async (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     e.preventDefault();
@@ -69,7 +81,7 @@ const Card = (data: IPost) => {
           }
 
           { 
-            data?.public ? <img src={IconPrivate} className={styles.private_icon} alt='private'/> : <></>
+            !data?.public ? <img src={IconPrivate} className={styles.private_icon} alt='private'/> : <></>
           }
         </div>
       
@@ -90,13 +102,17 @@ const Card = (data: IPost) => {
       
       <div className={styles.bottom}>
         <div className={styles.lin_container}>
-          <div className={ userLike ? styles.likes_liked : styles.likes} onClick={(e) => handleOnClick(e)}                >
+          <div className={ userLike ? styles.likes_liked : styles.likes} onClick={(e) => handleOnClick(e)}>
             <p>{ likes?.count }</p>
             <img src={IconUnlike} className={styles.like_btn} alt='like'></img>
           </div>
           <p>|</p>
           
-          <img src={IconComments} className={styles.btns} alt='comments'></img>
+          <div className={styles.comments}>
+            <p>{ comments }</p>
+            <img src={IconComments} className={styles.like_btn} alt='comments'></img>
+          </div>
+          
         </div>
         
         <img src={IconShare} className={styles.btns} alt='share'></img>

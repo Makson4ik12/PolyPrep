@@ -267,8 +267,8 @@ const ViewPostPage = () => {
                           <>
                             <div className={styles.divider} />
 
-                            <button className={styles.action_item}>
-                              <img src={IconEdit} className={styles.action_btn} alt='edit' onClick={() => navigate("/post/edit/" + postData?.id)}/>
+                            <button className={styles.action_item} onClick={() => navigate("/post/edit/" + postData?.id)}>
+                              <img src={IconEdit} className={styles.action_btn} alt='edit'/>
                               <p>Редактировать</p>
                             </button>
                           </>
@@ -321,24 +321,29 @@ const ViewPostPage = () => {
       <h2>Комментарии</h2>
 
       <div className={styles.includes_container}>
-        <form onSubmit={handleOnSubmitComment}>
-          <textarea 
-            id="comment" 
-            name="comment" 
-            placeholder='Крутой конспект!' 
-            maxLength={350}
-            required
-            ref={commentRef}
-            onChange={handleCommentChange}
-            spellCheck={false}
-            autoCapitalize='on'
-            >
-          </textarea>
+        {
+          userData.uid ? 
+            <form onSubmit={handleOnSubmitComment}>
+              <textarea 
+                id="comment" 
+                name="comment" 
+                placeholder='Крутой конспект!' 
+                maxLength={350}
+                required
+                ref={commentRef}
+                onChange={handleCommentChange}
+                spellCheck={false}
+                autoCapitalize='on'
+                >
+              </textarea>
 
-          <button type='submit'>
-            <img src={IconSend} alt='send' />
-          </button>
-        </form>
+              <button type='submit'>
+                <img src={IconSend} alt='send' />
+              </button>
+            </form>
+          :
+          <p className={styles.access_restricted}> <img src={IconPrivate} alt='send' />Авторизируйтесь, для того чтобы оставить новый комментарий</p>
+        }
         
         <div className={styles.divider} />
 
