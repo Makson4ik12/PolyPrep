@@ -339,8 +339,6 @@ func SearchPosts(c *gin.Context) {
 
 //------------------------------GET/random------------------------------//
 
-//------------------------------GET/random------------------------------//
-
 func GetRandomPosts(c *gin.Context) {
 	countStr := c.Query("count")
 	count, err := strconv.Atoi(countStr)

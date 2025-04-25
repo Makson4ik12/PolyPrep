@@ -48,3 +48,10 @@ type User struct {
 	Email    string `gorm:"size:100" json:"email"`
 	Icon     string `gorm:"type:text" json:"icon"`
 }
+
+type Favourite struct {
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	UserID    string    `gorm:"not null" json:"user_id"`
+	PostID    uint      `gorm:"not null" json:"post_id"`
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
+}
