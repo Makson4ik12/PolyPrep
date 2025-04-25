@@ -158,51 +158,45 @@ func AddFavourites(c *gin.Context) {
 	})
 }
 
-//------------------------------DELETE/favourite------------------------------//
-
+// ------------------------------DELETE/favourite------------------------------//
 func DeleteFromFavourites(c *gin.Context) {
 
-	favID, err := strconv.Atoi(c.Query("id"))
-	if err != nil || favID <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{ //400
-			"message": "Invalid favourite ID",
+	postID, err := strconv.Atoi(c.Query("post_id"))
+	if err != nil || postID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid post ID",
 		})
 		return
 	}
 
 	currentUserID := c.GetString("user_id")
 	if currentUserID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{ //401
+		c.JSON(http.StatusUnauthorized, gin.H{
 			"message": "User not authenticated",
 		})
 		return
 	}
 
 	var favourite models.Favourite
-	if err := database.DB.First(&favourite, favID).Error; err != nil {
+	if err := database.DB.Where("user_id = ? AND post_id = ?", currentUserID, postID).
+		First(&favourite).Error; err != nil {
+
 		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusForbidden, gin.H{ //403
-				"message": "Favourite not found",
+			c.JSON(http.StatusForbidden, gin.H{ // 403
+				"message": "Favourite not found for this post",
 			})
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{ //500
+			c.JSON(http.StatusInternalServerError, gin.H{
 				"message": "Database error",
 			})
 		}
 		return
 	}
 
-	if favourite.UserID != currentUserID {
-		c.JSON(http.StatusForbidden, gin.H{ //403
-			"message": "You can only delete your own favourites",
-		})
-		return
-	}
-
 	var post models.Post
-	if err := database.DB.First(&post, favourite.PostID).Error; err == nil {
+	if err := database.DB.First(&post, postID).Error; err == nil {
 		if !post.Public && post.AuthorID != currentUserID {
-			c.JSON(http.StatusMethodNotAllowed, gin.H{ //405
+			c.JSON(http.StatusMethodNotAllowed, gin.H{
 				"message": "No access to private post favourites",
 			})
 			return
@@ -210,13 +204,13 @@ func DeleteFromFavourites(c *gin.Context) {
 	}
 
 	if err := database.DB.Delete(&favourite).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{ //500
+		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed to delete favourite",
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{ //200
+	c.JSON(http.StatusOK, gin.H{
 		"message": "Favourite deleted successfully",
 	})
 }
