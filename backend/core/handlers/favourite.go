@@ -84,7 +84,7 @@ func GetFavourites(c *gin.Context) {
 }
 
 // ------------------------------POST/favourite------------------------------//
-func AddFavourite(c *gin.Context) {
+func AddFavourites(c *gin.Context) {
 
 	currentUserID := c.GetString("user_id")
 	if currentUserID == "" {
@@ -158,7 +158,7 @@ func AddFavourite(c *gin.Context) {
 
 //------------------------------DELETE/favourite------------------------------//
 
-func DeleteFavourite(c *gin.Context) {
+func DeleteFromFavourites(c *gin.Context) {
 
 	favID, err := strconv.Atoi(c.Query("id"))
 	if err != nil || favID <= 0 {
