@@ -38,7 +38,7 @@ func GetFavourites(c *gin.Context) {
 	}
 
 	if err := database.DB.Table("favourites").
-		Select("id, UNIX_TIMESTAMP(created_at) as created_at, post_id").
+		Select("id, EXTRACT(EPOCH FROM created_at)::bigint as created_at, post_id").
 		Where("user_id = ?", currentUserID).
 		Scan(&favourites).Error; err != nil {
 
