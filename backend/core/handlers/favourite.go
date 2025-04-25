@@ -161,10 +161,10 @@ func AddFavourites(c *gin.Context) {
 // ------------------------------DELETE/favourite------------------------------//
 func DeleteFromFavourites(c *gin.Context) {
 
-	postID, err := strconv.Atoi(c.Query("post_id"))
-	if err != nil || postID <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Invalid post ID",
+	postID, err := strconv.ParseUint(c.Query("id"), 10, 32) //get id(integer)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{ //400
+			"message": "Invalid post ID format",
 		})
 		return
 	}
