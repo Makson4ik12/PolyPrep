@@ -44,6 +44,7 @@ func GetFavourites(c *gin.Context) {
 
 		c.JSON(http.StatusInternalServerError, gin.H{ //500
 			"message": "Failed to get favourites",
+			"error":   err.Error(),
 		})
 		return
 	}
@@ -143,6 +144,7 @@ func AddFavourites(c *gin.Context) {
 	if err := database.DB.Create(&favourite).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed to add to favourites",
+			"error":   err.Error(),
 		})
 		return
 	}
