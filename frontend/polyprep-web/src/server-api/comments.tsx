@@ -27,6 +27,21 @@ export async function postComment(comment: IComment) {
   }
 }
 
+export async function putComment(comment: IComment) {
+  try {
+    await validateTokens();
+    
+    const response = await axios.put(
+    `${SERVER_ADDRESS}${SERVER_API_VERSION}comment`, comment,
+    { headers: { Authorization: `Bearer ${store.getState().auth.authTokens.access_token}` } }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    throw error;
+  }
+}
+
 export async function getPostComments(comment_id: number) {
   try {
     const response = await axios.get(

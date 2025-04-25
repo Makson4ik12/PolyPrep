@@ -21,6 +21,7 @@
     p {
         font-size: 18px;
         white-space: pre-wrap;
+        line-height: 30px;
     }
 
     img {
@@ -379,6 +380,10 @@
     .container {
         gap: 20px;
 
+        p {
+            line-height: 25px;
+        }
+
         h2 {
             font-size: 21px;
         }
@@ -467,6 +472,10 @@
 @media screen and (width <= 480px) {
     .container {
         gap: 20px;
+
+        p {
+            line-height: 25px;
+        }
 
         h2 {
             font-size: 19px;
