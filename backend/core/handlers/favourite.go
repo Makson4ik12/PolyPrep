@@ -147,7 +147,13 @@ func AddFavourite(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Post added to favourites successfully",
+		"data": gin.H{
+			"id":      favourite.ID,
+			"post_id": favourite.PostID,
+		},
+	})
 }
 
 //------------------------------DELETE/favourite------------------------------//
@@ -208,7 +214,9 @@ func DeleteFavourite(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusOK, gin.H{ //200
+		"message": "Favourite deleted successfully",
+	})
 }
 
 // ------------------------------GET/favourite/check------------------------------//
@@ -262,5 +270,8 @@ func CheckFavourite(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusOK, gin.H{ //200
+		"message":      "Post is in favourites",
+		"favourite_id": favourite.ID,
+	})
 }
