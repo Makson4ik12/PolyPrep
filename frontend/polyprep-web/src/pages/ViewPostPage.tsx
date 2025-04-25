@@ -7,17 +7,19 @@ import IconUser from '../icons/user.svg'
 import IconPrivate from '../icons/private.svg'
 import IconPublic from '../icons/public.svg'
 import { useLocation, useNavigate } from 'react-router-dom';
-import { deleteComment, getPostComments, IComment, postComment } from '../server-api/comments';
+import { deleteComment, getPostComments, IComment, postComment, putComment } from '../server-api/comments';
 import { getDate } from '../utils/UtilFunctions';
 import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
 import IconArrowDown from '../icons/arrow_down.svg'
 import IconArrowUp from '../icons/arrow_up.svg'
 import IconDownload from '../icons/download.svg'
 import IconDelete from '../icons/trash.svg'
+import IconCancel from '../icons/delete.svg'
 import IconSend from '../icons/send.svg'
 import IconShare from '../icons/share.svg'
 import IconFavourite from '../icons/favourite.svg'
 import IconEdit from '../icons/edit.svg'
+import IconSuccess from '../icons/success.svg'
 import IconContextMenu from '../icons/context_menu.svg'
 import { Badge } from '../components/Badge';
 import IconUnlike from '../icons/unlike.svg'
@@ -52,6 +54,11 @@ interface ICommentMeta {
 
 const Comment = (data: IComment & ICommentMeta) => {
   const userData = store.getState().auth.userData;
+  const [isEdit, setIsEdit] = useState(false);
+  const commentRef = useRef<HTMLTextAreaElement>(null);
+  const [value, setValue] = useState(data.text);
+
+  useAutosizeTextArea(commentRef.current, value);
 
   const handleOnDelete = async () => {
     data.setIsLoading(true);
@@ -65,6 +72,32 @@ const Comment = (data: IComment & ICommentMeta) => {
     data.setIsLoading(false);
   }
 
+  const handleCommentChange = (evt: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = evt.target?.value;
+    setValue(val);
+  };
+
+  const handleOnEdit = async () => {
+    if (commentRef.current?.value.length == 0) {
+      setValue(data.text);
+      return;
+    }
+
+    await putComment({
+      id: data.id,
+      text: commentRef.current?.value || data.text,
+      post_id: data.post_id
+    })
+    .then ((resp) => {
+      setValue(commentRef.current?.value || data.text);
+      setIsEdit(false);
+    })
+    .catch((error) => { 
+      setIsEdit(false);
+      console.log("comment not updated");
+    });
+  }
+
   return (
     <div className={styles.info_container}>
       <div className={styles.top_info}>
@@ -76,16 +109,45 @@ const Comment = (data: IComment & ICommentMeta) => {
         {
           data?.author_id === userData.uid ?
             <div className={styles.lin_container}>
-              <img src={IconEdit} alt='edit' className={styles.action_btn}/>
-              <img src={IconDelete} alt='delete' onClick={() => handleOnDelete()}/>
+              {
+                isEdit ? 
+                  <>
+                    <img src={IconCancel} alt='cancel' className={styles.action_btn} onClick={() => setIsEdit(false)}/>
+                    <img src={IconSuccess} alt='success' className={styles.action_btn} onClick={() => handleOnEdit()}/>
+                  </>
+                :
+                  <>
+                    <img src={IconEdit} alt='edit' className={styles.action_btn} onClick={() => setIsEdit(true)}/>
+                    <img src={IconDelete} alt='delete' className={styles.action_btn} onClick={() => handleOnDelete()}/>
+                  </>
+              }
             </div>
           :
             <></>
         }
         
       </div>
-
-      <p className={styles.text}>{data.text}</p>
+      
+      {
+        isEdit ? 
+          <form>
+            <textarea 
+              id="edit-comment" 
+              name="comment" 
+              placeholder='Крутой конспект!' 
+              maxLength={350}
+              required
+              ref={commentRef}
+              onChange={handleCommentChange}
+              spellCheck={false}
+              defaultValue={value}
+              autoCapitalize='on'
+              >
+            </textarea>
+          </form>
+        :
+          <p className={styles.text}>{value}</p>
+      }
     </div>
   )
 }
@@ -157,6 +219,8 @@ const ViewPostPage = () => {
       .then ((resp) => {
         setIsLoadingComments(false);
         updateComments(prev => !prev);
+        setValue("");
+        commentRef.current ? commentRef.current.value = "" : console.log("null comment ref");
       })
       .catch((error) => { 
         setIsLoadingComments(false);
@@ -319,7 +383,12 @@ const ViewPostPage = () => {
       </div>
 
       <h2>Комментарии</h2>
-
+      {/* 
+      
+      TODO: очистить input после отправки коммента
+      Реализовать редактирование комментов
+      
+      */}
       <div className={styles.includes_container}>
         {
           userData.uid ? 
