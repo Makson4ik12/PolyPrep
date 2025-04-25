@@ -144,18 +144,11 @@ func AddFavourites(c *gin.Context) {
 	if err := database.DB.Create(&favourite).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed to add to favourites",
-			"error":   err.Error(),
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Post added to favourites successfully",
-		"data": gin.H{
-			"id":      favourite.ID,
-			"post_id": favourite.PostID,
-		},
-	})
+	c.JSON(http.StatusOK, gin.H{})
 }
 
 // ------------------------------DELETE/favourite------------------------------//
@@ -267,7 +260,6 @@ func CheckFavourite(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{ //200
-		"message":      "Post is in favourites",
-		"favourite_id": favourite.ID,
+		"message": "Post is in favourites",
 	})
 }
