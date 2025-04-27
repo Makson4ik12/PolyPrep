@@ -324,6 +324,15 @@ const ViewPostPage = () => {
     }
   }, [postData]);
 
+  useEffect(() => {
+      if (location.hash) {
+        const element = document.getElementById(location.hash.replace('#', ''));
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    }, [location, isLoadingComments]);
+
   return (
     <div className={styles.container}>
       {
@@ -445,7 +454,7 @@ const ViewPostPage = () => {
         <Include name='photo-2002020.png' />
       </div>
 
-      <h2>Комментарии</h2>
+      <h2 id='comments'>Комментарии</h2>
       {/* 
       
       TODO: очистить input после отправки коммента

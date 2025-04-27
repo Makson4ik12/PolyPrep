@@ -5,14 +5,15 @@ import IconUser from '../../icons/user.svg'
 import IconFavourite from '../../icons/favourite.svg'
 import IconPosts from '../../icons/posts.svg'
 import { Link } from 'react-router-dom';
-import store from '../../redux-store/store';
+import { useAppSelector } from '../../redux-store/hooks'
 
 interface IMobileHeader {
   onClose: () => void;
 }
 
 export default function MobileHeader(params: IMobileHeader) {
-  const userdata = store.getState().auth.userData;
+  const userFirstName = useAppSelector(data => data.auth.userData.first_name);
+  const userLastName = useAppSelector(data => data.auth.userData.last_name);
   
   return (
     <header className={styles.header_style}>
@@ -53,7 +54,7 @@ export default function MobileHeader(params: IMobileHeader) {
 
         <div className={styles.user}>
           <Link onClick={() => params.onClose()} to="/user">
-            <p> { userdata.preferred_username ? userdata.preferred_username : "Вход" }</p>
+            <p> { userFirstName && userLastName ? userFirstName + " " + userLastName : "Вход" }</p>
             <img src={IconUser} alt='user' />
           </Link>
         </div>

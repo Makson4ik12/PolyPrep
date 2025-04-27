@@ -13,7 +13,8 @@ import MobileHeader from './modals/MobileHeader';
 import { useAppSelector } from '../redux-store/hooks';
 
 const Header = () => {
-  const userDataSelector = useAppSelector(data => data.auth.userData.first_name + " " + data.auth.userData.last_name);
+  const userFirstName = useAppSelector(data => data.auth.userData.first_name);
+  const userLastName = useAppSelector(data => data.auth.userData.last_name);
   const screenSize = HandleResponsiveView();
   const [viewMobileMenu, setViewMobileMenu] = useState(false);
   
@@ -45,7 +46,7 @@ const Header = () => {
 
               <div className={styles.user}>
                 <Link to="/user">
-                  <p> { userDataSelector ? userDataSelector : "Вход" }</p>
+                  <p> { userFirstName && userLastName ? userFirstName + " " + userLastName : "Вход" }</p>
                   <img src={IconUser} alt='user' />
                 </Link>
               </div>

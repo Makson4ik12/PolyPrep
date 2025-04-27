@@ -151,7 +151,11 @@ const Card = (data: IPost) => {
           </div>
           <p>|</p>
           
-          <div className={styles.comments}>
+          <div className={styles.comments} onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            navigate('/post/view/' + data.id + "#comments");
+          }}>
             <p>{ comments }</p>
             <img src={IconComments} className={styles.like_btn} alt='comments'></img>
           </div>
