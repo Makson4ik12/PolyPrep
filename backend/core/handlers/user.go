@@ -49,7 +49,6 @@ func GetUser(c *gin.Context) {
 			log.Printf("Database error: %v", result.Error)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"message": "Database error",
-				"error":   result.Error.Error(),
 			})
 		}
 		return
@@ -85,7 +84,6 @@ func GetAllUserPosts(c *gin.Context) {
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"message": "Database error",
-				"error":   result.Error.Error(),
 			})
 		}
 		return

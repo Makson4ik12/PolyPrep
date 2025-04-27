@@ -77,9 +77,9 @@ func main() {
 			api.POST("/includes", handlers.LoadIncludes)
 			api.DELETE("/includes", handlers.DeleteIncludes)
 
-			api.GET("/favourite", handlers.GetFavorite)
-			api.POST("/favourite", handlers.MakeFavorite)
-			api.DELETE("/favourite", handlers.DeleteFromFavorite)
+			api.GET("/favourite", handlers.GetFavourites)
+			api.POST("/favourite", handlers.AddFavourites)
+			api.DELETE("/favourite", handlers.DeleteFromFavourites)
 		}
 	}
 
