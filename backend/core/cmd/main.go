@@ -60,7 +60,7 @@ func main() {
 
 		api.Use(middleware.AuthMiddleware())
 		{
-			api.GET("/get", handlers.GetSharePost)
+			api.GET("/post/shared", handlers.GetSharePost)
 			api.POST("/post", handlers.CreatePost)
 			api.PUT("/post", handlers.UpdatePost)
 			api.DELETE("/post", handlers.DeletePost)
