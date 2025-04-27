@@ -99,19 +99,19 @@ func CreateShareLink(c *gin.Context) {
 	}
 
 	var request struct {
-		NextID    uint  `json:"next_id"`
-		CaptersAt int64 `json:"capters_at"`
+		PostID    uint  `json:"post_id" binding:"required"`
+		ExpiresAt int64 `json:"expires_at"`
 	}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Invalid request body",
+			"message": "Invalid request body: " + err.Error(),
 		})
 		return
 	}
 
 	var post models.Post
-	if err := database.DB.First(&post, request.NextID).Error; err != nil {
+	if err := database.DB.First(&post, request.PostID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusForbidden, gin.H{
 				"message": "Post not found",
@@ -139,7 +139,7 @@ func CreateShareLink(c *gin.Context) {
 		PostID:    post.ID,
 		UUID:      formattedUUID,
 		UserID:    currentUserID,
-		ExpiresAt: time.Now().Add(30 * 24 * time.Hour),
+		ExpiresAt: time.Unix(request.ExpiresAt, 0),
 	}
 
 	if err := database.DB.Create(&share).Error; err != nil {
@@ -150,7 +150,7 @@ func CreateShareLink(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"valid": share.UUID,
+		"outId": share.UUID,
 	})
 }
 
