@@ -10,6 +10,7 @@ import { getPosts, IPost } from "../server-api/posts";
 import Loader from "../components/Loader";
 import Masonry from "react-layout-masonry";
 import cardStyles from '../components/Card.module.scss'
+import { getFavouritePosts, IFavourite } from "../server-api/favourites";
 
 const UserPage = () => {
   const current_state = store.getState().auth;
@@ -18,6 +19,7 @@ const UserPage = () => {
   const [viewMyPosts, setViewMyPosts] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [userPosts, setUserPosts] = useState<IPost[]>([]);
+  const [favouritePosts, setFavouritePosts] = useState<IFavourite[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -28,6 +30,20 @@ const UserPage = () => {
         setUserPosts(resp as IPost[]);
       })
       .catch((error) => console.log("cannot load user posts"));
+
+      setIsLoading(false);
+    }) ()
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      setIsLoading(true);
+
+      await getFavouritePosts()
+      .then((resp) => {
+        setFavouritePosts(resp as IFavourite[]);
+      })
+      .catch((error) => console.log("cannot load favourite posts"));
 
       setIsLoading(false);
     }) ()
@@ -61,7 +77,35 @@ const UserPage = () => {
       </div>
       
       <div className={viewFavourites ? styles.cards_container : styles.cards_container_hidden}>
-        {/* TODO */}
+        {
+          // favouritePosts?.length === 0 ? <p>У вас нет избранных постов :(</p>
+          // :
+          //   <Masonry
+          //     columns={{640:1, 1200: 2}}
+          //     gap={20}
+          //     className={viewMyPosts ? styles.cards_container : styles.cards_container_hidden}
+          //     columnProps={{
+          //       className: cardStyles.card_wrapper
+          //     }}
+          //   >
+          //     {
+          //       userPosts?.map((item) => 
+          //         <Card 
+          //           key={item.id}
+          //           id={item.id}
+          //           created_at={item.created_at}
+          //           updated_at={item.updated_at}
+          //           scheduled_at={item.scheduled_at}
+          //           author_id={item.author_id}
+          //           title={item.title} 
+          //           text={item.text}
+          //           public={item.public}
+          //           hashtages={item.hashtages}
+          //         />
+          //       )
+          //     }
+          //   </Masonry>
+        }
       </div>
 
       <div className={styles.title_razdel} onClick={() => setViewMyPosts(prev => !prev)}>

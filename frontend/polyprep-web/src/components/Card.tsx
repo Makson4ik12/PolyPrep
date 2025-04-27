@@ -13,8 +13,9 @@ import store from '../redux-store/store';
 import { deleteLike, getPostLikes, ILike, ILikes, postLike } from '../server-api/likes';
 import { useEffect, useState } from 'react';
 import IconPrivate from '../icons/private.svg'
-import IconPublic from '../icons/public.svg'
+import IconFavouriteFilled from '../icons/favourite_fill.svg'
 import { getPostComments, IComment } from '../server-api/comments';
+import { checkPostIsFavourite, deleteFavourite, postFavourite } from '../server-api/favourites';
 
 const Card = (data: IPost) => {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ const Card = (data: IPost) => {
   const [comments, setComments] = useState<number>(0);
   const [userLike, setUserLike] = useState(false);
   const [isUpdate, updateComponent] = useState<boolean>(false);
+  const [isFavourite, setIsFavourite] = useState<boolean>(false);
   
   useEffect(() => {
     (async () => {
@@ -44,6 +46,16 @@ const Card = (data: IPost) => {
         setComments((resp as IComment[]).length);
       })
       .catch((error) => console.log("cannot load post comments"));
+    }) ()
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      await checkPostIsFavourite(data.id || -1)
+      .then((resp) => {
+        setIsFavourite(true);
+      })
+      .catch((error) => console.log("not favorite"));
     }) ()
   }, []);
 
@@ -68,6 +80,25 @@ const Card = (data: IPost) => {
     }
   }
 
+  const handleFavourite = async (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (isFavourite) {
+      await deleteFavourite(data.id || -1)
+      .then((resp) => {
+        setIsFavourite(false);
+      })
+      .catch((error) => console.log("cannot delete favourite post"));
+    } else {
+      await postFavourite(data.id || -1)
+      .then((resp) => {
+        setIsFavourite(true);
+      })
+      .catch((error) => console.log("cannot favourite post"));
+    }
+  }
+
   return (
     <div className={styles.container} onClick={() => navigate('/post/view/' + data.id)}>
       <div className={styles.top}>
@@ -85,7 +116,7 @@ const Card = (data: IPost) => {
           }
         </div>
       
-        <img src={IconFavourite} className={styles.btns} alt='favourite'></img>
+        <img src={ isFavourite ? IconFavouriteFilled : IconFavourite} className={styles.btns} alt='favourite' onClick={(e) => handleFavourite(e)}></img>
       </div>
 
       <div className={styles.lin_container}>

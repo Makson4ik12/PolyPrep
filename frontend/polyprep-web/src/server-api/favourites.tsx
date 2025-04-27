@@ -4,15 +4,9 @@ import { SERVER_ADDRESS, SERVER_API_VERSION } from "./config";
 import store from "../redux-store/store";
 
 export interface IFavourite {
-  id?: number;
-  created_at?: number;
-  updated_at?: number;
-  scheduled_at?: number | null;
-  author_id?: string;
-  title: string;
-  text: string;
-  public: boolean;
-  hashtages: string[];
+  id: number;
+  created_at: number;
+  post_id: number;
 }
   
 export async function postFavourite(post_id: number) {
@@ -20,7 +14,7 @@ export async function postFavourite(post_id: number) {
     await validateTokens();
     
     const response = await axios.post(
-    `${SERVER_ADDRESS}${SERVER_API_VERSION}post`, { post_id: post_id},
+    `${SERVER_ADDRESS}${SERVER_API_VERSION}favourite`, { post_id: post_id},
     { headers: { Authorization: `Bearer ${store.getState().auth.authTokens.access_token}` } }
     );
 
@@ -64,7 +58,7 @@ export async function deleteFavourite(post_id: number) {
   try {
     await validateTokens();
     
-    const response = await axios.get(
+    const response = await axios.delete(
     `${SERVER_ADDRESS}${SERVER_API_VERSION}favourite?id=${post_id}`,
     { headers: { Authorization: `Bearer ${store.getState().auth.authTokens.access_token}` }}
     );

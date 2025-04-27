@@ -80,6 +80,7 @@ func main() {
 			api.GET("/favourite", handlers.GetFavourites)
 			api.POST("/favourite", handlers.AddFavourites)
 			api.DELETE("/favourite", handlers.DeleteFromFavourites)
+			api.GET("/favourite/check", handlers.CheckFavourite)
 		}
 	}
 
