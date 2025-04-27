@@ -24,6 +24,8 @@ tags:
 
   - name: "Пользователь"
 
+  - name: "Приватные посты"
+
 paths:
   /auth/check:
     post:
@@ -146,6 +148,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiError"
 
+
   /post:
     get:
       description: "Получение поста"
@@ -255,7 +258,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
-    
+
     delete:
       description: "Удаление поста"
       tags:
@@ -292,6 +295,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+
 
   /post/search:
     get:
@@ -387,6 +391,47 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+
+  /post/shared:
+    get:
+      description: "Полученить приватный пост по ссылке"
+      tags:
+        - "Посты"
+
+      parameters:
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+        
+        - in: query
+          name: uuid
+          description: uuid поста
+          required: true
+          schema:
+            type: string
+            example: "xxxx-xxxx-xxxx-xxxx"
+
+      responses:
+        200:
+          description: "Пост найден"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetPost"
+        
+        403:
+          description: "Ссылка не найдена / время жизни истекло"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
 
   /comment:
     get:
@@ -541,6 +586,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiError"
 
+
   /like:
     get:
       description: "Получение лайков поста"
@@ -657,6 +703,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiError"
 
+
   /include:
     get:
       description: "Получение вложений поста"
@@ -772,6 +819,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+
 
   /favourite:
     get:
@@ -917,6 +965,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiError"
 
+
   /user:
     get:
       description: "Получение данных какого-либо пользователя"
@@ -987,6 +1036,133 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+
+  
+  /shared:
+    get:
+      description: "Получить ссылку на приватный пост"
+      tags:
+        - "Приватные посты"
+
+      parameters:
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+        
+        - in: query
+          name: id
+          description: id поста
+          required: true
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: "Ссылка найдена"
+          content:
+            application/json:
+              schema:
+                required:
+                  - "uuid"
+                properties:
+                  uuid:
+                    type: "string"
+                    example: xxxx-xxxx-xxxx-xxxx
+        
+        403:
+          description: "Ссылка не создана"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    
+    post:
+      description: "Создать ссылку на приватный пост"
+      tags:
+        - "Приватные посты"
+
+      parameters:
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostPostShared"   
+        required: true
+
+      responses:
+        200:
+          description: "Успешно"
+          content:
+            application/json:
+              schema:
+                required:
+                  - "uuid"
+                properties:
+                  uuid:
+                    type: "string"
+                    example: xxxx-xxxx-xxxx-xxxx
+        
+        403:
+          description: "Пост не найден"
+
+        405:
+          description: "Нет доступа"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+    delete:
+      description: "Удалить ссылку на приватный пост"
+      tags:
+        - "Приватные посты"
+
+      parameters:
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+        
+        - in: query
+          name: uuid
+          description: uuid-ссылка
+          example: xxxx-xxxx-xxxx-xxxx
+          required: true
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: "Ссылка удалена"
+        
+        403:
+          description: "Ссылка не найдена / нет доступа"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
 
 components:
   securitySchemes:
@@ -1142,6 +1318,16 @@ components:
           post_id::
             type: "integer"
 
+
+    PostPostShared:
+      required:
+        - "post_id"
+        - "expires_at"
+      properties:
+        post_id:
+          type: "integer"
+        expires_at:
+          type: "integer"
 
     GetComment:
       type: array
