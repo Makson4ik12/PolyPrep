@@ -55,3 +55,12 @@ type Favourite struct {
 	PostID    uint      `gorm:"not null" json:"post_id"`
 	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
 }
+
+type Share struct {
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	PostID    uint      `gorm:"not null" json:"post_id"`
+	UUID      string    `gorm:"type:uuid;uniqueIndex;not null" json:"uuid"`
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
+	ExpiresAt time.Time `gorm:"not null" json:"expires_at"`
+	UserID    string    `gorm:"not null" json:"user_id"`
+}

@@ -60,7 +60,7 @@ func main() {
 
 		api.Use(middleware.AuthMiddleware())
 		{
-
+			api.GET("/post/shared", handlers.GetSharePost)
 			api.POST("/post", handlers.CreatePost)
 			api.PUT("/post", handlers.UpdatePost)
 			api.DELETE("/post", handlers.DeletePost)
@@ -81,6 +81,10 @@ func main() {
 			api.POST("/favourite", handlers.AddFavourites)
 			api.DELETE("/favourite", handlers.DeleteFromFavourites)
 			api.GET("/favourite/check", handlers.CheckFavourite)
+
+			api.GET("shared", handlers.GetShareLink)
+			api.POST("shared", handlers.CreateShareLink)
+			api.DELETE("shared", handlers.DeleteShareLink)
 		}
 	}
 

@@ -392,3 +392,46 @@ func GetRandomPosts(c *gin.Context) {
 		"posts": formattedPosts,
 	})
 }
+
+// ------------------------------GET/post/shared------------------------------//
+
+func GetSharePost(c *gin.Context) {
+
+	uuid := c.Query("uuid")
+	if uuid == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "UUID parameter is required",
+		})
+		return
+	}
+
+	var share models.Share
+	if err := database.DB.Where("uuid = ? AND expires_at > ?", uuid, time.Now()).First(&share).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusForbidden, gin.H{})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Database error",
+		})
+		return
+	}
+
+	var post models.Post
+	if err := database.DB.First(&post, share.PostID).Error; err != nil {
+		c.JSON(http.StatusForbidden, gin.H{})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":           post.ID,
+		"created_at":   post.CreatedAt.Unix(),
+		"updated_at":   post.UpdatedAt.Unix(),
+		"scheduled_at": post.ScheduledAt.Unix(),
+		"author_id":    post.AuthorID,
+		"title":        post.Title,
+		"text":         post.Text,
+		"public":       post.Public,
+		"hashtages":    post.Hashtages,
+	})
+}
