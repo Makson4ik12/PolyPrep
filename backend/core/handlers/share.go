@@ -145,6 +145,7 @@ func CreateShareLink(c *gin.Context) {
 	if err := database.DB.Create(&share).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed to create share link",
+			"error":   err.Error(),
 		})
 		return
 	}
