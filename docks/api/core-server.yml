@@ -148,6 +148,82 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiError"
 
+  /auth/mobile/check:
+    post:
+      description: "Проверка access и refresh токенов аутентификации [IOS]"
+      tags:
+        - "OAuth 2.0"
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+                - "access_token"
+                - "refresh_token"
+                - "next_view"
+              properties:
+                access_token:
+                  type: "string"
+
+                refresh_token:
+                  type: "string"
+
+                next_view:
+                  type: "string" 
+        description: "Входные данные"
+        required: true
+
+      responses:
+        200:
+          description: "Редирект на сервер аутентификации"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tokens"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /auth/mobile/callback:
+    get:
+      description: "Получение access / refresh токенов [IOS]"
+      tags:
+        - "OAuth 2.0"
+
+      parameters:
+        - in: query
+          name: code
+          description: Код ответа от Keycloak
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: next_view
+          description: Страница приложения для редиректа
+          required: true
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: "Успешная аутентификация"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tokens"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
 
   /post:
     get:
