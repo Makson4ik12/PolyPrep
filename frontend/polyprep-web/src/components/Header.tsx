@@ -10,9 +10,10 @@ import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
 import { useState } from 'react';
 import Modal from 'react-responsive-modal';
 import MobileHeader from './modals/MobileHeader';
+import { useAppSelector } from '../redux-store/hooks';
 
 const Header = () => {
-  const userdata = store.getState().auth.userData;
+  const userDataSelector = useAppSelector(data => data.auth.userData.preferred_username);
   const screenSize = HandleResponsiveView();
   const [viewMobileMenu, setViewMobileMenu] = useState(false);
   
@@ -44,7 +45,7 @@ const Header = () => {
 
               <div className={styles.user}>
                 <Link to="/user">
-                  <p> { userdata.preferred_username ? userdata.preferred_username : "Вход" }</p>
+                  <p> { userDataSelector ? userDataSelector : "Вход" }</p>
                   <img src={IconUser} alt='user' />
                 </Link>
               </div>
