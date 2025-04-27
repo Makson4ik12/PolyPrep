@@ -1,4 +1,3 @@
-import { JsxElement } from 'typescript';
 import styles from './NewPostPage.module.scss'
 import { useEffect, useRef, useState } from 'react';
 import useAutosizeTextArea from '../utils/CustomHooks';

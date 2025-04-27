@@ -1,15 +1,20 @@
 import styles from './ViewPostPage.module.scss'
+import store from '../redux-store/store';
 import { useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { deleteComment, getPostComments, IComment, postComment, putComment } from '../server-api/comments';
+import { deleteLike, getPostLikes, ILikes, postLike } from '../server-api/likes';
+import { checkPostIsFavourite, deleteFavourite, postFavourite } from '../server-api/favourites';
+import { deletePost, getPost, IPost } from '../server-api/posts';
+import { getDate } from '../utils/UtilFunctions';
+import useAutosizeTextArea from '../utils/CustomHooks';
+import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
 import IconDoc from '../icons/doc.svg'
 import IconImage from '../icons/image.svg'
 import IconAudio from '../icons/audio.svg'
 import IconUser from '../icons/user.svg'
 import IconPrivate from '../icons/private.svg'
 import IconPublic from '../icons/public.svg'
-import { useLocation, useNavigate } from 'react-router-dom';
-import { deleteComment, getPostComments, IComment, postComment, putComment } from '../server-api/comments';
-import { getDate } from '../utils/UtilFunctions';
-import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
 import IconArrowDown from '../icons/arrow_down.svg'
 import IconArrowUp from '../icons/arrow_up.svg'
 import IconDownload from '../icons/download.svg'
@@ -18,16 +23,14 @@ import IconCancel from '../icons/delete.svg'
 import IconSend from '../icons/send.svg'
 import IconShare from '../icons/share.svg'
 import IconFavourite from '../icons/favourite.svg'
+import IconFavouriteFilled from '../icons/favourite_fill.svg'
 import IconEdit from '../icons/edit.svg'
 import IconSuccess from '../icons/success.svg'
 import IconContextMenu from '../icons/context_menu.svg'
-import { Badge } from '../components/Badge';
 import IconUnlike from '../icons/unlike.svg'
-import { getPost, IPost } from '../server-api/posts';
-import store from '../redux-store/store';
+import { Badge } from '../components/Badge';
 import Loader from '../components/Loader';
-import { deleteLike, getPostLikes, ILikes, postLike } from '../server-api/likes';
-import useAutosizeTextArea from '../utils/CustomHooks';
+import { getUser, IUser } from '../server-api/user';
 
 interface IInclude {
   name: string;
@@ -161,6 +164,8 @@ const ViewPostPage = () => {
   const [postComments, setPostComments] = useState<IComment[]>();
   const [userLike, setUserLike] = useState(false);
   const [likes, setLikes] = useState<ILikes>();
+  const [isFavourite, setIsFavourite] = useState<boolean>(false);
+  const [user, setUser] = useState<IUser>();
 
   const [isUpdate, updateComponent] = useState<boolean>(false);
   const [isUpdateComments, updateComments] = useState<boolean>(false);
@@ -177,7 +182,7 @@ const ViewPostPage = () => {
 
   useAutosizeTextArea(commentRef.current, value);
 
-  const handleOnClick = async (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+  const handleLike = async (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -226,7 +231,37 @@ const ViewPostPage = () => {
         setIsLoadingComments(false);
         console.log("comment not created");
       });
-    }
+  }
+
+  const handleFavourite = async (e: React.MouseEvent<HTMLImageElement, MouseEvent> | React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+      e.preventDefault();
+      e.stopPropagation();
+  
+      if (isFavourite) {
+        await deleteFavourite(postData?.id || -1)
+        .then((resp) => {
+          setIsFavourite(false);
+        })
+        .catch((error) => console.log("cannot delete favourite post"));
+      } else {
+        await postFavourite(postData?.id || -1)
+        .then((resp) => {
+          setIsFavourite(true);
+        })
+        .catch((error) => console.log("cannot favourite post"));
+      }
+  }
+
+  const handleDelete = async (e: React.MouseEvent<HTMLDivElement, MouseEvent> | React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    await deletePost(post_id)
+      .then((resp) => {
+        navigate(-2);
+      })
+      .catch((error) => console.log("cannot delete post"));
+  }
 
   useEffect(() => {
     (async () => {
@@ -244,6 +279,16 @@ const ViewPostPage = () => {
 
   useEffect(() => {
     (async () => {
+      await checkPostIsFavourite(post_id)
+      .then((resp) => {
+        setIsFavourite(true);
+      })
+      .catch((error) => console.log("not favorite"));
+    }) ()
+  }, []);
+    
+  useEffect(() => {
+    (async () => {
       setIsLoadingComments(true);
 
       await getPostComments(post_id)
@@ -257,15 +302,27 @@ const ViewPostPage = () => {
   }, [isUpdateComments]);
 
   useEffect(() => {
+    (async () => {
+      await getPostLikes(post_id)
+      .then((resp) => {
+        setLikes(resp as ILikes);
+        setUserLike(((resp as ILikes).likes).some(item => item.user_id === userData.uid));
+      })
+      .catch((error) => console.log("cannot load post likes"));
+    }) ()
+  }, [isUpdate]);
+
+  useEffect(() => {
+    if (postData?.author_id) {
       (async () => {
-        await getPostLikes(post_id)
+        await getUser(postData?.author_id || "-1")
         .then((resp) => {
-          setLikes(resp as ILikes);
-          setUserLike(((resp as ILikes).likes).some(item => item.user_id === userData.uid));
+          setUser(resp as IUser)
         })
-        .catch((error) => console.log("cannot load post likes"));
+        .catch((error) => console.log("cannot load user"));
       }) ()
-    }, [isUpdate]);
+    }
+  }, [postData]);
 
   return (
     <div className={styles.container}>
@@ -276,7 +333,7 @@ const ViewPostPage = () => {
             <div className={styles.top_info}>
               <div className={styles.lin_container}>
                 <img src={IconUser} alt='usericon'/>
-                <p><b>{ postData?.author_id === userData.uid ? "You" : "SomeUser" }</b> | { getDate(postData?.created_at || 0) }</p>
+                <p><b>{ postData?.author_id === userData.uid ? "You" : user?.username }</b> | { getDate(postData?.created_at || 0) }</p>
 
                 <div className={styles.badge}>
                   {
@@ -299,13 +356,14 @@ const ViewPostPage = () => {
                 {
                   screenSize.width > screenSizes.__768.width ?
                     <>
-                      <img src={IconFavourite} className={styles.action_btn} alt='favourite'/>
+                      <img src={ isFavourite ? IconFavouriteFilled : IconFavourite } className={styles.action_btn} alt='favourite' onClick={(e) => handleFavourite(e)}/>
                       <img src={IconShare} className={styles.action_btn} alt='share'/>
                       {
                         postData?.author_id === userData.uid ?
                           <>
                             <p>|</p>
                             <img src={IconEdit} className={styles.action_btn} alt='edit' onClick={() => navigate("/post/edit/" + postData?.id)}/>
+                            <img src={IconDelete} className={styles.action_btn} alt='delete' onClick={(e) => handleDelete(e)}/>
                           </>
                         :
                           <></>
@@ -316,8 +374,8 @@ const ViewPostPage = () => {
                     <img src={IconContextMenu} className={styles.action_btn} alt='context_menu'/>
 
                     <div className={styles.dropdown_content}>
-                      <button className={styles.action_item}>
-                        <img src={IconFavourite} className={styles.action_btn} alt='favourite'/>
+                      <button className={styles.action_item} onClick={(e) => handleFavourite(e)}>
+                        <img src={ isFavourite ? IconFavouriteFilled : IconFavourite } className={styles.action_btn} alt='favourite'/>
                         <p>В избранное</p>
                       </button>
 
@@ -334,6 +392,11 @@ const ViewPostPage = () => {
                             <button className={styles.action_item} onClick={() => navigate("/post/edit/" + postData?.id)}>
                               <img src={IconEdit} className={styles.action_btn} alt='edit'/>
                               <p>Редактировать</p>
+                            </button>
+
+                            <button className={styles.action_item} onClick={(e) => handleDelete(e)}>
+                              <img src={IconDelete} className={styles.action_btn} alt='delete'/>
+                              <p>Удалить</p>
                             </button>
                           </>
                         :
@@ -363,7 +426,7 @@ const ViewPostPage = () => {
             <div className={styles.divider} />
 
             <div className={styles.lin_container}>
-              <div className={ userLike ? styles.likes_liked : styles.likes} onClick={(e) => handleOnClick(e)}>
+              <div className={ userLike ? styles.likes_liked : styles.likes} onClick={(e) => handleLike(e)}>
                 <p>{ likes?.count }</p>
                 <img src={IconUnlike} className={styles.like_btn} alt='like'></img>
               </div>

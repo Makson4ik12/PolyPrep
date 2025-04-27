@@ -115,7 +115,7 @@
     .cards_container_hidden {
         @extend .cards_container;
 
-        display: none;
+        display: none !important;
     }
 
     .title_razdel {

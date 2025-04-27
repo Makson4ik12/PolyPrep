@@ -13,7 +13,7 @@ import MobileHeader from './modals/MobileHeader';
 import { useAppSelector } from '../redux-store/hooks';
 
 const Header = () => {
-  const userDataSelector = useAppSelector(data => data.auth.userData.preferred_username);
+  const userDataSelector = useAppSelector(data => data.auth.userData.first_name + " " + data.auth.userData.last_name);
   const screenSize = HandleResponsiveView();
   const [viewMobileMenu, setViewMobileMenu] = useState(false);
   
@@ -21,7 +21,7 @@ const Header = () => {
     <header className={styles.header_style}>
       <div className={styles.container} >
         <Link to="/">
-          <h1>PolyPrep &lt;&lt;</h1>
+          <h1>polyprep</h1>
         </Link>
 
         {
