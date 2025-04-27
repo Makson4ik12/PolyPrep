@@ -40,6 +40,8 @@ func main() {
 			auth.GET("/callback", handlers.AuthCallback)
 			auth.POST("/logout/callback", handlers.LogoutCallback)
 			auth.POST("/refresh", handlers.RefreshToken)
+			auth.POST("mobile/check", handlers.MobileAuthCheck)
+			auth.GET("mobile/callback", handlers.MobileAuthCallback)
 		}
 
 		// это публичные запросы, тут не нужны токены

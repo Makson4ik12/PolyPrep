@@ -176,52 +176,113 @@ func RefreshToken(c *gin.Context) {
 	})
 }
 
-func TokenCallback(c *gin.Context) {
+// ------------------------------POST/auth/mobile/check------------------------------//
 
-	code := c.Query("code")
-	nextPage := c.Query("next_page")
+func MobileAuthCheck(c *gin.Context) {
 
-	if code == "" {
+	var req struct {
+		SuccessToken  string `json:"success_token"`
+		ReferendToken string `json:"referend_token"`
+		NextToken     string `json:"next_token"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "authorization code is required",
+			"message": "Invalid request format",
 		})
 		return
 	}
 
 	cfg := config.LoadConfig()
 
-	redirectURI := cfg.RedirectURL
-	if nextPage != "" {
-		redirectURI += "?next_page=" + url.QueryEscape(nextPage)
+	if req.SuccessToken != "" {
+		token, _, err := keycloakClient.DecodeAccessToken(c.Request.Context(), req.SuccessToken, cfg.Realm)
+		if err == nil && token != nil {
+
+			c.JSON(http.StatusOK, gin.H{
+				"success_token":  req.SuccessToken,
+				"referend_token": req.ReferendToken,
+			})
+			return
+		}
 	}
+
+	if req.ReferendToken != "" {
+		tokens, err := keycloakClient.RefreshToken(
+			c.Request.Context(),
+			req.ReferendToken,
+			cfg.ClientID,
+			cfg.ClientSecret,
+			cfg.Realm,
+		)
+
+		if err == nil {
+			c.JSON(http.StatusOK, gin.H{
+				"success_token":  tokens.AccessToken,
+				"referend_token": tokens.RefreshToken,
+			})
+			return
+		}
+	}
+
+	c.JSON(http.StatusUnauthorized, gin.H{
+		"message": "Authentication failed",
+	})
+}
+
+// ------------------------------GET/auth/mobile/callback------------------------------//
+
+func MobileAuthCallback(c *gin.Context) {
+
+	code := c.Query("code")
+	nextView := c.Query("next_view")
+
+	if code == "" || nextView == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Parameters 'code' and 'next_view' are required",
+		})
+		return
+	}
+
+	cfg := config.LoadConfig()
 
 	token, err := keycloakClient.GetToken(c.Request.Context(), cfg.Realm, gocloak.TokenOptions{
 		GrantType:    gocloak.StringP("authorization_code"),
 		Code:         &code,
 		ClientID:     &cfg.ClientID,
 		ClientSecret: &cfg.ClientSecret,
-		RedirectURI:  &redirectURI,
+		RedirectURI:  gocloak.StringP(cfg.MobileRedirectURL + "?next_view=" + url.QueryEscape(nextView)),
 	})
 
 	if err != nil {
-		log.Printf("Error to get token: %v\nRedirectURI used: %s", err, redirectURI)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":        "failed to exchange code for token",
-			"details":      err.Error(),
-			"redirect_uri": redirectURI,
-			"keycloak_url": cfg.KeycloakURL,
+		log.Printf("Mobile auth callback failed: %v", err)
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Failed to authenticate",
 		})
 		return
 	}
 
-	response := gin.H{
-		"access_token":  token.AccessToken,
+	userInfo, err := keycloakClient.GetUserInfo(c.Request.Context(), token.AccessToken, cfg.Realm)
+	if err != nil {
+		log.Printf("Failed to get user info: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to get user information",
+		})
+		return
+	}
+
+	user := models.User{
+		UUID:     *userInfo.Sub,
+		Username: *userInfo.PreferredUsername,
+		Email:    *userInfo.Email,
+	}
+
+	if err := database.DB.Where("uuid = ?", user.UUID).FirstOrCreate(&user).Error; err != nil {
+		log.Printf("Failed to save user: %v", err)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success_token": token.AccessToken,
 		"refresh_token": token.RefreshToken,
-	}
-
-	if nextPage != "" {
-		response["next_page"] = nextPage
-	}
-
-	c.JSON(http.StatusOK, response)
+	})
 }
