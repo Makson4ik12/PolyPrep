@@ -131,9 +131,7 @@ func CreateShareLink(c *gin.Context) {
 		return
 	}
 
-	newUUID := strings.ToUpper(strings.Replace(uuid.New().String(), "-", "", -1))
-	formattedUUID := fmt.Sprintf("%s-%s-%s-%s",
-		newUUID[0:4], newUUID[4:8], newUUID[8:12], newUUID[12:16])
+	formattedUUID := uuid.New().String()
 
 	share := models.Share{
 		PostID:    post.ID,
