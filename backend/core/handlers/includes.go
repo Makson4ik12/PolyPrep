@@ -33,58 +33,79 @@ import (
 //-----------------------------------------------------------------------//
 
 // ------------------------------GET/include------------------------------//
+
 func GetIncludes(c *gin.Context) {
 
-	postID, err := strconv.Atoi(c.Query("id")) //get id(integer)
+	postID, err := strconv.Atoi(c.Query("id"))
 	if err != nil || postID <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{ //400
+		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Invalid post ID",
 		})
 		return
 	}
 
+	currentUserID := c.GetString("user_id")
+	if currentUserID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Authorization required",
+		})
+		return
+	}
+
 	var post models.Post
-	if err := database.DB.First(&post, postID).Error; err != nil { //check comm
+	if err := database.DB.First(&post, postID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{ //404
+			c.JSON(http.StatusForbidden, gin.H{
 				"message": "Post not found",
 			})
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{ //500
+			c.JSON(http.StatusInternalServerError, gin.H{
 				"message": "Database error",
 			})
 		}
 		return
 	}
 
-	currentUserID := c.GetString("user_id")
 	if !post.Public && post.AuthorID != currentUserID {
-		c.JSON(http.StatusForbidden, gin.H{
-			"start":      0,
-			"created_at": 0,
-			"link":       "string",
-			"next_id":    0,
+		c.JSON(http.StatusMethodNotAllowed, gin.H{
+			"message": "No access to private post",
 		})
 		return
 	}
 
-	var includes []models.Include
-	if err := database.DB.Where("post_id = ?", postID).Find(&includes).Error; err != nil {
+	var includes []struct {
+		ID uint `json:"id"`
+	}
+
+	if err := database.DB.Model(&models.Include{}).
+		Where("post_id = ?", postID).
+		Select("id").
+		Find(&includes).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed to get includes",
+			"error":   err.Error(),
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Includes retrieved successfully",
-		"data":    includes,
-	})
+	includeIDs := make([]uint, len(includes))
+	for i, inc := range includes {
+		includeIDs[i] = inc.ID
+	}
+
+	if len(includeIDs) == 0 {
+		c.JSON(http.StatusForbidden, gin.H{
+			"message": "No includes found for this post",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, includeIDs)
 }
 
 // ------------------------------POST/include-----------------------------//
 
-func UploadInclude(c *gin.Context) {
+func UploadIncludes(c *gin.Context) {
 
 	currentUserID := c.GetString("user_id")
 	if currentUserID == "" {
@@ -215,7 +236,7 @@ func DeleteIncludes(c *gin.Context) {
 
 	includeID, err := strconv.Atoi(c.Query("id"))
 	if err != nil || includeID <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{ //400
+		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Invalid include ID",
 		})
 		return
@@ -223,55 +244,79 @@ func DeleteIncludes(c *gin.Context) {
 
 	currentUserID := c.GetString("user_id")
 	if currentUserID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{ //401
-			"message": "User not authenticated",
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Authorization required",
 		})
 		return
 	}
 
 	var include models.Include
-	if err := database.DB.First(&include, includeID).Error; err != nil {
+	if err := database.DB.Preload("Post").First(&include, includeID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusForbidden, gin.H{ //403
+			c.JSON(http.StatusForbidden, gin.H{
 				"message": "Include not found",
 			})
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{ //500
+			c.JSON(http.StatusInternalServerError, gin.H{
 				"message": "Database error",
+				"error":   err.Error(),
 			})
 		}
 		return
 	}
 
-	var post models.Post
-	if err := database.DB.First(&post, include.PostID).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusForbidden, gin.H{ //403
-				"message": "Post not found",
+	if include.Post.AuthorID != currentUserID {
+		if !include.Post.Public {
+			c.JSON(http.StatusMethodNotAllowed, gin.H{
+				"message": "No access to private post include",
 			})
-		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{ //500
-				"message": "Database error",
-			})
+			return
 		}
+		c.JSON(http.StatusForbidden, gin.H{
+			"message": "You can only delete your own includes",
+		})
 		return
 	}
 
-	if post.AuthorID != currentUserID {
-		c.JSON(http.StatusMethodNotAllowed, gin.H{ //405
-			"message": "No access to delete include from this post",
+	cfg := config.LoadBegetS3Config()
+	sess, err := session.NewSession(&aws.Config{
+		Endpoint: aws.String(cfg.Endpoint),
+		Region:   aws.String(cfg.Region),
+		Credentials: credentials.NewStaticCredentials(
+			cfg.AccessKeyID,
+			cfg.SecretAccessKey,
+			"",
+		),
+		S3ForcePathStyle: aws.Bool(true),
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to create S3 session",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	s3Client := s3.New(sess)
+	_, err = s3Client.DeleteObject(&s3.DeleteObjectInput{
+		Bucket: aws.String(cfg.Bucket),
+		Key:    aws.String(include.Data),
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to delete file from S3",
+			"error":   err.Error(),
 		})
 		return
 	}
 
 	if err := database.DB.Delete(&include).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{ //500
-			"message": "Failed to delete include",
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to delete include record",
+			"error":   err.Error(),
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Include deleted successfully",
-	})
+	c.Status(http.StatusOK)
 }

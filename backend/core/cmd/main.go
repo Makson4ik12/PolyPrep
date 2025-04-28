@@ -72,7 +72,7 @@ func main() {
 
 			api.GET("/user/posts", handlers.GetAllUserPosts)
 
-			//api.POST("/includes", handlers.LoadIncludes)
+			api.POST("/includes", handlers.UploadIncludes)
 			api.DELETE("/includes", handlers.DeleteIncludes)
 
 			api.GET("/favourite", handlers.GetFavourites)
