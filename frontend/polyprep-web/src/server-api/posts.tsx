@@ -51,9 +51,7 @@ export async function getPost(post_id: number) {
 export async function getSharedPost(uuid: string) {
   try {
     const response = await axios.get(
-    `${SERVER_ADDRESS}${SERVER_API_VERSION}post/shared?uuid=${uuid}`,
-    { headers: { Authorization: `Bearer ${store.getState().auth.authTokens.access_token}` } }
-    );
+    `${SERVER_ADDRESS}${SERVER_API_VERSION}post/shared?uuid=${uuid}`);
 
     return response.data;
   } catch (error: any) {

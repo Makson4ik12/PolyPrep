@@ -1,7 +1,7 @@
 import styles from './ViewPostPage.module.scss'
 import store from '../redux-store/store';
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { getSharedPost, IPost } from '../server-api/posts';
 import { getDate } from '../utils/UtilFunctions';
 import IconDoc from '../icons/doc.svg'
@@ -36,6 +36,7 @@ const Include = (data: IInclude) => {
 }
 
 const ViewSharedPost = () => {
+  const navigate = useNavigate();
   const location = useLocation();
   const post_id = location.pathname.slice(location.pathname.lastIndexOf('/') + 1, location.pathname.length);
   const userData = store.getState().auth.userData;
@@ -44,8 +45,6 @@ const ViewSharedPost = () => {
   const [user, setUser] = useState<IUser>();
 
   const [isLoadingPost, setIsLoadingPost] = useState(true);
-  const [isLoadingComments, setIsLoadingComments] = useState(true);
-
   const [viewIncludes, setViewIncludes] = useState(false);
 
   useEffect(() => {
@@ -56,6 +55,7 @@ const ViewSharedPost = () => {
       .then((resp) => {
         setPostData(resp as IPost);
       })
+      .catch((err) => navigate("/error"))
 
       setIsLoadingPost(false);
     }) ()
@@ -72,15 +72,6 @@ const ViewSharedPost = () => {
       }) ()
     }
   }, [postData]);
-
-  useEffect(() => {
-      if (location.hash) {
-        const element = document.getElementById(location.hash.replace('#', ''));
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }
-      }
-    }, [location, isLoadingComments]);
 
   return (
     <div className={styles.container}>

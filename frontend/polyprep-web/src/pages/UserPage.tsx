@@ -74,7 +74,10 @@ const UserPage = () => {
 
       await getPosts()
       .then((resp) => {
-        setUserPosts(resp as IPost[]);
+        const _user_posts = resp as IPost[];
+        _user_posts.sort((item1, item2) => (item2?.created_at as number) - (item1?.created_at as number));
+
+        setUserPosts(_user_posts);
       })
       .catch((error) => console.log("cannot load user posts"));
 
@@ -88,7 +91,10 @@ const UserPage = () => {
 
       await getFavouritePosts()
       .then((resp) => {
-        setFavouritePosts(resp as IFavourite[]);
+        const _fav_posts = resp as IFavourite[];
+        _fav_posts.sort((item1, item2) => (item2?.id as number) - (item1?.id as number));
+
+        setFavouritePosts(_fav_posts);
       })
       .catch((error) => console.log("cannot load favourite posts"));
 

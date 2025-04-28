@@ -44,14 +44,11 @@ func main() {
 			auth.GET("mobile/callback", handlers.MobileAuthCallback)
 		}
 
-		// это публичные запросы, тут не нужны токены
 		api.GET("/post/search", handlers.SearchPosts)
 		api.GET("/post/random", handlers.GetRandomPosts)
+		api.GET("/post/shared", handlers.GetSharePost)
 		api.GET("/user", handlers.GetUser)
 
-		// это вариативные запросы - те мы можем их отправлять например к открытым постам, или к закрытыми (токен можно илфи отправить или не отправлять)
-		// смысл в том, что если токен не отправляется - значит эндпоинты вернут тока данные открытых постов
-		// если отпавляется - то открытые посты тоже вернутся, но при этом публичные посты будут 404 посколько нельзя узнать кто автор запроса
 		api.Use(middleware.VariableAuthMiddleware())
 		{
 			api.GET("/post", handlers.GetPost)
@@ -62,7 +59,6 @@ func main() {
 
 		api.Use(middleware.AuthMiddleware())
 		{
-			api.GET("/post/shared", handlers.GetSharePost)
 			api.POST("/post", handlers.CreatePost)
 			api.PUT("/post", handlers.UpdatePost)
 			api.DELETE("/post", handlers.DeletePost)

@@ -287,7 +287,7 @@ const ViewPostPage = () => {
       .then((resp) => {
         setPostData(resp as IPost);
       })
-      .catch((error) => console.log("cannot load post with id: " + post_id));
+      .catch((error) => navigate("/error"));
 
       setIsLoadingPost(false);
     }) ()

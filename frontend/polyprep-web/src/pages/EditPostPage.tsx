@@ -114,7 +114,7 @@ const EditPostPage = () => {
         if ((resp as IPost).public)
           setIsPrivate(false);
       })
-      .catch((error) => console.log("cannot update post"));
+      .catch((error) => navigate("/error"));
 
       setIsLoadingPost(false);
     }) ()
