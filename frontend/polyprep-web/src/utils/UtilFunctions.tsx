@@ -1,7 +1,13 @@
 export const getDate = (timestamp: number) => {
-  const data = new Date(timestamp * 1000);
-  return data.getDate() + "." + (data.getMonth() + 1) + "." + data.getFullYear() + " в " + data.getHours() + ":" + data.getMinutes();
-}
+  const date = new Date(timestamp * 1000);
+  
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+
+  return `${day}.${month}.${date.getFullYear()} в ${hours}:${minutes}`;
+};
 
 export const getTextColor = (hexBgColor: string) => {
   hexBgColor = hexBgColor.replace("#", "");

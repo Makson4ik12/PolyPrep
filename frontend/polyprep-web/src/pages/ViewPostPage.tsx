@@ -57,9 +57,12 @@ interface ICommentMeta {
 
 const Comment = (data: IComment & ICommentMeta) => {
   const userData = store.getState().auth.userData;
-  const [isEdit, setIsEdit] = useState(false);
-  const commentRef = useRef<HTMLTextAreaElement>(null);
+
+  const [user, setUser] = useState<IUser>();
   const [value, setValue] = useState(data.text);
+  const [isEdit, setIsEdit] = useState(false);
+
+  const commentRef = useRef<HTMLTextAreaElement>(null);
 
   useAutosizeTextArea(commentRef.current, value);
 
@@ -101,12 +104,22 @@ const Comment = (data: IComment & ICommentMeta) => {
     });
   }
 
+  useEffect(() => {
+    (async () => {
+      await getUser(data.author_id || "")
+      .then((resp) => {
+        setUser(resp as IUser)
+      })
+      .catch((error) => console.log("cannot load user"));
+    }) ()
+  }, []);
+
   return (
     <div className={styles.info_container}>
       <div className={styles.top_info}>
         <div className={styles.lin_container}>
           <img src={IconUser} alt='usericon'/>
-          <p><b>{ data?.author_id === userData.uid ? "You" : "SomeUser" }</b> | { getDate(data.created_at || 0) }</p>
+          <p><b>{ data?.author_id === userData.uid ? "You" : user?.username }</b> | { getDate(data.created_at || 0) }</p>
         </div>
 
         {
@@ -157,10 +170,9 @@ const Comment = (data: IComment & ICommentMeta) => {
 
 const ViewPostPage = () => {
   const location = useLocation();
-  const post_id_raw = location.pathname.slice(location.pathname.lastIndexOf('/') + 1, location.pathname.length);
+  const post_id = Number(location.pathname.slice(location.pathname.lastIndexOf('/') + 1, location.pathname.length) || -1);
   const userData = store.getState().auth.userData;
 
-  const [post_id, setPostId] = useState(-1);
   const [postData, setPostData] = useState<IPost>();
   const [postComments, setPostComments] = useState<IComment[]>();
   const [userLike, setUserLike] = useState(false);
@@ -268,20 +280,11 @@ const ViewPostPage = () => {
     (async () => {
       setIsLoadingPost(true);
 
-      if (isNaN(Number(post_id_raw))) {
-        await getSharedPost(post_id_raw)
-        .then((resp) => {
-          setPostData(resp as IPost);
-          setPostId((resp as IPost)?.id || -1);
-        })
-        .catch((error) => console.log("cannot load post with id: " + post_id));
-      } else {
-        await getPost(Number(post_id_raw))
-        .then((resp) => {
-          setPostData(resp as IPost);
-        })
-        .catch((error) => console.log("cannot load post with id: " + post_id));
-      }
+      await getPost(post_id)
+      .then((resp) => {
+        setPostData(resp as IPost);
+      })
+      .catch((error) => console.log("cannot load post with id: " + post_id));
 
       setIsLoadingPost(false);
     }) ()

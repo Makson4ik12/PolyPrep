@@ -7,6 +7,7 @@ import { deleteSharedLink, getSharedLink, IShareLink, postShareLink } from '../.
 import { getDate } from '../../utils/UtilFunctions';
 
 const link_prefix = window.location.protocol + "//" + window.location.hostname + ":" + window.location.port  + "/post/view/";
+const link_prefix_shared = window.location.protocol + "//" + window.location.hostname + ":" + window.location.port  + "/post/shared/";
 
 export default function SharePost(postData: IPost) {
   const userData = store.getState().auth.userData;
@@ -38,7 +39,7 @@ export default function SharePost(postData: IPost) {
     };
 
     (async () => {
-      await postShareLink({post_id: postData.id || -1, expires_at: new Date(formElements.data.value).getTime()})
+      await postShareLink({post_id: postData.id || -1, expires_at: ((new Date(formElements.data.value)).getTime()) / 1000 })
         .then((resp) => {
           setLink(resp as IShareLink);
         })
@@ -69,7 +70,7 @@ export default function SharePost(postData: IPost) {
                       <input 
                         name='data' 
                         type='datetime-local'
-                        placeholder='abc' 
+                        placeholder='now' 
                         required
                       />
                       <button 
@@ -82,20 +83,37 @@ export default function SharePost(postData: IPost) {
                     </form>
                   </>
                 :
-                  <>
-                    <input 
-                      name="link" 
-                      type='link' 
-                      placeholder='link' 
-                      disabled
-                      defaultValue={link_prefix + link.uuid}
-                    />
+                  (postData.author_id === userData.uid) && !postData.public ?
+                    <>
+                      <input 
+                        name="link" 
+                        type='link' 
+                        placeholder='link' 
+                        disabled
+                        defaultValue={link_prefix_shared + link.uuid}
+                      />
 
-                    <p>Действительна до: { getDate(link.expires_at) }</p>
-                    
-                    <button onClick={ () =>  navigator.clipboard.writeText(link_prefix + link.uuid) }>Скопировать в буфер обмена</button>
-                    <button className={styles.button_dark} onClick={ () => handleDeleteLink() }>Удалить общую ссылку</button>
-                  </>
+                      <p>Действительна до: { getDate(link.expires_at) }</p>
+                      
+                      <form>
+                        <button type='button' onClick={ () =>  navigator.clipboard.writeText(link_prefix_shared + link.uuid) }>Скопировать в буфер обмена</button>
+                        <button type='button' className={styles.button_dark} onClick={ () => handleDeleteLink() }>Удалить общую ссылку</button>
+                      </form>
+                    </>
+                  :
+                    <>
+                      <input 
+                        name="link" 
+                        type='link' 
+                        placeholder='link' 
+                        disabled
+                        defaultValue={link_prefix + link.uuid}
+                      />
+
+                      <form>
+                        <button type='button' onClick={ () =>  navigator.clipboard.writeText(link_prefix + link.uuid) }>Скопировать в буфер обмена</button>
+                      </form>
+                    </>
               }
             </>
       }
