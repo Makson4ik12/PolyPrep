@@ -283,7 +283,7 @@ func DeletePost(c *gin.Context) {
 //------------------------------GET/post/search------------------------------//
 
 func SearchPosts(c *gin.Context) {
-	// 1. Валидация параметров
+
 	searchText := strings.TrimSpace(c.Query("text"))
 	from, errFrom := strconv.Atoi(c.Query("from"))
 	to, errTo := strconv.Atoi(c.Query("to"))
@@ -313,10 +313,11 @@ func SearchPosts(c *gin.Context) {
 
 	for _, word := range searchWords {
 		pattern := "%" + word + "%"
+
 		dbQuery = dbQuery.Where(
 			database.DB.Where("title ILIKE ?", pattern).
 				Or("text ILIKE ?", pattern).
-				Or("hashtages ILIKE ?", pattern).
+				Or("array_to_string(hashtages, ',') ILIKE ?", pattern).
 				Or("author_name ILIKE ?", pattern),
 		)
 	}
