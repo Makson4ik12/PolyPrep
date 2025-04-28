@@ -316,7 +316,7 @@ func SearchPosts(c *gin.Context) {
 		dbQuery = dbQuery.Where(
 			database.DB.Where("title ILIKE ?", pattern).
 				Or("text ILIKE ?", pattern).
-				Or("hashtags ILIKE ?", pattern).
+				Or("hashtages ILIKE ?", pattern).
 				Or("author_name ILIKE ?", pattern),
 		)
 	}
