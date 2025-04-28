@@ -54,26 +54,18 @@ func GetShareLink(c *gin.Context) {
 
 	var share models.Share
 	if err := database.DB.Where("post_id = ? AND expires_at > ?", postID, time.Now()).
-		First(&share).Error; err == nil {
-		c.JSON(http.StatusOK, gin.H{
-			"build": share.UUID,
-		})
-		return
-	}
+		First(&share).Error; err != nil {
 
-	formattedUUID := uuid.New().String()
-
-	share = models.Share{
-		PostID:    post.ID,
-		UUID:      formattedUUID,
-		UserID:    currentUserID,
-		ExpiresAt: time.Now().Add(7 * 24 * time.Hour),
-	}
-
-	if err := database.DB.Create(&share).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to create share link",
-		})
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusOK, gin.H{
+				"exists":  false,
+				"message": "No active share link found",
+			})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Database error",
+			})
+		}
 		return
 	}
 
