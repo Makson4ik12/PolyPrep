@@ -17,12 +17,15 @@ import IconPrivate from '../icons/private.svg'
 import { getPostComments, IComment } from '../server-api/comments';
 import { checkPostIsFavourite, deleteFavourite, postFavourite } from '../server-api/favourites';
 import { getUser, IUser } from '../server-api/user';
+import SharePost from './modals/SharePost';
+import Modal from 'react-responsive-modal';
 
 const Card = (data: IPost) => {
   const navigate = useNavigate();
   const screenSize = HandleResponsiveView();
   const userData = store.getState().auth.userData;
 
+  const [viewShare, setViewShare] = useState<boolean>(false);
   const [user, setUser] = useState<IUser>();
   const [likes, setLikes] = useState<ILikes>();
   const [comments, setComments] = useState<number>(0);
@@ -111,8 +114,15 @@ const Card = (data: IPost) => {
     }
   }
 
+  const handleShareLink = async (e: React.MouseEvent<HTMLImageElement, MouseEvent>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    setViewShare(true);
+  }
+
   return (
-    <div className={styles.container} onClick={() => navigate('/post/view/' + data.id)}>
+    <div className={styles.container}>
       <div className={styles.top}>
         <div className={styles.lin_container}>
           <img src={IconUser} alt='user' className={styles.user_icon}></img>
@@ -138,10 +148,11 @@ const Card = (data: IPost) => {
           )
         }
       </div>
-
-      <h1>{data.title}</h1>
-    
-      <p>{data.text}</p>
+      
+      <div className={styles.card_main_content} onClick={() => navigate('/post/view/' + data.id)}>
+        <h1>{data.title}</h1>
+        <p>{data.text}</p>
+      </div>
       
       <div className={styles.bottom}>
         <div className={styles.lin_container}>
@@ -162,9 +173,29 @@ const Card = (data: IPost) => {
           
         </div>
         
-        <img src={IconShare} className={styles.btns} alt='share'></img>
-        
+        <img src={IconShare} className={styles.btns} alt='share' onClick={(e) => handleShareLink(e)}></img>
       </div>
+
+      <Modal 
+        open={viewShare} 
+        onClose={() => setViewShare(false)} 
+        showCloseIcon={false} 
+        animationDuration={400}
+        blockScroll={false}
+        center
+      >
+        <SharePost 
+          id={data.id}
+          created_at={data.created_at}
+          updated_at={data.updated_at}
+          scheduled_at={data.scheduled_at}
+          author_id={data.author_id}
+          title={data.title} 
+          text={data.text}
+          public={data.public}
+          hashtages={data.hashtages}
+        />
+      </Modal>
     </div>
   )
 }

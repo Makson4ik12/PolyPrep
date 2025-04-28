@@ -14,6 +14,7 @@ import EditPostPage from './pages/EditPostPage';
 import ScrollToTop from './utils/ScrollToTop';
 import { useEffect } from 'react';
 import { validateTokens } from './server-api/auth';
+import ViewSharedPost from './pages/ViewSharedPost';
 
 const App = () => {
   useEffect(() => {
@@ -34,6 +35,7 @@ const App = () => {
 
           <Route path="/post/edit/*" element={<EditPostPage /> } />
           <Route path="/post/view/*" element={<ViewPostPage /> } />
+          <Route path="/post/shared/*" element={<ViewSharedPost /> } />
           <Route path="/post/new" element={<LoginPage page={<NewPostPage />} next_page="post/new" />} />
 
           <Route path="/user" element={<LoginPage page={<UserPage />} next_page="user" />} />

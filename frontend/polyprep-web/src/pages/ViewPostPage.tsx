@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { deleteComment, getPostComments, IComment, postComment, putComment } from '../server-api/comments';
 import { deleteLike, getPostLikes, ILikes, postLike } from '../server-api/likes';
 import { checkPostIsFavourite, deleteFavourite, postFavourite } from '../server-api/favourites';
-import { deletePost, getPost, IPost } from '../server-api/posts';
+import { deletePost, getPost, getSharedPost, IPost } from '../server-api/posts';
 import { getDate } from '../utils/UtilFunctions';
 import useAutosizeTextArea from '../utils/CustomHooks';
 import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
@@ -31,6 +31,8 @@ import IconUnlike from '../icons/unlike.svg'
 import { Badge } from '../components/Badge';
 import Loader from '../components/Loader';
 import { getUser, IUser } from '../server-api/user';
+import Modal from 'react-responsive-modal';
+import SharePost from '../components/modals/SharePost';
 
 interface IInclude {
   name: string;
@@ -57,9 +59,12 @@ interface ICommentMeta {
 
 const Comment = (data: IComment & ICommentMeta) => {
   const userData = store.getState().auth.userData;
-  const [isEdit, setIsEdit] = useState(false);
-  const commentRef = useRef<HTMLTextAreaElement>(null);
+
+  const [user, setUser] = useState<IUser>();
   const [value, setValue] = useState(data.text);
+  const [isEdit, setIsEdit] = useState(false);
+
+  const commentRef = useRef<HTMLTextAreaElement>(null);
 
   useAutosizeTextArea(commentRef.current, value);
 
@@ -101,12 +106,22 @@ const Comment = (data: IComment & ICommentMeta) => {
     });
   }
 
+  useEffect(() => {
+    (async () => {
+      await getUser(data.author_id || "")
+      .then((resp) => {
+        setUser(resp as IUser)
+      })
+      .catch((error) => console.log("cannot load user"));
+    }) ()
+  }, []);
+
   return (
     <div className={styles.info_container}>
       <div className={styles.top_info}>
         <div className={styles.lin_container}>
           <img src={IconUser} alt='usericon'/>
-          <p><b>{ data?.author_id === userData.uid ? "You" : "SomeUser" }</b> | { getDate(data.created_at || 0) }</p>
+          <p><b>{ data?.author_id === userData.uid ? "You" : user?.username }</b> | { getDate(data.created_at || 0) }</p>
         </div>
 
         {
@@ -166,6 +181,7 @@ const ViewPostPage = () => {
   const [likes, setLikes] = useState<ILikes>();
   const [isFavourite, setIsFavourite] = useState<boolean>(false);
   const [user, setUser] = useState<IUser>();
+  const [viewShare, setViewShare] = useState<boolean>(false);
 
   const [isUpdate, updateComponent] = useState<boolean>(false);
   const [isUpdateComments, updateComments] = useState<boolean>(false);
@@ -271,7 +287,7 @@ const ViewPostPage = () => {
       .then((resp) => {
         setPostData(resp as IPost);
       })
-      .catch((error) => console.log("cannot load post"));
+      .catch((error) => console.log("cannot load post with id: " + post_id));
 
       setIsLoadingPost(false);
     }) ()
@@ -366,7 +382,7 @@ const ViewPostPage = () => {
                   screenSize.width > screenSizes.__768.width ?
                     <>
                       <img src={ isFavourite ? IconFavouriteFilled : IconFavourite } className={styles.action_btn} alt='favourite' onClick={(e) => handleFavourite(e)}/>
-                      <img src={IconShare} className={styles.action_btn} alt='share'/>
+                      <img src={IconShare} className={styles.action_btn} alt='share' onClick={() => setViewShare(true)}/>
                       {
                         postData?.author_id === userData.uid ?
                           <>
@@ -388,8 +404,8 @@ const ViewPostPage = () => {
                         <p>В избранное</p>
                       </button>
 
-                      <button className={styles.action_item}>
-                      <img src={IconShare} className={styles.action_btn} alt='share'/>
+                      <button className={styles.action_item} onClick={() => setViewShare(true)}>
+                        <img src={IconShare} className={styles.action_btn} alt='share'/>
                         <p>Поделиться</p>
                       </button>
                       
@@ -455,12 +471,7 @@ const ViewPostPage = () => {
       </div>
 
       <h2 id='comments'>Комментарии</h2>
-      {/* 
-      
-      TODO: очистить input после отправки коммента
-      Реализовать редактирование комментов
-      
-      */}
+
       <div className={styles.includes_container}>
         {
           userData.uid ? 
@@ -513,6 +524,27 @@ const ViewPostPage = () => {
               </>
           }
       </div>
+
+      <Modal 
+        open={viewShare} 
+        onClose={() => setViewShare(false)} 
+        showCloseIcon={false} 
+        animationDuration={400}
+        blockScroll={false}
+        center
+      >
+        <SharePost 
+          id={postData?.id}
+          created_at={postData?.created_at}
+          updated_at={postData?.updated_at}
+          scheduled_at={postData?.scheduled_at}
+          author_id={postData?.author_id}
+          title={postData?.title as string} 
+          text={postData?.text as string}
+          public={postData?.public as boolean}
+          hashtages={postData?.hashtages as string[]}
+        />
+      </Modal>
     </div>
   )
 }

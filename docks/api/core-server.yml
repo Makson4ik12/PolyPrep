@@ -1143,10 +1143,14 @@ paths:
               schema:
                 required:
                   - "uuid"
+                  - "expires_at"
                 properties:
                   uuid:
                     type: "string"
                     example: xxxx-xxxx-xxxx-xxxx
+                  expires_at:
+                    type: "integer"
+                    example: 123456
         
         403:
           description: "Ссылка не создана"
