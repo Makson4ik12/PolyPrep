@@ -69,7 +69,7 @@ func GetShareLink(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"build": share.UUID,
+		"uuid": share.UUID,
 	})
 }
 
@@ -136,7 +136,7 @@ func CreateShareLink(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"outId": share.UUID,
+		"uuid": share.UUID,
 	})
 }
 
