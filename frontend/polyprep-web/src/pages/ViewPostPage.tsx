@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { deleteComment, getPostComments, IComment, postComment, putComment } from '../server-api/comments';
 import { deleteLike, getPostLikes, ILikes, postLike } from '../server-api/likes';
 import { checkPostIsFavourite, deleteFavourite, postFavourite } from '../server-api/favourites';
-import { deletePost, getPost, IPost } from '../server-api/posts';
+import { deletePost, getPost, getSharedPost, IPost } from '../server-api/posts';
 import { getDate } from '../utils/UtilFunctions';
 import useAutosizeTextArea from '../utils/CustomHooks';
 import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
@@ -157,9 +157,10 @@ const Comment = (data: IComment & ICommentMeta) => {
 
 const ViewPostPage = () => {
   const location = useLocation();
-  const post_id = Number(location.pathname.slice(location.pathname.lastIndexOf('/') + 1, location.pathname.length) || -1);
+  const post_id_raw = location.pathname.slice(location.pathname.lastIndexOf('/') + 1, location.pathname.length);
   const userData = store.getState().auth.userData;
 
+  const [post_id, setPostId] = useState(-1);
   const [postData, setPostData] = useState<IPost>();
   const [postComments, setPostComments] = useState<IComment[]>();
   const [userLike, setUserLike] = useState(false);
@@ -267,11 +268,20 @@ const ViewPostPage = () => {
     (async () => {
       setIsLoadingPost(true);
 
-      await getPost(post_id)
-      .then((resp) => {
-        setPostData(resp as IPost);
-      })
-      .catch((error) => console.log("cannot load post"));
+      if (isNaN(Number(post_id_raw))) {
+        await getSharedPost(post_id_raw)
+        .then((resp) => {
+          setPostData(resp as IPost);
+          setPostId((resp as IPost)?.id || -1);
+        })
+        .catch((error) => console.log("cannot load post with id: " + post_id));
+      } else {
+        await getPost(Number(post_id_raw))
+        .then((resp) => {
+          setPostData(resp as IPost);
+        })
+        .catch((error) => console.log("cannot load post with id: " + post_id));
+      }
 
       setIsLoadingPost(false);
     }) ()

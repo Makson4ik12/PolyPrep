@@ -189,6 +189,15 @@
     box-sizing: border-box;
 }
 
+.card_main_content {
+    @extend .container;
+    box-shadow: none;
+    padding: unset;
+    border-radius: unset;
+
+    cursor: pointer;
+}
+
 @media screen and (1200px < width) {
     // .container {
     //     width: 48%;

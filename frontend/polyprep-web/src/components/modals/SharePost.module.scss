@@ -1,0 +1,64 @@
+.container {
+    width: auto;
+    height: auto;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+
+    padding: 20px;
+    font-size: 20px;
+
+    form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+    }
+
+    input {
+        width: 500px;
+        font-size: 20px;
+        font-weight: 500;
+        box-sizing: border-box;
+
+        padding: 10px 20px;
+        outline: none;
+        border: 1px solid #cecece;
+        border-radius: 20px;
+    }
+
+    button{
+        cursor: pointer;
+        font-size: 19px;
+
+        border: 2px solid black;
+        border-radius: 20px;
+        padding: 7px 20px;
+        background-color: white;
+
+        width: 500px;
+
+        transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+
+        &:hover {
+            background-color: black;
+            color: white;
+        }
+    }
+
+    .button_dark {
+        @extend button;
+        border: 2px solid black;
+        background-color: black;
+        color: white;
+
+        &:hover {
+            background-color: white;
+            color: black;
+        }
+    }
+}
