@@ -8,42 +8,44 @@ interface IProtectedPage {
   next_page: string
 }
 
-export const LoginPage = (params: IProtectedPage) => {
-    const [searchParams, setSearchParams] = useSearchParams();
-    const [isLoading, setIsLoading] = useState(true);
-  
-    useEffect(() => {
-      if (searchParams.get("code")) {
-        (async () => {
-          await authCallback(searchParams.get("code") || "abc", params.next_page)
-          .then(() => setIsLoading(false))
-          .catch((err) => console.log(err));
-        }) ();
-      } else {
-        (async () => {
-          await validateTokens()
-          .then((resp) => setIsLoading(false))
-          .catch((err) => {
-            (async () => {
-              await authCheck(params.next_page)
-              .then((resp) => resp.redirect ? window.open(resp.url, "_self") : setIsLoading(false))
-              .catch((err) => console.log(err));
-            }) ();
-          });
-        }) ();
+const LoginPage = (params: IProtectedPage) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [isLoading, setIsLoading] = useState(true);
 
-        
-      }
-    }, []);
-  
-    return (
-      <>
-      {
-        isLoading ? 
-          <Loader /> 
-        :
-          params.page
-      }
-      </>
-    )
-  }
+  useEffect(() => {
+    if (searchParams.get("code")) {
+      (async () => {
+        await authCallback(searchParams.get("code") || "abc", params.next_page)
+        .then(() => setIsLoading(false))
+        .catch((err) => console.log(err));
+      }) ();
+    } else {
+      (async () => {
+        await validateTokens()
+        .then((resp) => setIsLoading(false))
+        .catch((err) => {
+          (async () => {
+            await authCheck(params.next_page)
+            .then((resp) => resp.redirect ? window.open(resp.url, "_self") : setIsLoading(false))
+            .catch((err) => console.log(err));
+          }) ();
+        });
+      }) ();
+
+      
+    }
+  }, []);
+
+  return (
+    <>
+    {
+      isLoading ? 
+        <Loader /> 
+      :
+        params.page
+    }
+    </>
+  )
+}
+
+export default LoginPage;

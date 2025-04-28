@@ -2,10 +2,10 @@ import styles from './ViewPostPage.module.scss'
 import store from '../redux-store/store';
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { deleteComment, getPostComments, IComment, postComment, putComment } from '../server-api/comments';
+import { getPostComments, IComment, postComment } from '../server-api/comments';
 import { deleteLike, getPostLikes, ILikes, postLike } from '../server-api/likes';
 import { checkPostIsFavourite, deleteFavourite, postFavourite } from '../server-api/favourites';
-import { deletePost, getPost, getSharedPost, IPost } from '../server-api/posts';
+import { deletePost, getPost, IPost } from '../server-api/posts';
 import { getDate } from '../utils/UtilFunctions';
 import useAutosizeTextArea from '../utils/CustomHooks';
 import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
@@ -19,20 +19,20 @@ import IconArrowDown from '../icons/arrow_down.svg'
 import IconArrowUp from '../icons/arrow_up.svg'
 import IconDownload from '../icons/download.svg'
 import IconDelete from '../icons/trash.svg'
-import IconCancel from '../icons/delete.svg'
 import IconSend from '../icons/send.svg'
 import IconShare from '../icons/share.svg'
 import IconFavourite from '../icons/favourite.svg'
 import IconFavouriteFilled from '../icons/favourite_fill.svg'
 import IconEdit from '../icons/edit.svg'
-import IconSuccess from '../icons/success.svg'
 import IconContextMenu from '../icons/context_menu.svg'
 import IconUnlike from '../icons/unlike.svg'
 import { Badge } from '../components/Badge';
+import Comment from '../components/Comment';
 import Loader from '../components/Loader';
 import { getUser, IUser } from '../server-api/user';
 import Modal from 'react-responsive-modal';
 import SharePost from '../components/modals/SharePost';
+import { useQuery } from '@tanstack/react-query';
 
 interface IInclude {
   name: string;
@@ -52,148 +52,32 @@ const Include = (data: IInclude) => {
   )
 }
 
-interface ICommentMeta {
-  setIsLoading: (val: boolean) => void;
-  updateComments: () => void;
-}
+const fetchPost = async (post_id: number) => {
+  const resp = await getPost(post_id);
 
-const Comment = (data: IComment & ICommentMeta) => {
-  const userData = store.getState().auth.userData;
-
-  const [user, setUser] = useState<IUser>();
-  const [value, setValue] = useState(data.text);
-  const [isEdit, setIsEdit] = useState(false);
-
-  const commentRef = useRef<HTMLTextAreaElement>(null);
-
-  useAutosizeTextArea(commentRef.current, value);
-
-  const handleOnDelete = async () => {
-    data.setIsLoading(true);
-
-    await deleteComment(data.id || -1)
-    .then((resp) => {
-      data.updateComments();
-    })
-    .catch((error) => console.log("cannot delete post"));
-
-    data.setIsLoading(false);
-  }
-
-  const handleCommentChange = (evt: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const val = evt.target?.value;
-    setValue(val);
-  };
-
-  const handleOnEdit = async () => {
-    if (commentRef.current?.value.length == 0) {
-      setValue(data.text);
-      return;
-    }
-
-    await putComment({
-      id: data.id,
-      text: commentRef.current?.value || data.text,
-      post_id: data.post_id
-    })
-    .then ((resp) => {
-      setValue(commentRef.current?.value || data.text);
-      setIsEdit(false);
-    })
-    .catch((error) => { 
-      setIsEdit(false);
-      console.log("comment not updated");
-    });
-  }
-
-  useEffect(() => {
-    (async () => {
-      await getUser(data.author_id || "")
-      .then((resp) => {
-        setUser(resp as IUser)
-      })
-      .catch((error) => console.log("cannot load user"));
-    }) ()
-  }, []);
-
-  return (
-    <div className={styles.info_container}>
-      <div className={styles.top_info}>
-        <div className={styles.lin_container}>
-          <img src={IconUser} alt='usericon'/>
-          <p><b>{ data?.author_id === userData.uid ? "You" : user?.username }</b> | { getDate(data.created_at || 0) }</p>
-        </div>
-
-        {
-          data?.author_id === userData.uid ?
-            <div className={styles.lin_container}>
-              {
-                isEdit ? 
-                  <>
-                    <img src={IconCancel} alt='cancel' className={styles.action_btn} onClick={() => setIsEdit(false)}/>
-                    <img src={IconSuccess} alt='success' className={styles.action_btn} onClick={() => handleOnEdit()}/>
-                  </>
-                :
-                  <>
-                    <img src={IconEdit} alt='edit' className={styles.action_btn} onClick={() => setIsEdit(true)}/>
-                    <img src={IconDelete} alt='delete' className={styles.action_btn} onClick={() => handleOnDelete()}/>
-                  </>
-              }
-            </div>
-          :
-            <></>
-        }
-        
-      </div>
-      
-      {
-        isEdit ? 
-          <form>
-            <textarea 
-              id="edit-comment" 
-              name="comment" 
-              placeholder='Крутой конспект!' 
-              maxLength={350}
-              required
-              ref={commentRef}
-              onChange={handleCommentChange}
-              spellCheck={false}
-              defaultValue={value}
-              autoCapitalize='on'
-              >
-            </textarea>
-          </form>
-        :
-          <p className={styles.text}>{value}</p>
-      }
-    </div>
-  )
-}
+  return resp as IPost;
+};
 
 const ViewPostPage = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const post_id = Number(location.pathname.slice(location.pathname.lastIndexOf('/') + 1, location.pathname.length) || -1);
   const userData = store.getState().auth.userData;
 
-  const [postData, setPostData] = useState<IPost>();
   const [postComments, setPostComments] = useState<IComment[]>();
   const [userLike, setUserLike] = useState(false);
   const [likes, setLikes] = useState<ILikes>();
   const [isFavourite, setIsFavourite] = useState<boolean>(false);
   const [user, setUser] = useState<IUser>();
   const [viewShare, setViewShare] = useState<boolean>(false);
+  const [viewIncludes, setViewIncludes] = useState(false);
+  const [value, setValue] = useState("");
 
   const [isUpdate, updateComponent] = useState<boolean>(false);
   const [isUpdateComments, updateComments] = useState<boolean>(false);
-
-  const [isLoadingPost, setIsLoadingPost] = useState(true);
   const [isLoadingComments, setIsLoadingComments] = useState(true);
 
-  const [viewIncludes, setViewIncludes] = useState(false);
-  const navigate = useNavigate();
   const screenSize = HandleResponsiveView();
-  const [value, setValue] = useState("");
-
   const commentRef = useRef<HTMLTextAreaElement>(null);
 
   useAutosizeTextArea(commentRef.current, value);
@@ -279,19 +163,11 @@ const ViewPostPage = () => {
       .catch((error) => console.log("cannot delete post"));
   }
 
-  useEffect(() => {
-    (async () => {
-      setIsLoadingPost(true);
-
-      await getPost(post_id)
-      .then((resp) => {
-        setPostData(resp as IPost);
-      })
-      .catch((error) => navigate("/error"));
-
-      setIsLoadingPost(false);
-    }) ()
-  }, []);
+  const { data: postData, isLoading: isLoadingPost, error: errLoadPost } = useQuery({
+    queryKey: ['viewpostpage-id' + post_id],
+    queryFn: () => fetchPost(post_id),
+    staleTime: 5 * 60 * 1000,
+  });
 
   useEffect(() => {
     (async () => {

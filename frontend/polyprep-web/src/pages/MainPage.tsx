@@ -1,88 +1,58 @@
-import { useEffect, useState } from 'react';
 import Card from '../components/Card';
 import styles from './MainPage.module.scss'
 import cardStyles from '../components/Card.module.scss'
-import { getRandomPosts, IPost, IRandomPosts } from '../server-api/posts';
+import { getRandomPosts, IRandomPosts } from '../server-api/posts';
 import Loader from '../components/Loader';
 import Masonry from 'react-layout-masonry';
+import { useQuery } from '@tanstack/react-query';
+import { Navigate } from 'react-router-dom';
+
+const fetchRandomPosts = async () => {
+  const resp = await getRandomPosts(10);
+  return resp as IRandomPosts;
+};
 
 const MainPage = () => {
-  const [randomPosts, setRandomPosts] = useState<IRandomPosts>();
-  const [isLoading, setIsLoading] = useState(true);
-  
-    useEffect(() => {
-      (async () => {
-        setIsLoading(true);
-  
-        await getRandomPosts(10)
-        .then((resp) => {
-          setRandomPosts(resp as IRandomPosts);
-        })
-        .catch((error) => console.log("cannot load user posts"));
-  
-        setIsLoading(false);
-      }) ()
-    }, []);
-    
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['mainpage-randomPosts'],
+    queryFn: fetchRandomPosts,
+    staleTime: 5 * 60 * 1000, // 5 минут
+  });
+
   return (
-    <div className={styles.container}>
-      {/* <div className={styles.cards_container}>
-        {
-            isLoading ?
-              <Loader />
-            :
-              randomPosts?.count === 0 ? <p>Постов пока нет :(</p>
-                :
-              <>
-                {
-                  randomPosts?.posts.map((item) => 
-                    <Card 
-                      key={item.id}
-                      id={item.id}
-                      created_at={item.created_at}
-                      updated_at={item.updated_at}
-                      scheduled_at={item.scheduled_at}
-                      author_id={item.author_id}
-                      title={item.title} 
-                      text={item.text}
-                      public={item.public}
-                      hashtages={item.hashtages}
-                    />
-                  )
-                }
-              </>
-          }
-      </div> */}
-      
+    <div className={styles.container}>      
       {
         isLoading ?
           <Loader />
         :
-          <Masonry
-            columns={{640:1, 1200: 2}}
-            gap={20}
-            className={styles.cards_container}
-            columnProps={{
-              className: cardStyles.card_wrapper
-            }}
-          >
-            {
-              randomPosts?.posts.map((item) => 
-                <Card 
-                  key={item.id}
-                  id={item.id}
-                  created_at={item.created_at}
-                  updated_at={item.updated_at}
-                  scheduled_at={item.scheduled_at}
-                  author_id={item.author_id}
-                  title={item.title} 
-                  text={item.text}
-                  public={item.public}
-                  hashtages={item.hashtages}
-                />
-              )
-            }
-          </Masonry>
+          !error ?
+            <Masonry
+              columns={{640:1, 1200: 2}}
+              gap={20}
+              className={styles.cards_container}
+              columnProps={{
+                className: cardStyles.card_wrapper
+              }}
+            >
+              {
+                data?.posts.map((item) => 
+                  <Card 
+                    key={item.id}
+                    id={item.id}
+                    created_at={item.created_at}
+                    updated_at={item.updated_at}
+                    scheduled_at={item.scheduled_at}
+                    author_id={item.author_id}
+                    title={item.title} 
+                    text={item.text}
+                    public={item.public}
+                    hashtages={item.hashtages}
+                  />
+                )
+              }
+            </Masonry>
+          :
+            <Navigate  to="/error" />
         }
     </div>
   )

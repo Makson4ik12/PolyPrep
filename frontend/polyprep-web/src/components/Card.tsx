@@ -19,9 +19,11 @@ import { checkPostIsFavourite, deleteFavourite, postFavourite } from '../server-
 import { getUser, IUser } from '../server-api/user';
 import SharePost from './modals/SharePost';
 import Modal from 'react-responsive-modal';
+import { useQueryClient } from '@tanstack/react-query';
 
 const Card = (data: IPost) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const screenSize = HandleResponsiveView();
   const userData = store.getState().auth.userData;
 
@@ -112,6 +114,8 @@ const Card = (data: IPost) => {
       })
       .catch((error) => console.log("cannot favourite post"));
     }
+
+    await queryClient.invalidateQueries({ queryKey: ['userpage-favouritePosts'] });
   }
 
   const handleShareLink = async (e: React.MouseEvent<HTMLImageElement, MouseEvent>) => {

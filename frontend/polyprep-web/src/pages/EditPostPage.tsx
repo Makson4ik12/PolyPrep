@@ -18,6 +18,7 @@ import IconBolt from '../icons/bolt.svg'
 import { getPost, IPost, putPost } from '../server-api/posts';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Loader from '../components/Loader';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface IInclude {
   name: string;
@@ -39,6 +40,7 @@ const Include = (data: IInclude) => {
 
 const EditPostPage = () => {
   const location = useLocation();
+  const queryClient = useQueryClient();
   const post_id = Number(location.pathname.slice(location.pathname.lastIndexOf('/') + 1, location.pathname.length) || -1);
 
   const [value, setValue] = useState("");
@@ -101,6 +103,8 @@ const EditPostPage = () => {
       setIsLoadingPost(false);
       setIsError({ind: true, error: "Ошибка - пост не обновлен("});
     });
+
+    await queryClient.invalidateQueries({ queryKey: ['userpage-userPosts'] });
   }
 
   useEffect(() => {

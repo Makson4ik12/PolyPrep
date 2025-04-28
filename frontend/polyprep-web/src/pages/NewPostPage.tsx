@@ -19,6 +19,7 @@ import IconBolt from '../icons/bolt.svg'
 import Loader from '../components/Loader';
 import { IPost, postPost } from '../server-api/posts';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface IInclude {
   name: string;
@@ -39,12 +40,13 @@ const Include = (data: IInclude) => {
 }
 
 const NewPostPage = () => {
-  const [value, setValue] = useState("");
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [isPrivate, setIsPrivate] = useState(false);
   const [isScheduled, setIsScheduled] = useState(false);
 
+  const [value, setValue] = useState("");
   const [titleLen, setTitleLen] = useState(0);
   const [hashtagesLen, setHashtagsLen] = useState(0);
   const [isError, setIsError] = useState({ind: false, error: ""});
@@ -98,6 +100,8 @@ const NewPostPage = () => {
       setIsLoading(false);
       setIsError({ind: true, error: "Ошибка - пост не создан("});
     });
+
+    await queryClient.invalidateQueries({ queryKey: ['userpage-userPosts'] });
   }
 
   return (

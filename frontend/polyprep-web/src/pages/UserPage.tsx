@@ -12,6 +12,7 @@ import Masonry from "react-layout-masonry";
 import cardStyles from '../components/Card.module.scss'
 import { getFavouritePosts, IFavourite } from "../server-api/favourites";
 import { useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 
 const FavouritePost = ( { post_id }: { post_id: number }) => {
   const [postData, setPostData] = useState<IPost>();
@@ -49,15 +50,40 @@ const FavouritePost = ( { post_id }: { post_id: number }) => {
   )
 }
 
+const fetchUserPosts = async () => {
+  const resp = await getPosts();
+  const _user_posts = resp as IPost[];
+  _user_posts.sort((item1, item2) => (item2?.created_at as number) - (item1?.created_at as number));
+
+  return _user_posts;
+};
+
+const fetchFavouritePosts = async () => {
+  const resp = await getFavouritePosts();
+  const _fav_posts = resp as IFavourite[];
+  _fav_posts.sort((item1, item2) => (item2?.id as number) - (item1?.id as number));
+
+  return _fav_posts;
+};
+
 const UserPage = () => {
   const current_state = store.getState().auth;
   const location = useLocation();
 
   const [viewFavourites, setViewFavourites] = useState(true);
   const [viewMyPosts, setViewMyPosts] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
-  const [userPosts, setUserPosts] = useState<IPost[]>([]);
-  const [favouritePosts, setFavouritePosts] = useState<IFavourite[]>([]);
+
+  const { data: userPosts, isLoading: loadingPosts, error: errLoadUserPosts } = useQuery({
+    queryKey: ['userpage-userPosts'],
+    queryFn: fetchUserPosts,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: favouritePosts, isLoading: loadingFavourite, error: errLoadFavouritePosts } = useQuery({
+    queryKey: ['userpage-favouritePosts'],
+    queryFn: fetchFavouritePosts,
+    staleTime: 5 * 60 * 1000,
+  });
 
   useEffect(() => {
     if (location.hash) {
@@ -66,41 +92,7 @@ const UserPage = () => {
         element.scrollIntoView({ behavior: 'smooth' });
       }
     }
-  }, [location, isLoading]);
-
-  useEffect(() => {
-    (async () => {
-      setIsLoading(true);
-
-      await getPosts()
-      .then((resp) => {
-        const _user_posts = resp as IPost[];
-        _user_posts.sort((item1, item2) => (item2?.created_at as number) - (item1?.created_at as number));
-
-        setUserPosts(_user_posts);
-      })
-      .catch((error) => console.log("cannot load user posts"));
-
-      setIsLoading(false);
-    }) ()
-  }, []);
-
-  useEffect(() => {
-    (async () => {
-      setIsLoading(true);
-
-      await getFavouritePosts()
-      .then((resp) => {
-        const _fav_posts = resp as IFavourite[];
-        _fav_posts.sort((item1, item2) => (item2?.id as number) - (item1?.id as number));
-
-        setFavouritePosts(_fav_posts);
-      })
-      .catch((error) => console.log("cannot load favourite posts"));
-
-      setIsLoading(false);
-    }) ()
-  }, []);
+  }, [location, loadingPosts, loadingFavourite]);
   
   return (
     <div className={styles.container}>
@@ -127,33 +119,35 @@ const UserPage = () => {
           </button>
         </div>
       </div>
-
+      
       <div id="favourite-posts" className={styles.title_razdel} onClick={() => setViewFavourites(prev => !prev)}>
         <h2>Избранное</h2>
         <img src={!viewFavourites ? IconArrowDown : IconArrowUp} alt='arrow' />
       </div>
-      
+
       {
-        favouritePosts?.length === 0 ? <p>У вас нет избранных постов :(</p>
+        loadingFavourite ? <Loader />
         :
-          <Masonry
-            columns={{640:1, 1200: 2}}
-            gap={20}
-            className={viewFavourites ? styles.cards_container : styles.cards_container_hidden}
-            columnProps={{
-              className: cardStyles.card_wrapper
-            }}
-          >
-            {
-              favouritePosts?.map((item) => 
-                <FavouritePost 
-                  key={item.id}
-                  post_id={item.post_id || -1}
-                />
-              )
-            }
-          </Masonry>
-        }
+          favouritePosts?.length === 0 ? <p>У вас нет избранных постов :(</p>
+            :
+              <Masonry
+                columns={{640:1, 1200: 2}}
+                gap={20}
+                className={viewFavourites ? styles.cards_container : styles.cards_container_hidden}
+                columnProps={{
+                  className: cardStyles.card_wrapper
+                }}
+              >
+                {
+                  favouritePosts?.map((item) => 
+                    <FavouritePost 
+                      key={item.id}
+                      post_id={item.post_id || -1}
+                    />
+                  )
+                }
+              </Masonry>  
+      }
 
       <div id="my-posts" className={styles.title_razdel} onClick={() => setViewMyPosts(prev => !prev)}>
         <h2>Ваши посты</h2>
@@ -161,7 +155,7 @@ const UserPage = () => {
       </div>
 
       {
-        isLoading ?
+        loadingPosts ?
           <Loader />
         :
           userPosts?.length === 0 ? <p>У вас еще нет постов</p>
