@@ -19,10 +19,12 @@ type Post struct {
 }
 
 type Include struct {
-	ID     uint   `gorm:"primaryKey" json:"id"`
-	PostID uint   `gorm:"not null" json:"post_id"`
-	Data   string `gorm:"type:text;not null" json:"data"`
-	Type   string `gorm:"size:20;not null" json:"type"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	PostID    uint      `gorm:"not null" json:"post_id"`
+	Data      string    `gorm:"not null" json:"-"`
+	Type      string    `gorm:"size:100" json:"type"`
+	Size      int64     `json:"size"`
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
 }
 
 type Like struct {

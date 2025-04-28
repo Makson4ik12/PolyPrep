@@ -1,13 +1,25 @@
 package handlers
 
 import (
+	"bytes"
 	"net/http"
+	"polyprep/config"
 	"polyprep/database"
 	models "polyprep/model"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+
+	"fmt"
+	"path/filepath"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/google/uuid"
 )
 
 //------------------------------STATUS CODE------------------------------//
@@ -72,16 +84,26 @@ func GetIncludes(c *gin.Context) {
 
 // ------------------------------POST/include-----------------------------//
 
-func LoadIncludes(c *gin.Context) {
+func UploadInclude(c *gin.Context) {
+
+	currentUserID := c.GetString("user_id")
+	if currentUserID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Authorization required"})
+		return
+	}
 
 	var request struct {
-		PostID uint   `json:"post_id"`
-		Blob   string `json:"blob"`
+		PostID   uint   `json:"post_id" binding:"required"`
+		Filename string `json:"filename" binding:"required"`
+		Blob     struct {
+			Data []byte `json:"data"`
+		} `json:"blob" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Invalid request body",
+			"message": "Invalid request format",
+			"details": err.Error(),
 		})
 		return
 	}
@@ -89,45 +111,102 @@ func LoadIncludes(c *gin.Context) {
 	var post models.Post
 	if err := database.DB.First(&post, request.PostID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusForbidden, gin.H{
-				"message": "Post not found",
-			})
+			c.JSON(http.StatusForbidden, gin.H{"message": "Post not found"})
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"message": "Database error",
-			})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Database error"})
 		}
 		return
 	}
 
-	currentUserID := c.GetString("user_id")
-	if post.AuthorID != currentUserID {
-		c.JSON(http.StatusMethodNotAllowed, gin.H{
-			"message": "No access to private post",
-		})
+	if !post.Public && post.AuthorID != currentUserID {
+		c.JSON(http.StatusMethodNotAllowed, gin.H{"message": "No access to private post"})
 		return
 	}
 
-	newInclude := models.Include{
-		PostID: request.PostID,
-		Data:   request.Blob,
-		Type:   "blob",
+	if !isValidFilename(request.Filename) {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid filename"})
+		return
 	}
 
-	if err := database.DB.Create(&newInclude).Error; err != nil {
+	fileExt := filepath.Ext(request.Filename)
+	fileName := fmt.Sprintf("%s%s", uuid.New().String(), fileExt)
+	s3Key := fmt.Sprintf("posts/%d/%s", request.PostID, fileName)
+	contentType := detectContentType(fileExt)
+
+	cfg := config.LoadBegetS3Config()
+	sess, err := session.NewSession(&aws.Config{
+		Endpoint: aws.String(cfg.Endpoint),
+		Region:   aws.String(cfg.Region),
+		Credentials: credentials.NewStaticCredentials(
+			cfg.AccessKeyID,
+			cfg.SecretAccessKey,
+			"",
+		),
+		S3ForcePathStyle: aws.Bool(true),
+	})
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to create include",
+			"message": "Failed to create S3 session",
+			"error":   err.Error(),
 		})
 		return
+	}
+
+	s3Client := s3.New(sess)
+	_, err = s3Client.PutObject(&s3.PutObjectInput{
+		Bucket:      aws.String(cfg.Bucket),
+		Key:         aws.String(s3Key),
+		Body:        bytes.NewReader(request.Blob.Data),
+		ContentType: aws.String(contentType),
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to upload file to S3",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	include := models.Include{
+		PostID: request.PostID,
+		Data:   s3Key,
+		Type:   contentType,
+		Size:   int64(len(request.Blob.Data)),
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Include added successfully",
+		"message": "File uploaded successfully",
 		"data": gin.H{
-			"id":      newInclude.ID,
-			"post_id": newInclude.PostID,
+			"id":       include.ID,
+			"post_id":  include.PostID,
+			"filename": request.Filename,
+			"size":     include.Size,
+			"type":     include.Type,
 		},
 	})
+}
+
+func isValidFilename(filename string) bool {
+	return !strings.ContainsAny(filename, "/\\?%*:|\"<>")
+}
+
+func detectContentType(ext string) string {
+	switch strings.ToLower(ext) {
+	case ".jpg", ".jpeg":
+		return "image/jpeg"
+	case ".png":
+		return "image/png"
+	case ".pdf":
+		return "application/pdf"
+	case ".mp4":
+		return "video/mp4"
+	case ".mp3":
+		return "audio/mpeg"
+	case ".txt":
+		return "text/plain"
+	default:
+		return "application/octet-stream"
+	}
 }
 
 // ------------------------------DELETE/include------------------------------//

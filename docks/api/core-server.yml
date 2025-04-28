@@ -1491,6 +1491,8 @@ components:
         post_id:
           type: "integer"
         blob:
+          type: "object"
+        filename:
           type: "string"
 
 
