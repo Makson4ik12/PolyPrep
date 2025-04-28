@@ -18,3 +18,12 @@ export const getTextColor = (hexBgColor: string) => {
 
   return ((0.299 * r + 0.587 * g + 0.114 * b) / 255) > 0.5 ? "#000000" : "#FFFFFF";
 }
+
+export const copyToClipboard = (text: string) => {
+  const textArea = document.createElement('textarea');
+  textArea.value = text;
+  document.body.appendChild(textArea);
+  textArea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textArea);
+};

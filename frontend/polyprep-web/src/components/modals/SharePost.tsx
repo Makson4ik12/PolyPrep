@@ -4,7 +4,7 @@ import store from '../../redux-store/store';
 import { useEffect, useRef, useState } from 'react';
 import Loader from '../Loader';
 import { deleteSharedLink, getSharedLink, IShareLink, postShareLink } from '../../server-api/shared';
-import { getDate } from '../../utils/UtilFunctions';
+import { copyToClipboard, getDate } from '../../utils/UtilFunctions';
 
 const link_prefix = window.location.protocol + "//" + window.location.hostname + ":" + window.location.port  + "/post/view/";
 const link_prefix_shared = window.location.protocol + "//" + window.location.hostname + ":" + window.location.port  + "/post/shared/";
@@ -96,7 +96,7 @@ export default function SharePost(postData: IPost) {
                       <p>Действительна до: { getDate(link.expires_at) }</p>
                       
                       <form>
-                        <button type='button' onClick={ () =>  navigator.clipboard.writeText(link_prefix_shared + link.uuid) }>Скопировать в буфер обмена</button>
+                        <button type='button' onClick={ () =>  copyToClipboard(link_prefix_shared + link.uuid) }>Скопировать в буфер обмена</button>
                         <button type='button' className={styles.button_dark} onClick={ () => handleDeleteLink() }>Удалить общую ссылку</button>
                       </form>
                     </>
@@ -111,7 +111,7 @@ export default function SharePost(postData: IPost) {
                       />
 
                       <form>
-                        <button type='button' onClick={ () =>  navigator.clipboard.writeText(link_prefix + link.uuid) }>Скопировать в буфер обмена</button>
+                        <button type='button' onClick={ () =>  copyToClipboard(link_prefix + link.uuid) }>Скопировать в буфер обмена</button>
                       </form>
                     </>
               }

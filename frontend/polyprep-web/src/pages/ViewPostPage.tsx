@@ -31,6 +31,8 @@ import IconUnlike from '../icons/unlike.svg'
 import { Badge } from '../components/Badge';
 import Loader from '../components/Loader';
 import { getUser, IUser } from '../server-api/user';
+import Modal from 'react-responsive-modal';
+import SharePost from '../components/modals/SharePost';
 
 interface IInclude {
   name: string;
@@ -179,6 +181,7 @@ const ViewPostPage = () => {
   const [likes, setLikes] = useState<ILikes>();
   const [isFavourite, setIsFavourite] = useState<boolean>(false);
   const [user, setUser] = useState<IUser>();
+  const [viewShare, setViewShare] = useState<boolean>(false);
 
   const [isUpdate, updateComponent] = useState<boolean>(false);
   const [isUpdateComments, updateComments] = useState<boolean>(false);
@@ -379,7 +382,7 @@ const ViewPostPage = () => {
                   screenSize.width > screenSizes.__768.width ?
                     <>
                       <img src={ isFavourite ? IconFavouriteFilled : IconFavourite } className={styles.action_btn} alt='favourite' onClick={(e) => handleFavourite(e)}/>
-                      <img src={IconShare} className={styles.action_btn} alt='share'/>
+                      <img src={IconShare} className={styles.action_btn} alt='share' onClick={() => setViewShare(true)}/>
                       {
                         postData?.author_id === userData.uid ?
                           <>
@@ -401,8 +404,8 @@ const ViewPostPage = () => {
                         <p>В избранное</p>
                       </button>
 
-                      <button className={styles.action_item}>
-                      <img src={IconShare} className={styles.action_btn} alt='share'/>
+                      <button className={styles.action_item} onClick={() => setViewShare(true)}>
+                        <img src={IconShare} className={styles.action_btn} alt='share'/>
                         <p>Поделиться</p>
                       </button>
                       
@@ -468,12 +471,7 @@ const ViewPostPage = () => {
       </div>
 
       <h2 id='comments'>Комментарии</h2>
-      {/* 
-      
-      TODO: очистить input после отправки коммента
-      Реализовать редактирование комментов
-      
-      */}
+
       <div className={styles.includes_container}>
         {
           userData.uid ? 
@@ -526,6 +524,27 @@ const ViewPostPage = () => {
               </>
           }
       </div>
+
+      <Modal 
+        open={viewShare} 
+        onClose={() => setViewShare(false)} 
+        showCloseIcon={false} 
+        animationDuration={400}
+        blockScroll={false}
+        center
+      >
+        <SharePost 
+          id={postData?.id}
+          created_at={postData?.created_at}
+          updated_at={postData?.updated_at}
+          scheduled_at={postData?.scheduled_at}
+          author_id={postData?.author_id}
+          title={postData?.title as string} 
+          text={postData?.text as string}
+          public={postData?.public as boolean}
+          hashtages={postData?.hashtages as string[]}
+        />
+      </Modal>
     </div>
   )
 }
