@@ -57,8 +57,7 @@ func GetShareLink(c *gin.Context) {
 		First(&share).Error; err != nil {
 
 		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusOK, gin.H{
-				"exists":  false,
+			c.JSON(http.StatusForbidden, gin.H{
 				"message": "No active share link found",
 			})
 		} else {
