@@ -284,12 +284,12 @@ func DeletePost(c *gin.Context) {
 
 func SearchPosts(c *gin.Context) {
 
-	searchText := strings.TrimSpace(c.Query("text")) //get text(string)
-	from, errFrom := strconv.Atoi(c.Query("from"))   //get from(string)
-	to, errTo := strconv.Atoi(c.Query("to"))         //get to(string)
+	searchText := strings.TrimSpace(c.Query("text"))
+	from, errFrom := strconv.Atoi(c.Query("from"))
+	to, errTo := strconv.Atoi(c.Query("to"))
 
-	if searchText == "" || errFrom != nil || errTo != nil || from < 0 || to <= from { //check valid
-		c.JSON(http.StatusBadRequest, gin.H{ //400
+	if searchText == "" || errFrom != nil || errTo != nil || from < 0 || to <= from {
+		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Invalid search parameters",
 			"details": map[string]interface{}{
 				"required": map[string]string{
@@ -302,39 +302,62 @@ func SearchPosts(c *gin.Context) {
 		return
 	}
 
+	searchWords := strings.Fields(searchText)
+	if len(searchWords) == 0 {
+		searchWords = []string{searchText}
+	}
+
+	dbQuery := database.DB.Model(&models.Post{}).
+		Where("public = true").
+		Order("created_at DESC")
+
+	for _, word := range searchWords {
+		pattern := "%" + word + "%"
+
+		dbQuery = dbQuery.Where(
+			database.DB.Where("title ILIKE ?", pattern).
+				Or("text ILIKE ?", pattern).
+				Or("array_to_string(hashtages, ',') ILIKE ?", pattern),
+		)
+	}
+
+	var total int64
+	if err := dbQuery.Count(&total).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to count posts",
+			"error":   err.Error(),
+		})
+		return
+	}
+
 	var posts []models.Post
-	query := database.DB.Where( //find post
-		"public = true AND (title ILIKE ? OR text ILIKE ? OR hashtages ILIKE ?)",
-		"%"+searchText+"%",
-		"%"+searchText+"%",
-		"%"+searchText+"%",
-	).Order("created_at DESC")
+	result := dbQuery.Offset(from).Limit(to - from).Find(&posts)
 
-	var total int64 //пагинация
-	query.Model(&models.Post{}).Count(&total)
-	result := query.Offset(from).Limit(to - from).Find(&posts)
-
-	if result.Error != nil { //check result
-		c.JSON(http.StatusInternalServerError, gin.H{ //500
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Database error",
+			"error":   result.Error.Error(),
 		})
 		return
 	}
 
 	if len(posts) == 0 {
-		c.JSON(http.StatusForbidden, gin.H{ //403
+		c.JSON(http.StatusForbidden, gin.H{
 			"message": "No posts found",
 			"search":  searchText,
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{ //200
+	response := gin.H{
 		"total":   total,
 		"from":    from,
 		"to":      from + len(posts),
 		"results": posts,
-	})
+		"search":  searchText,
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 //------------------------------GET/random------------------------------//

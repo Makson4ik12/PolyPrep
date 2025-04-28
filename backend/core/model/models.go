@@ -21,6 +21,7 @@ type Post struct {
 type Include struct {
 	ID        uint      `gorm:"primaryKey" json:"id"`
 	PostID    uint      `gorm:"not null" json:"post_id"`
+	Post      Post      `gorm:"foreignKey:PostID" json:"-"`
 	Data      string    `gorm:"not null" json:"-"`
 	Type      string    `gorm:"size:100" json:"type"`
 	Size      int64     `json:"size"`
