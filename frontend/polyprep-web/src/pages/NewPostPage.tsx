@@ -20,6 +20,7 @@ import Loader from '../components/Loader';
 import { IPost, postPost } from '../server-api/posts';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import TextareaAutosize from 'react-textarea-autosize';
 
 interface IInclude {
   name: string;
@@ -46,7 +47,6 @@ const NewPostPage = () => {
   const [isPrivate, setIsPrivate] = useState(false);
   const [isScheduled, setIsScheduled] = useState(false);
 
-  const [value, setValue] = useState("");
   const [titleLen, setTitleLen] = useState(0);
   const [hashtagesLen, setHashtagsLen] = useState(0);
   const [isError, setIsError] = useState({ind: false, error: ""});
@@ -56,8 +56,6 @@ const NewPostPage = () => {
   const titleRef = useRef<HTMLInputElement>(null);
   const hashtagesRef = useRef<HTMLInputElement>(null);
 
-  useAutosizeTextArea(textRef.current, value);
-
   const handleTitleChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
     const val = evt.target?.value.length;
     setTitleLen(val);
@@ -66,11 +64,6 @@ const NewPostPage = () => {
   const handleHashtagsChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
     const val = evt.target?.value.length;
     setHashtagsLen(val);
-  };
-
-  const handleTextChange = (evt: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const val = evt.target?.value;
-    setValue(val);
   };
 
   const handleOnSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -131,17 +124,15 @@ const NewPostPage = () => {
           <h2>Текст</h2>
         </div>
 
-        <textarea 
+        <TextareaAutosize 
           id="text" 
           name="text" 
           placeholder='Абв'
           ref={textRef}
-          onChange={handleTextChange}
           spellCheck={false}
           autoCapitalize='on'
           required
-          >
-        </textarea>
+        />
 
         <div className={styles.subheader}>
           <img src={IconHashtag} alt='hashtages' />

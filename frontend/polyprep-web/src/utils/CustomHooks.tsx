@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
 
 const useAutosizeTextArea = (
   textAreaRef: HTMLTextAreaElement | null,
@@ -8,8 +7,8 @@ const useAutosizeTextArea = (
   useEffect(() => {
     if (textAreaRef) {
       textAreaRef.style.height = "0px";
-      const scrollHeight = textAreaRef.scrollHeight;
       
+      const scrollHeight = textAreaRef.scrollHeight;
       textAreaRef.style.height = scrollHeight + "px";
     }
   }, [textAreaRef, value]);

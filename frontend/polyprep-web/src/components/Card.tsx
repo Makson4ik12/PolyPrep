@@ -20,6 +20,8 @@ import { getUser, IUser } from '../server-api/user';
 import SharePost from './modals/SharePost';
 import Modal from 'react-responsive-modal';
 import { useQueryClient } from '@tanstack/react-query';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const Card = (data: IPost) => {
   const navigate = useNavigate();
@@ -155,7 +157,7 @@ const Card = (data: IPost) => {
       
       <div className={styles.card_main_content} onClick={() => navigate('/post/view/' + data.id)}>
         <h1>{data.title}</h1>
-        <p>{data.text}</p>
+        <Markdown remarkPlugins={[remarkGfm]}>{data.text}</Markdown>
       </div>
       
       <div className={styles.bottom}>

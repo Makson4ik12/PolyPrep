@@ -32,7 +32,9 @@ import Loader from '../components/Loader';
 import { getUser, IUser } from '../server-api/user';
 import Modal from 'react-responsive-modal';
 import SharePost from '../components/modals/SharePost';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface IInclude {
   name: string;
@@ -61,6 +63,7 @@ const fetchPost = async (post_id: number) => {
 const ViewPostPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const post_id = Number(location.pathname.slice(location.pathname.lastIndexOf('/') + 1, location.pathname.length) || -1);
   const userData = store.getState().auth.userData;
 
@@ -161,6 +164,9 @@ const ViewPostPage = () => {
         navigate(-2);
       })
       .catch((error) => console.log("cannot delete post"));
+    
+    await queryClient.invalidateQueries({ queryKey: ['userpage-userPosts'] });
+    await queryClient.invalidateQueries({ queryKey: ['userpage-favouritePosts'] });
   }
 
   const { data: postData, isLoading: isLoadingPost, error: errLoadPost } = useQuery({
@@ -314,7 +320,7 @@ const ViewPostPage = () => {
             
             <h2 className={styles.title}>{ postData?.title }</h2>
 
-            <p className={styles.text}>{ postData?.text }</p>
+            <Markdown remarkPlugins={[remarkGfm]}>{ postData?.text }</Markdown>
             
             <div className={styles.lin_container}>
               {

@@ -19,6 +19,7 @@ import { getPost, IPost, putPost } from '../server-api/posts';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Loader from '../components/Loader';
 import { useQueryClient } from '@tanstack/react-query';
+import TextareaAutosize from 'react-textarea-autosize';
 
 interface IInclude {
   name: string;
@@ -43,7 +44,6 @@ const EditPostPage = () => {
   const queryClient = useQueryClient();
   const post_id = Number(location.pathname.slice(location.pathname.lastIndexOf('/') + 1, location.pathname.length) || -1);
 
-  const [value, setValue] = useState("");
   const [isPrivate, setIsPrivate] = useState(true);
   const [isScheduled, setIsScheduled] = useState(false);
   const [titleLen, setTitleLen] = useState(0);
@@ -58,8 +58,6 @@ const EditPostPage = () => {
   const [postData, setPostData] = useState<IPost>();
   const navigate = useNavigate();
 
-  useAutosizeTextArea(textRef.current, value);
-
   const handleTitleChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
     const val = evt.target?.value.length;
     setTitleLen(val);
@@ -68,11 +66,6 @@ const EditPostPage = () => {
   const handleHashtagsChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
     const val = evt.target?.value.length;
     setHashtagsLen(val);
-  };
-
-  const handleTextChange = (evt: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const val = evt.target?.value;
-    setValue(val);
   };
 
   const handleOnSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -105,6 +98,7 @@ const EditPostPage = () => {
     });
 
     await queryClient.invalidateQueries({ queryKey: ['userpage-userPosts'] });
+    await queryClient.invalidateQueries({ queryKey: ['viewpostpage-id' + post_id] });
   }
 
   useEffect(() => {
@@ -152,18 +146,16 @@ const EditPostPage = () => {
           <h2>Текст</h2>
         </div>
 
-        <textarea 
+        <TextareaAutosize 
           id="text" 
           name="text" 
           placeholder='Абв'
           ref={textRef}
-          onChange={handleTextChange}
           spellCheck={false}
           defaultValue={ postData?.text }
           autoCapitalize='on'
           required
-          >
-        </textarea>
+        />
 
         <div className={styles.subheader}>
           <img src={IconHashtag} alt='hashtages' />

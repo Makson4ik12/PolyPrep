@@ -33,6 +33,22 @@ h1, h2, p, a, button, input, textarea {
   font-family: 'Montserrat';
 }
 
+blockquote {
+  width: 100%;
+  box-sizing: border-box;
+
+  background-color: #e8fde6;
+  margin: 0;
+  padding: 10px 10px 10px 20px;
+  border-left: 3px solid rgb(140, 161, 138);
+}
+
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+  padding: 10px;
+}
+
 @media screen and (1000px < width <= 1540px) {
   :root {
     --workzone-width: 85%;

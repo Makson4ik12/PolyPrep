@@ -83,7 +83,11 @@
             font-weight: 400;
             resize: vertical;
             display: block;
-            white-space: nowrap;
+
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            line-height: 1.5;
         }
 
         h2 {
