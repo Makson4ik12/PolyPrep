@@ -10,6 +10,8 @@ import IconSuccess from '../icons/success.svg'
 import IconUser from '../icons/user.svg'
 import IconEdit from '../icons/edit.svg'
 import IconDelete from '../icons/trash.svg'
+import TextareaAutosize from 'react-textarea-autosize';
+import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
 
 interface ICommentMeta {
   setIsLoading: (val: boolean) => void;
@@ -22,10 +24,9 @@ const Comment = (data: IComment & ICommentMeta) => {
   const [user, setUser] = useState<IUser>();
   const [value, setValue] = useState(data.text);
   const [isEdit, setIsEdit] = useState(false);
-
+  
+  const screenSize = HandleResponsiveView();
   const commentRef = useRef<HTMLTextAreaElement>(null);
-
-  useAutosizeTextArea(commentRef.current, value);
 
   const handleOnDelete = async () => {
     data.setIsLoading(true);
@@ -80,7 +81,9 @@ const Comment = (data: IComment & ICommentMeta) => {
       <div className={styles.top_info}>
         <div className={styles.lin_container}>
           <img src={IconUser} alt='usericon'/>
-          <p><b>{ data?.author_id === userData.uid ? "You" : user?.username }</b> | { getDate(data.created_at || 0) }</p>
+          <p>
+            <b>{ data?.author_id === userData.uid ? "You" : user?.username }</b>{screenSize.width <= screenSizes.__320.width ? <br></br> : " | "}{ getDate(data.created_at || 0) }
+          </p>
         </div>
 
         {
@@ -108,7 +111,7 @@ const Comment = (data: IComment & ICommentMeta) => {
       {
         isEdit ? 
           <form>
-            <textarea 
+            <TextareaAutosize 
               id="edit-comment" 
               name="comment" 
               placeholder='Крутой конспект!' 
@@ -119,8 +122,7 @@ const Comment = (data: IComment & ICommentMeta) => {
               spellCheck={false}
               defaultValue={value}
               autoCapitalize='on'
-              >
-            </textarea>
+            />
           </form>
         :
           <p className={styles.text}>{value}</p>

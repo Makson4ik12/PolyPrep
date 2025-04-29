@@ -195,31 +195,15 @@
     cursor: pointer;
 }
 
-@media screen and (1200px < width) {
-    // .container {
-    //     width: 48%;
-    // }
-}
 
 @media screen and (width <= 1200px) {
-    // .container {
-    //     width: 48%;
-    // }
-
     .card_wrapper {
         width: 100%;
     }
 }
 
-@media screen and (768px < width <= 1000px) {
-    // .container {
-    //     width: 100%;
-    // }
-}
-
 @media screen and (480px < width <= 768px) {
     .container {
-        //width: 100%;
 
         h1 {
             font-size: 22px;
@@ -234,7 +218,6 @@
 
 @media screen and (width <= 480px) {
     .container {
-        //width: 100%;
 
         h1 {
             font-size: 18px;

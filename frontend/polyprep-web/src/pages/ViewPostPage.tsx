@@ -7,7 +7,6 @@ import { deleteLike, getPostLikes, ILikes, postLike } from '../server-api/likes'
 import { checkPostIsFavourite, deleteFavourite, postFavourite } from '../server-api/favourites';
 import { deletePost, getPost, IPost } from '../server-api/posts';
 import { getDate } from '../utils/UtilFunctions';
-import useAutosizeTextArea from '../utils/CustomHooks';
 import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
 import IconDoc from '../icons/doc.svg'
 import IconImage from '../icons/image.svg'
@@ -35,6 +34,7 @@ import SharePost from '../components/modals/SharePost';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import TextareaAutosize from 'react-textarea-autosize';
 
 interface IInclude {
   name: string;
@@ -74,7 +74,6 @@ const ViewPostPage = () => {
   const [user, setUser] = useState<IUser>();
   const [viewShare, setViewShare] = useState<boolean>(false);
   const [viewIncludes, setViewIncludes] = useState(false);
-  const [value, setValue] = useState("");
 
   const [isUpdate, updateComponent] = useState<boolean>(false);
   const [isUpdateComments, updateComments] = useState<boolean>(false);
@@ -82,8 +81,6 @@ const ViewPostPage = () => {
 
   const screenSize = HandleResponsiveView();
   const commentRef = useRef<HTMLTextAreaElement>(null);
-
-  useAutosizeTextArea(commentRef.current, value);
 
   const handleLike = async (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     e.preventDefault();
@@ -106,11 +103,6 @@ const ViewPostPage = () => {
     }
   }
 
-  const handleCommentChange = (evt: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const val = evt.target?.value;
-    setValue(val);
-  };
-
   const handleOnSubmitComment = async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
   
@@ -127,7 +119,6 @@ const ViewPostPage = () => {
       .then ((resp) => {
         setIsLoadingComments(false);
         updateComments(prev => !prev);
-        setValue("");
         commentRef.current ? commentRef.current.value = "" : console.log("null comment ref");
       })
       .catch((error) => { 
@@ -358,18 +349,16 @@ const ViewPostPage = () => {
         {
           userData.uid ? 
             <form onSubmit={handleOnSubmitComment}>
-              <textarea 
+              <TextareaAutosize 
                 id="comment" 
                 name="comment" 
                 placeholder='Крутой конспект!' 
                 maxLength={350}
                 required
                 ref={commentRef}
-                onChange={handleCommentChange}
                 spellCheck={false}
                 autoCapitalize='on'
-                >
-              </textarea>
+              />
 
               <button type='submit'>
                 <img src={IconSend} alt='send' />

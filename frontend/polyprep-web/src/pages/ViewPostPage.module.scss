@@ -488,7 +488,7 @@
         }
 
         .info_container {
-            gap: 15px;
+            gap: 5px;
             
             .title {
                 font-size: 19px;
@@ -502,6 +502,12 @@
                 .lin_container {
                     p {
                         font-size: 14px;
+                        line-height: 1.3rem;
+                    }
+
+                    img {
+                        width: 25px;
+                        height: 25px;
                     }
 
                     .action_btn {
