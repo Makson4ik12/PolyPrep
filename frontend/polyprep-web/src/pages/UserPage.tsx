@@ -13,6 +13,7 @@ import cardStyles from '../components/Card.module.scss'
 import { getFavouritePosts, IFavourite } from "../server-api/favourites";
 import { useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { KEYCLOAK_ADDRESS } from "../server-api/config";
 
 const FavouritePost = ( { post_id }: { post_id: number }) => {
   const [postData, setPostData] = useState<IPost>();
@@ -66,6 +67,10 @@ const fetchFavouritePosts = async () => {
   return _fav_posts;
 };
 
+// # TODO:  добавить сылку на редактирование - keycloak; 
+// изменить стили для markdown
+// добавить в 2 строки имя и дата поста при просмотре поста [mobile]
+
 const UserPage = () => {
   const current_state = store.getState().auth;
   const location = useLocation();
@@ -114,7 +119,7 @@ const UserPage = () => {
             <h2 className={styles.title}>{ current_state.userData.user_mail ? current_state.userData.user_mail : "somemail@mail.com"}</h2>
           </div>
 
-          <button>
+          <button onClick={() => window.open(`${KEYCLOAK_ADDRESS}realms/master/account`, "_blank")}>
             <p>Редактировать</p>
           </button>
         </div>
@@ -126,9 +131,10 @@ const UserPage = () => {
       </div>
 
       {
-        loadingFavourite ? <Loader />
+        loadingFavourite ? 
+          <Loader />
         :
-          favouritePosts?.length === 0 ? <p>У вас нет избранных постов :(</p>
+          (favouritePosts?.length === 0 || (errLoadFavouritePosts != null)) ? <p>У вас нет избранных постов :(</p>
             :
               <Masonry
                 columns={{640:1, 1200: 2}}
@@ -158,7 +164,7 @@ const UserPage = () => {
         loadingPosts ?
           <Loader />
         :
-          userPosts?.length === 0 ? <p>У вас еще нет постов</p>
+          ((userPosts?.length === 0) || (errLoadUserPosts != null)) ? <p>У вас еще нет постов</p>
             :
               <Masonry
                 columns={{640:1, 1200: 2}}

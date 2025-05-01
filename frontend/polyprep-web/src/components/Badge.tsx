@@ -16,11 +16,11 @@ export function Badge (data: IBadge) {
   }, []);
 
   return (
-    <div className={styles.badge} style={{backgroundColor: colors.bgColor}}>
+    <div className={styles.badge} style={{backgroundColor: "white"}}>
       {
         data.icon ? <img src={data.icon} alt='icon'/> : <></>
       }
-      <p style={{color: colors.textColor}}>{data.text}</p>
+      <p style={{color: "black"}}>{data.text}</p>
     </div>
   )
 }

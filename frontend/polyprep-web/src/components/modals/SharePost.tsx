@@ -9,7 +9,7 @@ import { copyToClipboard, getDate } from '../../utils/UtilFunctions';
 const link_prefix = window.location.protocol + "//" + window.location.hostname + ":" + window.location.port  + "/post/view/";
 const link_prefix_shared = window.location.protocol + "//" + window.location.hostname + ":" + window.location.port  + "/post/shared/";
 
-export default function SharePost(postData: IPost) {
+export default function SharePost(postData: IPost & { onClose: () => void }) {
   const userData = store.getState().auth.userData;
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [link, setLink] = useState<IShareLink>({uuid: "null", expires_at: 0});
@@ -76,7 +76,6 @@ export default function SharePost(postData: IPost) {
                       <button 
                         type='submit' 
                         className={styles.button_dark} 
-                        onClick={ () =>  navigator.clipboard.writeText(link_prefix + link.uuid) }
                       >
                         Сгенерировать общую ссылку
                       </button>
@@ -87,7 +86,7 @@ export default function SharePost(postData: IPost) {
                     <>
                       <input 
                         name="link" 
-                        type='link' 
+                        type='url' 
                         placeholder='link' 
                         disabled
                         defaultValue={link_prefix_shared + link.uuid}
@@ -96,7 +95,10 @@ export default function SharePost(postData: IPost) {
                       <p>Действительна до: { getDate(link.expires_at) }</p>
                       
                       <form>
-                        <button type='button' onClick={ () =>  copyToClipboard(link_prefix_shared + link.uuid) }>Скопировать в буфер обмена</button>
+                        <button type='button' onClick={ () => {
+                          copyToClipboard(link_prefix_shared + link.uuid);
+                          postData.onClose();
+                        }}>Скопировать в буфер обмена</button>
                         <button type='button' className={styles.button_dark} onClick={ () => handleDeleteLink() }>Удалить общую ссылку</button>
                       </form>
                     </>
@@ -104,14 +106,17 @@ export default function SharePost(postData: IPost) {
                     <>
                       <input 
                         name="link" 
-                        type='link' 
+                        type='url' 
                         placeholder='link' 
                         disabled
                         defaultValue={link_prefix + link.uuid}
                       />
 
                       <form>
-                        <button type='button' onClick={ () =>  copyToClipboard(link_prefix + link.uuid) }>Скопировать в буфер обмена</button>
+                        <button type='button' onClick={ () => {
+                          copyToClipboard(link_prefix + link.uuid);
+                          postData.onClose();
+                        }}>Скопировать в буфер обмена</button>
                       </form>
                     </>
               }

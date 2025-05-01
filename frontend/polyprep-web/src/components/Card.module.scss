@@ -193,6 +193,11 @@
     border-radius: unset;
 
     cursor: pointer;
+
+    .post_title {
+        color: var(--color-accent-dark);
+        font-weight: 700;
+    }
 }
 
 
@@ -218,6 +223,7 @@
 
 @media screen and (width <= 480px) {
     .container {
+        gap: 12px;
 
         h1 {
             font-size: 18px;
@@ -230,6 +236,10 @@
         .like_btn {
             width: 25px;
             height: 25px;
+        }
+
+        .card_main_content {
+            gap: 12px;
         }
     }
 }

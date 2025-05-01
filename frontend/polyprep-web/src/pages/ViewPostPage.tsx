@@ -64,6 +64,7 @@ const ViewPostPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  
   const post_id = Number(location.pathname.slice(location.pathname.lastIndexOf('/') + 1, location.pathname.length) || -1);
   const userData = store.getState().auth.userData;
 
@@ -231,23 +232,23 @@ const ViewPostPage = () => {
             <div className={styles.top_info}>
               <div className={styles.lin_container}>
                 <img src={IconUser} alt='usericon'/>
-                <p><b>{ postData?.author_id === userData.uid ? "You" : user?.username }</b> | { getDate(postData?.created_at || 0) }</p>
 
-                <div className={styles.badge}>
-                  {
-                    !postData?.public ?
-                    <>
+                {
+                  screenSize.width > screenSizes.__1200.width ?
+                    <p><b>{ postData?.author_id === userData.uid ? "You" : user?.username }</b> | { getDate(postData?.created_at || 0) }</p>
+                  :
+                    <p><b>{ postData?.author_id === userData.uid ? "You" : user?.username }</b><br></br>{ getDate(postData?.created_at || 0) }</p>
+                }
+                
+                {
+                  !postData?.public ?
+                    <div className={styles.badge}>
                       <img src={IconPrivate} alt='private'/>
                       <p>Private</p>
-                    </>
-                    :
-                    <>
-                      <img src={IconPublic} alt='public'/>
-                      <p>Public</p>
-                    </>
-                  }
-                  
-                </div>
+                    </div>
+                  :
+                    <></>
+                }
               </div>
               
               <div className={styles.lin_container}>
@@ -309,9 +310,11 @@ const ViewPostPage = () => {
               
             </div>
             
-            <h2 className={styles.title}>{ postData?.title }</h2>
-
-            <Markdown remarkPlugins={[remarkGfm]}>{ postData?.text }</Markdown>
+            <h1 className={styles.title}>{ postData?.title }</h1>
+            
+            <div className={styles.md_wrapper}>
+              <Markdown remarkPlugins={[remarkGfm]}>{ postData?.text }</Markdown>
+            </div>
             
             <div className={styles.lin_container}>
               {
@@ -342,8 +345,10 @@ const ViewPostPage = () => {
         <Include name='myrecords.mp3' />
         <Include name='photo-2002020.png' />
       </div>
-
-      <h2 id='comments'>Комментарии</h2>
+      
+      <div className={styles.title_razdel} id='comments'>
+        <h2>Комментарии</h2>
+      </div>
 
       <div className={styles.includes_container}>
         {
@@ -414,6 +419,7 @@ const ViewPostPage = () => {
           text={postData?.text as string}
           public={postData?.public as boolean}
           hashtages={postData?.hashtages as string[]}
+          onClose={() => setViewShare(false)}
         />
       </Modal>
     </div>

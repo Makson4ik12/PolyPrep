@@ -3,6 +3,7 @@
 :root {
   --color-accent: #45cf1b;
   --color-accent-pressed: #359916;
+  --color-accent-dark: #2c9933;
   --color-card: #ffffff;
   --header-height: 85px;
   --workzone-width: 75%;
@@ -26,11 +27,21 @@ a {
   transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
-h1, h2, p, a, button, input, textarea {
+h1, h2, h3, p, a, button, input, textarea, ol, ul {
   font-weight: 400;
   margin: 0;
   text-decoration: none;
   font-family: 'Montserrat';
+}
+
+ol, ul {
+  li {
+    padding: 5px 0px;
+
+    &::marker {
+      font-weight: 500;
+    }
+  }
 }
 
 blockquote {
@@ -44,6 +55,7 @@ blockquote {
 }
 
 table, th, td {
+  width: auto;
   border: 1px solid black;
   border-collapse: collapse;
   padding: 10px;

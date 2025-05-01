@@ -156,7 +156,7 @@ const Card = (data: IPost) => {
       </div>
       
       <div className={styles.card_main_content} onClick={() => navigate('/post/view/' + data.id)}>
-        <h1>{data.title}</h1>
+        <h1 className={styles.post_title}>{data.title}</h1>
         <Markdown remarkPlugins={[remarkGfm]}>{data.text}</Markdown>
       </div>
       
@@ -200,6 +200,7 @@ const Card = (data: IPost) => {
           text={data.text}
           public={data.public}
           hashtages={data.hashtages}
+          onClose={() => setViewShare(false)}
         />
       </Modal>
     </div>

@@ -14,10 +14,6 @@
 
     padding-bottom: 50px;
 
-    h2 {
-        font-weight: 500;
-    }
-
     p {
         font-size: 18px;
         white-space: pre-wrap;
@@ -59,12 +55,32 @@
         }
 
         .title {
-            font-size: 26px;
+            color: var(--color-accent-dark);
+            font-weight: 700;
         }
     }
 
     .main_content {
         @extend .info_container;
+
+        .md_wrapper {
+            width: 100%;
+            height: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+
+            justify-content: center;
+            align-items: flex-start;
+
+            p {
+                font-size: unset;
+            }
+
+            h1, h2, h3 {
+                font-weight: 600;
+            }
+        }
     }
 
     .title_razdel {
@@ -384,10 +400,6 @@
             line-height: 25px;
         }
 
-        h2 {
-            font-size: 21px;
-        }
-
         .main_content {
             box-shadow: none;
             padding: 0;
@@ -396,10 +408,6 @@
 
         .info_container {
             gap: 15px;
-
-            .title {
-                font-size: 21px;
-            }
 
             .text {
                 font-size: 18px;
@@ -477,22 +485,30 @@
             line-height: 25px;
         }
 
-        h2 {
-            font-size: 19px;
-        }
-
         .main_content {
             box-shadow: none;
             padding: 0;
             border-radius: 0;
+
+            .md_wrapper {
+                gap: 12px;
+
+                h1 {
+                    font-size: 22px;
+                }
+
+                h2 {
+                    font-size: 20px;
+                }
+
+                h3 {
+                    font-size: 18px;
+                }
+            }
         }
 
         .info_container {
-            gap: 5px;
-            
-            .title {
-                font-size: 19px;
-            }
+            gap: 12px;
 
             .text {
                 font-size: 16px;
@@ -529,6 +545,16 @@
                     }
                 }
             }
+
+            .title {
+                font-size: 22px;
+            }
+        }
+
+        .title_razdel {
+            h2 {
+                font-size: 22px;
+            }
         }
 
         .lin_container .badge {
@@ -554,6 +580,10 @@
                     width: 25px;
                     height: 25px;
                 }
+            }
+
+            .access_restricted {
+                font-size: 16px;
             }
 
             .include {
