@@ -175,7 +175,7 @@ func UploadUserPhoto(c *gin.Context) {
 	imageURL := fmt.Sprintf("%s/%s/%s", s3Config.Endpoint, s3Config.Bucket, fileName)
 
 	result := database.DB.Model(&models.User{}).
-		Where("id = ?", userID).
+		Where("uuid = ?", userID).
 		Update("icon", imageURL)
 	if result.Error != nil {
 		log.Printf("Error updating user avatar: %v", result.Error)
@@ -184,7 +184,6 @@ func UploadUserPhoto(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"id":       userID,
 		"img_link": imageURL,
 	})
 }
