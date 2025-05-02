@@ -1134,11 +1134,8 @@ paths:
             application/json:
               schema:
                 required:
-                  - "id"
                   - "img_link"
                 properties:
-                  id:
-                    type: "integer"
                   img_link:
                     type: "string"
                     example: "http://abc.png"
