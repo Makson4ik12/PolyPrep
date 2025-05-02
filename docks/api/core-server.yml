@@ -1049,13 +1049,6 @@ paths:
         - "Пользователь"
 
       parameters:
-        - in: header
-          name: Authorization
-          description: "Access токен"
-          required: true
-          schema:
-            type: string
-        
         - in: query
           name: id
           description: Id пользователя
@@ -1113,7 +1106,94 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiError"
 
-  
+  /user/photo:
+    post:
+      description: "Загрузка фото для текущего пользователя"
+      tags:
+        - "Пользователь"
+
+      parameters:
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+
+      requestBody:  
+        content:
+          image/png:
+            schema:
+              type: string
+              format: binary
+
+      responses:
+        200:
+          description: "Фото загружено"
+          content:
+            application/json:
+              schema:
+                required:
+                  - "id"
+                  - "img_link"
+                properties:
+                  id:
+                    type: "integer"
+                  img_link:
+                    type: "string"
+                    example: "http://abc.png"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+    put:
+      description: "Обновление фото для текущего пользователя"
+      tags:
+        - "Пользователь"
+
+      parameters:
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: true
+          schema:
+            type: string
+
+      requestBody:  
+        content:
+          image/png:
+            schema:
+              type: string
+              format: binary
+
+      responses:
+        200:
+          description: "Фото обновлено"
+          content:
+            application/json:
+              schema:
+                required:
+                  - "id"
+                  - "img_link"
+                properties:
+                  id:
+                    type: "integer"
+                  img_link:
+                    type: "string"
+                    example: "http://abc.png"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+
   /shared:
     get:
       description: "Получить ссылку на приватный пост"
@@ -1524,7 +1604,7 @@ components:
       required:
         - "id"
         - "username"
-        - "icon"
+        - "img_link"
       properties:
         id:
           type: "integer"
@@ -1532,7 +1612,7 @@ components:
         username:
           type: "string"
           example: "KtotoAdmin"
-        icon:
+        img_link:
           type: "string"
           example: "http://abc.png"
     
