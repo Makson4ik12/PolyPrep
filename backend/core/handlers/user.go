@@ -122,9 +122,11 @@ func GetAllUserPosts(c *gin.Context) {
 
 func UploadUserPhoto(c *gin.Context) {
 
-	userID, exists := c.Get("userID")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "strike"})
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{ //401
+			"message": "User not authenticated",
+		})
 		return
 	}
 
