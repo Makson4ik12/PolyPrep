@@ -5,7 +5,7 @@ import IconMail from '../icons/mail.svg'
 import IconArrowDown from '../icons/arrow_down.svg'
 import IconArrowUp from '../icons/arrow_up.svg'
 import Card from "../components/Card";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { getPost, getPosts, IPost } from "../server-api/posts";
 import Loader from "../components/Loader";
 import Masonry from "react-layout-masonry";
@@ -18,6 +18,8 @@ import ChangeUserImage from "../components/modals/ChangeUserImage";
 import Modal from "react-responsive-modal";
 import { useAppSelector } from "../redux-store/hooks";
 import { fetchUserData } from "../components/Header";
+import { getImgLink } from "../utils/UtilFunctions";
+import { setViewFavourite, setViewUserPosts } from "../redux-store/user-settings";
 
 const FavouritePost = ( { post_id }: { post_id: number }) => {
   const [postData, setPostData] = useState<IPost>();
@@ -74,10 +76,11 @@ const fetchFavouritePosts = async () => {
 const UserPage = () => {
   const current_state = store.getState().auth;
   const location = useLocation();
-  const uid = useAppSelector((state) => state.auth.userData.uid);
 
-  const [viewFavourites, setViewFavourites] = useState(true);
-  const [viewMyPosts, setViewMyPosts] = useState(true);
+  const uid = useAppSelector((state) => state.auth.userData.uid);
+  const viewFavourites = useAppSelector((state) => state.settings.viewFavourite);
+  const viewMyPosts = useAppSelector((state) => state.settings.viewUserPosts);
+
   const [viewChangeImage, setViewChangeImage] = useState(false);
 
   const { data: userPosts, isLoading: loadingPosts, error: errLoadUserPosts } = useQuery({
@@ -95,7 +98,7 @@ const UserPage = () => {
   const { data: userData, isLoading: loadingData, error } = useQuery({
     queryKey: ['user-' + uid + '-image'],
     queryFn: () => fetchUserData(uid || "-1"),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000
   });
 
   useEffect(() => {
@@ -114,7 +117,7 @@ const UserPage = () => {
           loadingData ? <Loader />
           :
             <>
-              <img src={((userData?.img_link != "") ? userData?.img_link : IconUser)} alt='user' className={styles.user_image} onClick={() => setViewChangeImage(true)}></img>
+              <img src={((userData?.img_link != "") ? getImgLink(userData?.img_link || "") : IconUser)} alt='user' className={styles.user_image} onClick={() => setViewChangeImage(true)}></img>
 
               <div className={styles.data_container}>
                 <div className={styles.title_container}>
@@ -139,7 +142,13 @@ const UserPage = () => {
         }
       </div>
       
-      <div id="favourite-posts" className={styles.title_razdel} onClick={() => setViewFavourites(prev => !prev)}>
+      <div 
+        id="favourite-posts" 
+        className={styles.title_razdel} 
+        onClick={() => {
+          store.dispatch(setViewFavourite(!viewFavourites));
+        }}
+      >
         <h2>Избранное</h2>
         <img src={!viewFavourites ? IconArrowDown : IconArrowUp} alt='arrow' />
       </div>
@@ -169,7 +178,13 @@ const UserPage = () => {
               </Masonry>  
       }
 
-      <div id="my-posts" className={styles.title_razdel} onClick={() => setViewMyPosts(prev => !prev)}>
+      <div 
+        id="my-posts" 
+        className={styles.title_razdel} 
+        onClick={() => {
+          store.dispatch(setViewUserPosts(!viewMyPosts));
+        }}
+      >
         <h2>Ваши посты</h2>
         <img src={!viewMyPosts ? IconArrowDown : IconArrowUp} alt='arrow' />
       </div>
@@ -210,7 +225,7 @@ const UserPage = () => {
       <Modal 
         open={viewChangeImage} 
         onClose={() => setViewChangeImage(false)} 
-        showCloseIcon={false} 
+        showCloseIcon={true} 
         animationDuration={400}
         blockScroll={true}
         center

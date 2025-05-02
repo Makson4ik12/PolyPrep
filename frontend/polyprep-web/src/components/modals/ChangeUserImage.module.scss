@@ -2,13 +2,16 @@
 
 .container {
     align-items: center;
+    padding: 25px 10px 10px 10px;
 
     img {
-        width: 150px;
-        height: 150px;
-        border-radius: 50%;
+        max-width: 500px;
+        height: auto;
+        aspect-ratio: 1 / 1;
         object-fit: cover;
         box-sizing: border-box;
+        overflow: hidden;
+        border-radius: 20px;
     }
 
     form {
@@ -21,6 +24,15 @@
 
         .incorrect_login_hidden {
             display: none;
+        }
+    }
+}
+
+@media screen and (width <= 640px) {
+    .container {
+        img {
+            width: 100%;
+            aspect-ratio: unset;
         }
     }
 }

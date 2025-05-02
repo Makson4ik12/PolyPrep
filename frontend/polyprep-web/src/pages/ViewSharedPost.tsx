@@ -14,8 +14,12 @@ import IconArrowDown from '../icons/arrow_down.svg'
 import IconArrowUp from '../icons/arrow_up.svg'
 import IconDownload from '../icons/download.svg'
 import { Badge } from '../components/Badge';
-import Loader from '../components/Loader';
+import Loader, { MiniLoader } from '../components/Loader';
 import { getUser, IUser } from '../server-api/user';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { useQuery } from '@tanstack/react-query';
+import { fetchUserData } from '../components/Header';
 
 interface IInclude {
   name: string;
@@ -42,7 +46,6 @@ const ViewSharedPost = () => {
   const userData = store.getState().auth.userData;
 
   const [postData, setPostData] = useState<IPost>();
-  const [user, setUser] = useState<IUser>();
 
   const [isLoadingPost, setIsLoadingPost] = useState(true);
   const [viewIncludes, setViewIncludes] = useState(false);
@@ -61,17 +64,12 @@ const ViewSharedPost = () => {
     }) ()
   }, []);
 
-  useEffect(() => {
-    if (postData?.author_id) {
-      (async () => {
-        await getUser(postData?.author_id || "-1")
-        .then((resp) => {
-          setUser(resp as IUser)
-        })
-        .catch((error) => console.log("cannot load user"));
-      }) ()
-    }
-  }, [postData]);
+  const { data: user, isLoading: isLoadingUser } = useQuery({
+    queryKey: ['user-' + postData?.author_id + '-image'],
+    queryFn: () => fetchUserData(postData?.author_id || "-1"),
+    staleTime: 5 * 60 * 1000,
+    enabled: !!postData?.author_id
+  });
 
   return (
     <div className={styles.container}>
@@ -81,7 +79,14 @@ const ViewSharedPost = () => {
           <div className={styles.main_content}>
             <div className={styles.top_info}>
               <div className={styles.lin_container}>
-                <img src={IconUser} alt='usericon'/>
+                {
+                  isLoadingUser ? <MiniLoader />
+                  :
+                    <>
+                      <img className={styles.user_icon} src={(((user as IUser).img_link != "") ? (user as IUser).img_link : IconUser)} alt='usericon'/>
+                    </>
+                }
+                
                 <p><b>{ postData?.author_id === userData.uid ? "You" : user?.username }</b> | { getDate(postData?.created_at || 0) }</p>
 
                 <div className={styles.badge}>
@@ -104,7 +109,10 @@ const ViewSharedPost = () => {
             </div>
             
             <h2 className={styles.title}>{ postData?.title }</h2>
-            <p className={styles.text}>{ postData?.text }</p>
+            
+            <div className={styles.md_wrapper}>
+              <Markdown remarkPlugins={[remarkGfm]}>{ postData?.text }</Markdown>
+            </div>
             
             <div className={styles.lin_container}>
               {

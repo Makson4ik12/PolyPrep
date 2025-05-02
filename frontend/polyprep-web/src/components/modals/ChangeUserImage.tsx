@@ -5,6 +5,7 @@ import { useAppSelector } from '../../redux-store/hooks';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import IconUser from '../../icons/user.svg'
 import Loader from '../Loader';
+import { getImgLink } from '../../utils/UtilFunctions';
 
 export default function ChangeUserImage({ onClose }: { onClose: () => void }) {
 	const uid = useAppSelector((state) => state.auth.userData.uid);
@@ -39,11 +40,12 @@ export default function ChangeUserImage({ onClose }: { onClose: () => void }) {
     setIsLoading(true);
 
 		const formData = new FormData();
-    formData.append('image', selectedFile);
+    formData.append('image', selectedFile, "photo.png");
 
 		await postUserImage(formData)
 			.then((resp) => {
-				window.location.reload();
+        queryClient.invalidateQueries({ queryKey: ['user-' + uid + '-image'] }); 
+        onClose();
 			})
 			.catch((error) => {
 				setIsError({ind: true, error: "Ошибка - фото не обновлено("});

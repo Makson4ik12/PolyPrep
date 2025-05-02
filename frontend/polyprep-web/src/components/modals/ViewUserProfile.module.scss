@@ -1,0 +1,52 @@
+@import "./ChangeUserImage.module.scss";
+
+.container {
+    .title_container {
+        width: auto;
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        justify-content: center;
+        align-items: center;
+
+        img {
+            width: 35px;
+            height: 35px;
+        }
+    }
+}
+
+@media screen and (640px < width <= 1000px) {
+    .container {
+        .title_container {
+            font-size: 18px;
+        }
+    }
+}
+
+@media screen and (350px < width <= 640px) {
+    .container {
+        .title_container {
+            max-width: 100%;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+    }
+}
+
+@media screen and (width <= 350px) {
+    .container {
+        padding: 25px 5px 5px 5px;
+        
+        .title_container {
+            max-width: 100%;
+            font-size: 12px;
+            box-sizing: border-box;
+
+            img {
+                width: 25px;
+                height: 25px;
+            }
+        }
+    }
+}

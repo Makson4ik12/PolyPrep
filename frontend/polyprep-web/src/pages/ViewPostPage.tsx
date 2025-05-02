@@ -6,7 +6,7 @@ import { getPostComments, IComment, postComment } from '../server-api/comments';
 import { deleteLike, getPostLikes, ILikes, postLike } from '../server-api/likes';
 import { checkPostIsFavourite, deleteFavourite, postFavourite } from '../server-api/favourites';
 import { deletePost, getPost, IPost } from '../server-api/posts';
-import { getDate } from '../utils/UtilFunctions';
+import { getDate, getImgLink } from '../utils/UtilFunctions';
 import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
 import IconDoc from '../icons/doc.svg'
 import IconImage from '../icons/image.svg'
@@ -36,6 +36,7 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import TextareaAutosize from 'react-textarea-autosize';
 import { fetchUserData } from '../components/Header';
+import ViewUserProfile from '../components/modals/ViewUserProfile';
 
 interface IInclude {
   name: string;
@@ -75,6 +76,7 @@ const ViewPostPage = () => {
   const [isFavourite, setIsFavourite] = useState<boolean>(false);
   const [viewShare, setViewShare] = useState<boolean>(false);
   const [viewIncludes, setViewIncludes] = useState(false);
+  const [viewUserProfile, setViewUserProfile] = useState<boolean>(false);
 
   const [isUpdate, updateComponent] = useState<boolean>(false);
   const [isUpdateComments, updateComments] = useState<boolean>(false);
@@ -225,7 +227,7 @@ const ViewPostPage = () => {
         :
           <div className={styles.main_content}>
             <div className={styles.top_info}>
-              <div className={styles.lin_container}>
+              <div className={styles.user_info} onClick={() => setViewUserProfile(true)}>
                 {
                   isLoadingUser ? <MiniLoader />
                   :
@@ -419,6 +421,22 @@ const ViewPostPage = () => {
           text={postData?.text as string}
           public={postData?.public as boolean}
           hashtages={postData?.hashtages as string[]}
+          onClose={() => setViewShare(false)}
+        />
+      </Modal>
+
+      <Modal 
+        open={viewUserProfile} 
+        onClose={() => setViewUserProfile(false)} 
+        showCloseIcon={true} 
+        animationDuration={400}
+        blockScroll={true}
+        center
+      >
+        <ViewUserProfile 
+          id={user?.id || "-1"}
+          username={user?.username|| "-1"}
+          img_link={user?.img_link|| ""}
           onClose={() => setViewShare(false)}
         />
       </Modal>

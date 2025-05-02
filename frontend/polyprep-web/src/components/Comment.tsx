@@ -4,7 +4,7 @@ import { deleteComment, IComment, putComment } from '../server-api/comments';
 import styles from '../pages/ViewPostPage.module.scss'
 import { getUser, IUser } from '../server-api/user';
 import useAutosizeTextArea from '../utils/CustomHooks';
-import { getDate } from '../utils/UtilFunctions';
+import { getDate, getImgLink } from '../utils/UtilFunctions';
 import IconCancel from '../icons/delete.svg'
 import IconSuccess from '../icons/success.svg'
 import IconUser from '../icons/user.svg'
@@ -12,6 +12,8 @@ import IconEdit from '../icons/edit.svg'
 import IconDelete from '../icons/trash.svg'
 import TextareaAutosize from 'react-textarea-autosize';
 import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
+import { fetchUserData } from './Header';
+import { useQuery } from '@tanstack/react-query';
 
 interface ICommentMeta {
   setIsLoading: (val: boolean) => void;
@@ -21,7 +23,6 @@ interface ICommentMeta {
 const Comment = (data: IComment & ICommentMeta) => {
   const userData = store.getState().auth.userData;
 
-  const [user, setUser] = useState<IUser>();
   const [value, setValue] = useState(data.text);
   const [isEdit, setIsEdit] = useState(false);
   
@@ -66,21 +67,17 @@ const Comment = (data: IComment & ICommentMeta) => {
     });
   }
 
-  useEffect(() => {
-    (async () => {
-      await getUser(data.author_id || "")
-      .then((resp) => {
-        setUser(resp as IUser)
-      })
-      .catch((error) => console.log("cannot load user"));
-    }) ()
-  }, []);
+  const { data: user, isLoading: isLoadingUser } = useQuery({
+    queryKey: ['user-' + data.author_id + '-image'],
+    queryFn: () => fetchUserData(data.author_id || "-1"),
+    staleTime: 5 * 60 * 1000
+  });
 
   return (
     <div className={styles.info_container}>
       <div className={styles.top_info}>
         <div className={styles.lin_container}>
-          <img src={IconUser} alt='usericon'/>
+          <img className={styles.user_icon} src={(((user as IUser).img_link != "") ? getImgLink((user as IUser).img_link || "1") : IconUser)} alt='usericon'/>
           <p>
             <b>{ data?.author_id === userData.uid ? "You" : user?.username }</b>{screenSize.width <= screenSizes.__320.width ? <br></br> : " | "}{ getDate(data.created_at || 0) }
           </p>

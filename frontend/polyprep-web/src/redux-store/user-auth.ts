@@ -14,7 +14,7 @@ export interface IToken {
 
 export interface ITokens{
   refresh_token: string | null;
-  access_token: string | null
+  access_token: string | null;
 }
 
 interface IUserData {
@@ -28,7 +28,7 @@ interface IUserData {
 
 interface IAuthState {
   authTokens: ITokens;
-  userData: IUserData
+  userData: IUserData;
 }
   
 const initialState: IAuthState = {

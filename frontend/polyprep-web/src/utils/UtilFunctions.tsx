@@ -27,3 +27,10 @@ export const copyToClipboard = (text: string) => {
   document.execCommand('copy');
   document.body.removeChild(textArea);
 };
+
+export const getImgLink = (url: string) => {
+  if (url == "")
+    return "";
+  
+  return url + `?t=${Date.now().toString()}`;
+}

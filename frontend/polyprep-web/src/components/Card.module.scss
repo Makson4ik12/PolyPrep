@@ -137,6 +137,17 @@
         }
     }
 
+    .user_info {
+        @extend .lin_container;
+
+        transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+        cursor: pointer;
+
+        &:hover {
+            transform: scale(0.95);
+        }
+    }
+
     .top {
         display: flex;
         align-items: center;

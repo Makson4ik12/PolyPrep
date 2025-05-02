@@ -6,7 +6,7 @@ import IconShare from '../icons/share.svg'
 import IconFavourite from '../icons/favourite.svg'
 import IconFavouriteFilled from '../icons/favourite_fill.svg'
 import IconComments from '../icons/comments.svg'
-import { getDate } from '../utils/UtilFunctions';
+import { getDate, getImgLink } from '../utils/UtilFunctions';
 import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
 import { Badge } from './Badge';
 import { IPost } from '../server-api/posts';
@@ -24,6 +24,7 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { fetchUserData } from './Header';
 import { MiniLoader } from './Loader';
+import ViewUserProfile from './modals/ViewUserProfile';
 
 const Card = (data: IPost) => {
   const navigate = useNavigate();
@@ -32,6 +33,7 @@ const Card = (data: IPost) => {
   const userData = store.getState().auth.userData;
 
   const [viewShare, setViewShare] = useState<boolean>(false);
+  const [viewUserProfile, setViewUserProfile] = useState<boolean>(false);
   const [likes, setLikes] = useState<ILikes>();
   const [comments, setComments] = useState<number>(0);
   const [userLike, setUserLike] = useState(false);
@@ -127,12 +129,12 @@ const Card = (data: IPost) => {
   return (
     <div className={styles.container}>
       <div className={styles.top}>
-        <div className={styles.lin_container}>
+        <div className={styles.user_info} onClick={() => setViewUserProfile(true)}>
           {
             isLoadingUser ? <MiniLoader />
             :
               <>
-                <img src={(((user as IUser).img_link != "") ? (user as IUser).img_link : IconUser)} alt='user' className={styles.user_icon}></img>
+                <img src={(((user as IUser).img_link != "") ? (user as IUser).img_link: IconUser)} alt='user' className={styles.user_icon}></img>
               </>
           }
           {
@@ -204,6 +206,22 @@ const Card = (data: IPost) => {
           public={data.public}
           hashtages={data.hashtages}
           onClose={() => setViewShare(false)}
+        />
+      </Modal>
+
+      <Modal 
+        open={viewUserProfile} 
+        onClose={() => setViewUserProfile(false)} 
+        showCloseIcon={true} 
+        animationDuration={400}
+        blockScroll={true}
+        center
+      >
+        <ViewUserProfile 
+          id={user?.id || "-1"}
+          username={user?.username|| "-1"}
+          img_link={user?.img_link|| ""}
+          onClose={() => setViewUserProfile(false)}
         />
       </Modal>
     </div>

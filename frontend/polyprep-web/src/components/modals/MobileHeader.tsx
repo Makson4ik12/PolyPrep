@@ -10,6 +10,7 @@ import { useQuery } from '@tanstack/react-query'
 import { fetchUserData } from '../Header'
 import { IUser } from '../../server-api/user'
 import { MiniLoader } from '../Loader'
+import { getImgLink } from '../../utils/UtilFunctions'
 
 interface IMobileHeader {
   onClose: () => void;
@@ -24,6 +25,7 @@ export default function MobileHeader(params: IMobileHeader) {
     queryKey: ['user-' + uid + '-image'],
     queryFn: () => fetchUserData(uid || "-1"),
     staleTime: 5 * 60 * 1000,
+    enabled: !!uid
   });
   
   return (
@@ -69,7 +71,7 @@ export default function MobileHeader(params: IMobileHeader) {
             {
               isLoading ? <MiniLoader />
               :
-                <img className={styles.user_icon} src={(((userData as IUser).img_link != "") ? (userData as IUser).img_link : IconUser)} alt='user' />
+                <img className={styles.user_icon} src={((userData && userData?.img_link != "") ? userData?.img_link : IconUser)} alt='user' />
             }
           </Link>
         </div>

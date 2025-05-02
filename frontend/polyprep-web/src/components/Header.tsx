@@ -14,11 +14,11 @@ import { useAppSelector } from '../redux-store/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { getUser, IUser } from '../server-api/user';
 import Loader, { MiniLoader } from './Loader';
+import { getImgLink } from '../utils/UtilFunctions';
 
 export const fetchUserData = async (uid: string) => {
-  const resp = await getUser(uid);
-  console.log("header load data");
-  return resp as IUser;
+  const resp: IUser = await getUser(uid);
+  return { id: resp.id, username: resp.username, img_link: getImgLink(resp.img_link)};
 };
 
 const Header = () => {
@@ -33,6 +33,7 @@ const Header = () => {
     queryKey: ['user-' + uid + '-image'],
     queryFn: () => fetchUserData(uid || "-1"),
     staleTime: 5 * 60 * 1000,
+    enabled: !!uid
   });
   
   return (
@@ -68,7 +69,7 @@ const Header = () => {
                     <>
                       <Link to="/user">
                         <p> { userFirstName && userLastName ? userFirstName + " " + userLastName : "Вход" }</p>
-                        <img className={styles.user_icon} src={(((userData as IUser).img_link != "") ? (userData as IUser).img_link : IconUser)} alt='user' />
+                        <img className={styles.user_icon} src={((userData && userData?.img_link != "") ? userData?.img_link : IconUser)} alt='user' />
                       </Link>
                     </>
                 }
