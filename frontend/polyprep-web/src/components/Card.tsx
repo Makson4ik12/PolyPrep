@@ -187,7 +187,7 @@ const Card = (data: IPost) => {
         onClose={() => setViewShare(false)} 
         showCloseIcon={false} 
         animationDuration={400}
-        blockScroll={false}
+        blockScroll={true}
         center
       >
         <SharePost 

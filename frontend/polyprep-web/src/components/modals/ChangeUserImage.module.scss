@@ -1,0 +1,23 @@
+@import "./SharePost.module.scss";
+
+.container {
+    align-items: center;
+
+    img {
+        width: 150px;
+        height: 150px;
+    }
+
+    form {
+        gap: 15px;
+
+        .incorrect_login {
+            text-align: center;
+            color: red;
+        }
+
+        .incorrect_login_hidden {
+            display: none;
+        }
+    }
+}

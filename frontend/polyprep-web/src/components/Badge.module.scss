@@ -7,6 +7,10 @@
     align-items: center;
     justify-content: center;
     gap: 10px;
+
+    p {
+        font-weight: 500;
+    }
 }
 
 @media screen and (480px < width <= 768px) {
