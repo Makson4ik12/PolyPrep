@@ -15,9 +15,7 @@ export default function ChangeUserImage({ onClose }: { onClose: () => void }) {
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 	
-	const { data: userData }  = useQuery({
-		queryKey: ['user-' + uid + '-image'],
-	});
+	const userData = queryClient.getQueryData(['user-' + uid + '-image']);
 	
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -45,7 +43,7 @@ export default function ChangeUserImage({ onClose }: { onClose: () => void }) {
 
 		await postUserImage(formData)
 			.then((resp) => {
-				onClose();
+				window.location.reload();
 			})
 			.catch((error) => {
 				setIsError({ind: true, error: "Ошибка - фото не обновлено("});
@@ -53,41 +51,44 @@ export default function ChangeUserImage({ onClose }: { onClose: () => void }) {
 
 		setPreviewUrl(null);
 		setSelectedFile(null);
-		await queryClient.invalidateQueries({ queryKey: ['user-' + uid + '-image'] });
-
 		setIsLoading(false);
-    window.location.reload();
   }
   
   return (
     <div className={styles.container}>
-			<img
-				src={previewUrl || (((userData as IUser).img_link != "") ? (userData as IUser).img_link : IconUser)}  
-				alt='user-icon' 
-			/>
+      {
+        isLoading ? <Loader />
+        :
+          <>
+            <img
+              src={previewUrl || (((userData as IUser).img_link != "") ? (userData as IUser).img_link : IconUser)}  
+              alt='user-icon' 
+            />
 
-			<p>Выберите новое фото профиля:</p>
+            <p>Выберите новое фото профиля:</p>
 
-			<form onSubmit={handleUploadPhoto}>
-				<input 
-					type="file" 
-					id="img" 
-					name="img" 
-					accept="image/*" 
-					required 
-					placeholder='image'
-					onChange={handleFileChange}
-				/>
+            <form onSubmit={handleUploadPhoto}>
+              <input 
+                type="file" 
+                id="img" 
+                name="img" 
+                accept="image/*" 
+                required 
+                placeholder='image'
+                onChange={handleFileChange}
+              />
 
-				<button 
-					type='submit' 
-					className={styles.button_dark} 
-				>
-					Загрузить фото
-				</button>
+              <button 
+                type='submit' 
+                className={styles.button_dark} 
+              >
+                Загрузить фото
+              </button>
 
-				<p className={ isError.ind ? styles.incorrect_login : styles.incorrect_login_hidden }> {isError.error }</p>
-			</form>
+              <p className={ isError.ind ? styles.incorrect_login : styles.incorrect_login_hidden }> {isError.error }</p>
+            </form>
+          </>
+      }
     </div>
   )
 }

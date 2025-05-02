@@ -6,6 +6,10 @@ import IconFavourite from '../../icons/favourite.svg'
 import IconPosts from '../../icons/posts.svg'
 import { Link } from 'react-router-dom';
 import { useAppSelector } from '../../redux-store/hooks'
+import { useQuery } from '@tanstack/react-query'
+import { fetchUserData } from '../Header'
+import { IUser } from '../../server-api/user'
+import { MiniLoader } from '../Loader'
 
 interface IMobileHeader {
   onClose: () => void;
@@ -14,6 +18,13 @@ interface IMobileHeader {
 export default function MobileHeader(params: IMobileHeader) {
   const userFirstName = useAppSelector(data => data.auth.userData.first_name);
   const userLastName = useAppSelector(data => data.auth.userData.last_name);
+  const uid = useAppSelector((state) => state.auth.userData.uid);
+  
+  const { data: userData, isLoading } = useQuery({
+    queryKey: ['user-' + uid + '-image'],
+    queryFn: () => fetchUserData(uid || "-1"),
+    staleTime: 5 * 60 * 1000,
+  });
   
   return (
     <header className={styles.header_style}>
@@ -55,7 +66,11 @@ export default function MobileHeader(params: IMobileHeader) {
         <div className={styles.user}>
           <Link onClick={() => params.onClose()} to="/user">
             <p> { userFirstName && userLastName ? userFirstName + " " + userLastName : "Вход" }</p>
-            <img src={IconUser} alt='user' />
+            {
+              isLoading ? <MiniLoader />
+              :
+                <img className={styles.user_icon} src={(((userData as IUser).img_link != "") ? (userData as IUser).img_link : IconUser)} alt='user' />
+            }
           </Link>
         </div>
       </div>
