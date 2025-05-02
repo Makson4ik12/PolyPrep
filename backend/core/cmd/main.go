@@ -72,7 +72,6 @@ func main() {
 
 			api.GET("/user/posts", handlers.GetAllUserPosts)
 			api.POST("/user/photo", handlers.UploadUserPhoto)
-			api.PUT("/user/photo", handlers.UpdateUserPhoto)
 
 			api.POST("/includes", handlers.UploadIncludes)
 			api.DELETE("/includes", handlers.DeleteIncludes)

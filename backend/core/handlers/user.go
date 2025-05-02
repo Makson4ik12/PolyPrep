@@ -1,10 +1,8 @@
 package handlers
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"polyprep/config"
@@ -124,18 +122,21 @@ func GetAllUserPosts(c *gin.Context) {
 
 func UploadUserPhoto(c *gin.Context) {
 
-	userID, exists := c.Get("userID")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "strike"})
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{ //401
+			"message": "User not authenticated",
+		})
 		return
 	}
 
-	fileBytes, err := io.ReadAll(c.Request.Body)
+	file, _, err := c.Request.FormFile("image")
 	if err != nil {
-		log.Printf("Error reading request body: %v", err)
+		log.Printf("Error getting file from form: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"message": "strike"})
 		return
 	}
+	defer file.Close()
 
 	s3Config := config.LoadBegetS3Config()
 
@@ -162,7 +163,7 @@ func UploadUserPhoto(c *gin.Context) {
 	_, err = uploader.Upload(&s3manager.UploadInput{
 		Bucket:      aws.String(s3Config.Bucket),
 		Key:         aws.String(fileName),
-		Body:        bytes.NewReader(fileBytes),
+		Body:        file,
 		ContentType: aws.String("image/png"),
 	})
 	if err != nil {
@@ -174,7 +175,7 @@ func UploadUserPhoto(c *gin.Context) {
 	imageURL := fmt.Sprintf("%s/%s/%s", s3Config.Endpoint, s3Config.Bucket, fileName)
 
 	result := database.DB.Model(&models.User{}).
-		Where("id = ?", userID).
+		Where("uuid = ?", userID).
 		Update("icon", imageURL)
 	if result.Error != nil {
 		log.Printf("Error updating user avatar: %v", result.Error)
@@ -183,60 +184,6 @@ func UploadUserPhoto(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"id":       userID,
-		"img_link": imageURL,
-	})
-}
-
-//------------------------------PUT/user/photo------------------------------//
-
-func UpdateUserPhoto(c *gin.Context) {
-
-	userID, exists := c.Get("userID")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "Authorization required"})
-		return
-	}
-
-	fileBytes, err := io.ReadAll(c.Request.Body)
-	if err != nil {
-		log.Printf("Error reading request body: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{"message": "strike"})
-		return
-	}
-
-	fileName := fmt.Sprintf("users/%s/avatar.png", userID)
-
-	s3Config := config.LoadBegetS3Config()
-	_, err = s3manager.NewUploader(session.Must(session.NewSession(&aws.Config{
-		Endpoint:         aws.String(s3Config.Endpoint),
-		Region:           aws.String(s3Config.Region),
-		Credentials:      credentials.NewStaticCredentials(s3Config.AccessKeyID, s3Config.SecretAccessKey, ""),
-		S3ForcePathStyle: aws.Bool(true),
-	}))).Upload(&s3manager.UploadInput{
-		Bucket:      aws.String(s3Config.Bucket),
-		Key:         aws.String(fileName),
-		Body:        bytes.NewReader(fileBytes),
-		ContentType: aws.String("image/png"),
-	})
-
-	if err != nil {
-		log.Printf("S3 upload failed: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Upload failed"})
-		return
-	}
-
-	imageURL := fmt.Sprintf("%s/%s/%s", s3Config.Endpoint, s3Config.Bucket, fileName)
-	if err := database.DB.Model(&models.User{}).
-		Where("uuid = ?", userID).
-		Update("icon", imageURL).Error; err != nil {
-		log.Printf("DB update failed: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Database error"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"id":       userID,
 		"img_link": imageURL,
 	})
 }
