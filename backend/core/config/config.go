@@ -33,10 +33,10 @@ func LoadConfig() *Config {
 
 func LoadBegetS3Config() *BegetS3Config {
 	return &BegetS3Config{
-		Endpoint:        "https://cp.beget.com",
+		Endpoint:        "https://s3.ru1.storage.beget.cloud",
 		Bucket:          "b8b5832ca931-polypreps3",
 		AccessKeyID:     "96GQ5LN6LFGCJAGDYPLD",
 		SecretAccessKey: "2PRY2BwDghCYkUflnSSljBkP5mqfVovCI0b4Yqf8",
-		Region:          "ru-1",
+		Region:          "ru1",
 	}
 }
