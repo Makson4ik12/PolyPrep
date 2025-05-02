@@ -38,21 +38,3 @@ export async function postUserImage(formData: FormData) {
     throw error;
   }
 }
-
-export async function putUserPhoto(formData: FormData) {
-  try {
-    const response = await axios.put(
-    `${SERVER_ADDRESS}${SERVER_API_VERSION}user/photo`, formData,
-    { headers: 
-      { 
-        Authorization: `Bearer ${store.getState().auth.authTokens.access_token}`,
-       'Content-Type': 'multipart/form-data' 
-      } 
-    }
-    );
-
-    return response.data;
-  } catch (error: any) {
-    throw error;
-  }
-}

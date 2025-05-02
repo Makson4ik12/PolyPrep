@@ -1,7 +1,6 @@
 import styles from '../modals/ChangeUserImage.module.scss'
-import { IPost } from '../../server-api/posts'
 import { useEffect, useState } from 'react';
-import { getUser, IUser, postUserImage, putUserPhoto } from '../../server-api/user';
+import { getUser, IUser, postUserImage } from '../../server-api/user';
 import { useAppSelector } from '../../redux-store/hooks';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import IconUser from '../../icons/user.svg'
@@ -51,23 +50,13 @@ export default function ChangeUserImage({ onClose }: { onClose: () => void }) {
 		const formData = new FormData();
     formData.append('image', selectedFile);
 
-		if (userData?.img_link != "") {
-			await putUserPhoto(formData)
-				.then((resp) => {
-					onClose();
-				})
-				.catch((error) => {
-					setIsError({ind: true, error: "Ошибка - фото не загружено("});
-				});
-		} else {
-			await postUserImage(formData)
-				.then((resp) => {
-					onClose();
-				})
-				.catch((error) => {
-					setIsError({ind: true, error: "Ошибка - фото не обновлено("});
-				});
-		}
+		await postUserImage(formData)
+			.then((resp) => {
+				onClose();
+			})
+			.catch((error) => {
+				setIsError({ind: true, error: "Ошибка - фото не обновлено("});
+			});
 
 		setPreviewUrl(null);
 		setSelectedFile(null);
