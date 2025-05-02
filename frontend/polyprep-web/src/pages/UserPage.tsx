@@ -14,6 +14,8 @@ import { getFavouritePosts, IFavourite } from "../server-api/favourites";
 import { useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { KEYCLOAK_ADDRESS } from "../server-api/config";
+import ChangeUserImage from "../components/modals/ChangeUserImage";
+import Modal from "react-responsive-modal";
 
 const FavouritePost = ( { post_id }: { post_id: number }) => {
   const [postData, setPostData] = useState<IPost>();
@@ -67,16 +69,13 @@ const fetchFavouritePosts = async () => {
   return _fav_posts;
 };
 
-// # TODO:  добавить сылку на редактирование - keycloak; 
-// изменить стили для markdown
-// добавить в 2 строки имя и дата поста при просмотре поста [mobile]
-
 const UserPage = () => {
   const current_state = store.getState().auth;
   const location = useLocation();
 
   const [viewFavourites, setViewFavourites] = useState(true);
   const [viewMyPosts, setViewMyPosts] = useState(true);
+  const [viewChangeImage, setViewChangeImage] = useState(false);
 
   const { data: userPosts, isLoading: loadingPosts, error: errLoadUserPosts } = useQuery({
     queryKey: ['userpage-userPosts'],
@@ -102,7 +101,7 @@ const UserPage = () => {
   return (
     <div className={styles.container}>
       <div className={styles.lin_container}>
-        <img src={IconUser} alt='user' className={styles.user_image}></img>
+        <img src={IconUser} alt='user' className={styles.user_image} onClick={() => setViewChangeImage(true)}></img>
 
         <div className={styles.data_container}>
           <div className={styles.title_container}>
@@ -191,7 +190,20 @@ const UserPage = () => {
                   )
                 }
               </Masonry>
-        }
+      }
+
+      <Modal 
+        open={viewChangeImage} 
+        onClose={() => setViewChangeImage(false)} 
+        showCloseIcon={false} 
+        animationDuration={400}
+        blockScroll={true}
+        center
+      >
+        <ChangeUserImage 
+          onClose={() => setViewChangeImage(false)}
+        />
+      </Modal>
     </div>
   );
 }

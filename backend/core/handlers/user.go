@@ -44,7 +44,7 @@ func GetUser(c *gin.Context) {
 	}
 
 	var user models.User
-	result := database.DB.Select("id", "username", "icon").
+	result := database.DB.Select("id", "username", "icon", "uuid").
 		Where("uuid = ?", userUUID).
 		First(&user)
 
@@ -63,7 +63,7 @@ func GetUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"id":       user.UUID,
 		"username": user.Username,
-		"icon":     user.Icon,
+		"img_link": user.Icon,
 	})
 }
 

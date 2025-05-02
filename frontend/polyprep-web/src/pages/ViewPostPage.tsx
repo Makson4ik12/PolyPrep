@@ -406,7 +406,7 @@ const ViewPostPage = () => {
         onClose={() => setViewShare(false)} 
         showCloseIcon={false} 
         animationDuration={400}
-        blockScroll={false}
+        blockScroll={true}
         center
       >
         <SharePost 
