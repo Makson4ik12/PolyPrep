@@ -1,12 +1,20 @@
 package handlers
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"polyprep/config"
 	"polyprep/database"
 	models "polyprep/model"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -110,4 +118,125 @@ func GetAllUserPosts(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+//------------------------------POST/user/photo------------------------------//
+
+func UploadUserPhoto(c *gin.Context) {
+
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "strike"})
+		return
+	}
+
+	fileBytes, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		log.Printf("Error reading request body: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"message": "strike"})
+		return
+	}
+
+	s3Config := config.LoadBegetS3Config()
+
+	s3Session, err := session.NewSession(&aws.Config{
+		Endpoint: aws.String(s3Config.Endpoint),
+		Region:   aws.String(s3Config.Region),
+		Credentials: credentials.NewStaticCredentials(
+			s3Config.AccessKeyID,
+			s3Config.SecretAccessKey,
+			"",
+		),
+		S3ForcePathStyle: aws.Bool(true),
+	})
+
+	if err != nil {
+		log.Printf("Error creating S3 session: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "error S3"})
+		return
+	}
+
+	fileName := fmt.Sprintf("users/%s/avatar.png", userID)
+
+	uploader := s3manager.NewUploader(s3Session)
+	_, err = uploader.Upload(&s3manager.UploadInput{
+		Bucket:      aws.String(s3Config.Bucket),
+		Key:         aws.String(fileName),
+		Body:        bytes.NewReader(fileBytes),
+		ContentType: aws.String("image/png"),
+	})
+	if err != nil {
+		log.Printf("Error uploading to S3: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "error upload"})
+		return
+	}
+
+	imageURL := fmt.Sprintf("%s/%s/%s", s3Config.Endpoint, s3Config.Bucket, fileName)
+
+	result := database.DB.Model(&models.User{}).
+		Where("id = ?", userID).
+		Update("icon", imageURL)
+	if result.Error != nil {
+		log.Printf("Error updating user avatar: %v", result.Error)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "error updating in DB"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":       userID,
+		"img_link": imageURL,
+	})
+}
+
+//------------------------------PUT/user/photo------------------------------//
+
+func UpdateUserPhoto(c *gin.Context) {
+
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Authorization required"})
+		return
+	}
+
+	fileBytes, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		log.Printf("Error reading request body: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"message": "strike"})
+		return
+	}
+
+	fileName := fmt.Sprintf("users/%s/avatar.png", userID)
+
+	s3Config := config.LoadBegetS3Config()
+	_, err = s3manager.NewUploader(session.Must(session.NewSession(&aws.Config{
+		Endpoint:         aws.String(s3Config.Endpoint),
+		Region:           aws.String(s3Config.Region),
+		Credentials:      credentials.NewStaticCredentials(s3Config.AccessKeyID, s3Config.SecretAccessKey, ""),
+		S3ForcePathStyle: aws.Bool(true),
+	}))).Upload(&s3manager.UploadInput{
+		Bucket:      aws.String(s3Config.Bucket),
+		Key:         aws.String(fileName),
+		Body:        bytes.NewReader(fileBytes),
+		ContentType: aws.String("image/png"),
+	})
+
+	if err != nil {
+		log.Printf("S3 upload failed: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Upload failed"})
+		return
+	}
+
+	imageURL := fmt.Sprintf("%s/%s/%s", s3Config.Endpoint, s3Config.Bucket, fileName)
+	if err := database.DB.Model(&models.User{}).
+		Where("uuid = ?", userID).
+		Update("icon", imageURL).Error; err != nil {
+		log.Printf("DB update failed: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Database error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":       userID,
+		"img_link": imageURL,
+	})
 }
