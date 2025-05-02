@@ -54,6 +54,10 @@ blockquote {
   border-left: 3px solid rgb(140, 161, 138);
 }
 
+table {
+  overflow-x: scroll;
+}
+
 table, th, td {
   width: auto;
   border: 1px solid black;

@@ -72,6 +72,7 @@
 
             justify-content: center;
             align-items: flex-start;
+            overflow-x:auto;
 
             p {
                 font-size: unset;
@@ -502,6 +503,13 @@
             box-shadow: none;
             padding: 0;
             border-radius: 0;
+
+            .top_info .lin_container {
+                .user_icon {
+                    width: 30px;
+                    height: 30px;
+                }
+            }
 
             .md_wrapper {
                 gap: 12px;
