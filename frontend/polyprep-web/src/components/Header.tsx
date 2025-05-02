@@ -11,12 +11,29 @@ import { useState } from 'react';
 import Modal from 'react-responsive-modal';
 import MobileHeader from './modals/MobileHeader';
 import { useAppSelector } from '../redux-store/hooks';
+import { useQuery } from '@tanstack/react-query';
+import { getUser, IUser } from '../server-api/user';
+import Loader, { MiniLoader } from './Loader';
+
+export const fetchUserData = async (uid: string) => {
+  const resp = await getUser(uid);
+  console.log("header load data");
+  return resp as IUser;
+};
 
 const Header = () => {
   const userFirstName = useAppSelector(data => data.auth.userData.first_name);
   const userLastName = useAppSelector(data => data.auth.userData.last_name);
+  const uid = useAppSelector((state) => state.auth.userData.uid);
+
   const screenSize = HandleResponsiveView();
   const [viewMobileMenu, setViewMobileMenu] = useState(false);
+
+  const { data: userData, isLoading } = useQuery({
+    queryKey: ['user-' + uid + '-image'],
+    queryFn: () => fetchUserData(uid || "-1"),
+    staleTime: 5 * 60 * 1000,
+  });
   
   return (
     <header className={styles.header_style}>
@@ -45,10 +62,17 @@ const Header = () => {
               </div>
 
               <div className={styles.user}>
-                <Link to="/user">
-                  <p> { userFirstName && userLastName ? userFirstName + " " + userLastName : "Вход" }</p>
-                  <img src={IconUser} alt='user' />
-                </Link>
+                {
+                  isLoading ? <MiniLoader />
+                  :
+                    <>
+                      <Link to="/user">
+                        <p> { userFirstName && userLastName ? userFirstName + " " + userLastName : "Вход" }</p>
+                        <img className={styles.user_icon} src={(((userData as IUser).img_link != "") ? (userData as IUser).img_link : IconUser)} alt='user' />
+                      </Link>
+                    </>
+                }
+                
               </div>
             </>
           :

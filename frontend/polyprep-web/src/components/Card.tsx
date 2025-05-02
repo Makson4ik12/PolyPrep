@@ -19,9 +19,11 @@ import { checkPostIsFavourite, deleteFavourite, postFavourite } from '../server-
 import { getUser, IUser } from '../server-api/user';
 import SharePost from './modals/SharePost';
 import Modal from 'react-responsive-modal';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { fetchUserData } from './Header';
+import { MiniLoader } from './Loader';
 
 const Card = (data: IPost) => {
   const navigate = useNavigate();
@@ -30,22 +32,17 @@ const Card = (data: IPost) => {
   const userData = store.getState().auth.userData;
 
   const [viewShare, setViewShare] = useState<boolean>(false);
-  const [user, setUser] = useState<IUser>();
   const [likes, setLikes] = useState<ILikes>();
   const [comments, setComments] = useState<number>(0);
   const [userLike, setUserLike] = useState(false);
   const [isUpdate, updateComponent] = useState<boolean>(false);
   const [isFavourite, setIsFavourite] = useState<boolean>(false);
   
-  useEffect(() => {
-    (async () => {
-      await getUser(data.author_id || "-1")
-      .then((resp) => {
-        setUser(resp as IUser)
-      })
-      .catch((error) => console.log("cannot load user"));
-    }) ()
-  }, []);
+  const { data: user, isLoading: isLoadingUser } = useQuery({
+    queryKey: ['user-' + data.author_id + '-image'],
+    queryFn: () => fetchUserData(data.author_id || "-1"),
+    staleTime: 5 * 60 * 1000,
+  });
 
   useEffect(() => {
     (async () => {
@@ -131,7 +128,13 @@ const Card = (data: IPost) => {
     <div className={styles.container}>
       <div className={styles.top}>
         <div className={styles.lin_container}>
-          <img src={IconUser} alt='user' className={styles.user_icon}></img>
+          {
+            isLoadingUser ? <MiniLoader />
+            :
+              <>
+                <img src={(((user as IUser).img_link != "") ? (user as IUser).img_link : IconUser)} alt='user' className={styles.user_icon}></img>
+              </>
+          }
           {
             screenSize.width > screenSizes.__1200.width ?
               <p><b>{ data.author_id === userData.uid ? "You" : user?.username }</b> | { data.created_at ? getDate(data.created_at) : "null" }</p>

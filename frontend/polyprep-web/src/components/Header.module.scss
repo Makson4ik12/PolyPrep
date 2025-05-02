@@ -93,6 +93,12 @@
         .user {
             box-sizing: border-box;
 
+            .user_icon {
+                object-fit: cover;  
+                border-radius: 50%;
+                box-sizing: border-box;
+            }
+
             a {
                 display: flex;
                 flex-direction: row;

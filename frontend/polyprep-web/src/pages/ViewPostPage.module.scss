@@ -145,6 +145,12 @@
         width: auto;
         flex-wrap: wrap;
 
+        .user_icon {
+            object-fit: cover;  
+            border-radius: 50%;
+            box-sizing: border-box;
+        }
+
         img {
             padding: 0;
         }

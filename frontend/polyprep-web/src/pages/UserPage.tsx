@@ -16,6 +16,8 @@ import { useQuery } from "@tanstack/react-query";
 import { KEYCLOAK_ADDRESS } from "../server-api/config";
 import ChangeUserImage from "../components/modals/ChangeUserImage";
 import Modal from "react-responsive-modal";
+import { useAppSelector } from "../redux-store/hooks";
+import { fetchUserData } from "../components/Header";
 
 const FavouritePost = ( { post_id }: { post_id: number }) => {
   const [postData, setPostData] = useState<IPost>();
@@ -72,6 +74,7 @@ const fetchFavouritePosts = async () => {
 const UserPage = () => {
   const current_state = store.getState().auth;
   const location = useLocation();
+  const uid = useAppSelector((state) => state.auth.userData.uid);
 
   const [viewFavourites, setViewFavourites] = useState(true);
   const [viewMyPosts, setViewMyPosts] = useState(true);
@@ -89,6 +92,12 @@ const UserPage = () => {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: userData, isLoading: loadingData, error } = useQuery({
+    queryKey: ['user-' + uid + '-image'],
+    queryFn: () => fetchUserData(uid || "-1"),
+    staleTime: 5 * 60 * 1000,
+  });
+
   useEffect(() => {
     if (location.hash) {
       const element = document.getElementById(location.hash.replace('#', ''));
@@ -101,27 +110,33 @@ const UserPage = () => {
   return (
     <div className={styles.container}>
       <div className={styles.lin_container}>
-        <img src={IconUser} alt='user' className={styles.user_image} onClick={() => setViewChangeImage(true)}></img>
+        {
+          loadingData ? <Loader />
+          :
+            <>
+              <img src={((userData?.img_link != "") ? userData?.img_link : IconUser)} alt='user' className={styles.user_image} onClick={() => setViewChangeImage(true)}></img>
 
-        <div className={styles.data_container}>
-          <div className={styles.title_container}>
-            <img src={IconUser} alt='username' />
-            <h2 className={styles.title}>
-              {
-                current_state.userData.user_mail ? current_state.userData.first_name + " " + current_state.userData.last_name : "Unknown"
-              }
-            </h2>
-          </div>
+              <div className={styles.data_container}>
+                <div className={styles.title_container}>
+                  <img src={IconUser} alt='username' />
+                  <h2 className={styles.title}>
+                    {
+                      current_state.userData.user_mail ? current_state.userData.first_name + " " + current_state.userData.last_name : "Unknown"
+                    }
+                  </h2>
+                </div>
 
-          <div className={styles.title_container}>
-            <img src={IconMail} alt='mail' />
-            <h2 className={styles.title}>{ current_state.userData.user_mail ? current_state.userData.user_mail : "somemail@mail.com"}</h2>
-          </div>
+                <div className={styles.title_container}>
+                  <img src={IconMail} alt='mail' />
+                  <h2 className={styles.title}>{ current_state.userData.user_mail ? current_state.userData.user_mail : "somemail@mail.com"}</h2>
+                </div>
 
-          <button onClick={() => window.open(`${KEYCLOAK_ADDRESS}realms/master/account`, "_blank")}>
-            <p>Редактировать</p>
-          </button>
-        </div>
+                <button onClick={() => window.open(`${KEYCLOAK_ADDRESS}realms/master/account`, "_blank")}>
+                  <p>Редактировать</p>
+                </button>
+              </div>
+            </> 
+        }
       </div>
       
       <div id="favourite-posts" className={styles.title_razdel} onClick={() => setViewFavourites(prev => !prev)}>

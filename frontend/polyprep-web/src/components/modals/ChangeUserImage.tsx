@@ -6,11 +6,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import IconUser from '../../icons/user.svg'
 import Loader from '../Loader';
 
-const fetchUserData = async (uid: string) => {
-	const resp = await getUser(uid);
-	return resp as IUser;
-};
-
 export default function ChangeUserImage({ onClose }: { onClose: () => void }) {
 	const uid = useAppSelector((state) => state.auth.userData.uid);
 	const queryClient = useQueryClient();
@@ -20,11 +15,9 @@ export default function ChangeUserImage({ onClose }: { onClose: () => void }) {
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 	
-	const { data: userData, isLoading: loadingData, error } = useQuery({
-    queryKey: ['user-' + uid + '-image'],
-    queryFn: () => fetchUserData(uid || "-1"),
-    staleTime: 5 * 60 * 1000,
-  });
+	const { data: userData }  = useQuery({
+		queryKey: ['user-' + uid + '-image'],
+	});
 	
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -63,43 +56,38 @@ export default function ChangeUserImage({ onClose }: { onClose: () => void }) {
 		await queryClient.invalidateQueries({ queryKey: ['user-' + uid + '-image'] });
 
 		setIsLoading(false);
+    window.location.reload();
   }
   
   return (
     <div className={styles.container}>
-			{
-				(loadingData || isLoading) ? <Loader /> 
-				:
-					<>
-						<img
-							src={previewUrl || ((userData?.img_link != "") ? userData?.img_link : IconUser)}  
-							alt='user-icon' 
-						/>
+			<img
+				src={previewUrl || (((userData as IUser).img_link != "") ? (userData as IUser).img_link : IconUser)}  
+				alt='user-icon' 
+			/>
 
-						<p>Выберите новое фото профиля:</p>
+			<p>Выберите новое фото профиля:</p>
 
-						<form onSubmit={handleUploadPhoto}>
-							<input 
-								type="file" 
-								id="img" 
-								name="img" 
-								accept="image/*" 
-								required 
-								placeholder='image'
-								onChange={handleFileChange}
-							/>
+			<form onSubmit={handleUploadPhoto}>
+				<input 
+					type="file" 
+					id="img" 
+					name="img" 
+					accept="image/*" 
+					required 
+					placeholder='image'
+					onChange={handleFileChange}
+				/>
 
-							<button 
-								type='submit' 
-								className={styles.button_dark} 
-							>
-								Загрузить фото
-							</button>
+				<button 
+					type='submit' 
+					className={styles.button_dark} 
+				>
+					Загрузить фото
+				</button>
 
-							<p className={ isError.ind ? styles.incorrect_login : styles.incorrect_login_hidden }> {isError.error }</p>
-						</form>
-					</>
-			}
+				<p className={ isError.ind ? styles.incorrect_login : styles.incorrect_login_hidden }> {isError.error }</p>
+			</form>
     </div>
   )
 }

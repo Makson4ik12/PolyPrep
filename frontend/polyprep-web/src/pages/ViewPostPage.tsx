@@ -27,7 +27,7 @@ import IconContextMenu from '../icons/context_menu.svg'
 import IconUnlike from '../icons/unlike.svg'
 import { Badge } from '../components/Badge';
 import Comment from '../components/Comment';
-import Loader from '../components/Loader';
+import Loader, { MiniLoader } from '../components/Loader';
 import { getUser, IUser } from '../server-api/user';
 import Modal from 'react-responsive-modal';
 import SharePost from '../components/modals/SharePost';
@@ -35,6 +35,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import TextareaAutosize from 'react-textarea-autosize';
+import { fetchUserData } from '../components/Header';
 
 interface IInclude {
   name: string;
@@ -72,7 +73,6 @@ const ViewPostPage = () => {
   const [userLike, setUserLike] = useState(false);
   const [likes, setLikes] = useState<ILikes>();
   const [isFavourite, setIsFavourite] = useState<boolean>(false);
-  const [user, setUser] = useState<IUser>();
   const [viewShare, setViewShare] = useState<boolean>(false);
   const [viewIncludes, setViewIncludes] = useState(false);
 
@@ -167,6 +167,13 @@ const ViewPostPage = () => {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: user, isLoading: isLoadingUser } = useQuery({
+    queryKey: ['user-' + postData?.author_id + '-image'],
+    queryFn: () => fetchUserData(postData?.author_id || "-1"),
+    staleTime: 5 * 60 * 1000,
+    enabled: !!postData?.author_id
+  });
+
   useEffect(() => {
     (async () => {
       await checkPostIsFavourite(post_id)
@@ -203,18 +210,6 @@ const ViewPostPage = () => {
   }, [isUpdate]);
 
   useEffect(() => {
-    if (postData?.author_id) {
-      (async () => {
-        await getUser(postData?.author_id || "-1")
-        .then((resp) => {
-          setUser(resp as IUser)
-        })
-        .catch((error) => console.log("cannot load user"));
-      }) ()
-    }
-  }, [postData]);
-
-  useEffect(() => {
       if (location.hash) {
         const element = document.getElementById(location.hash.replace('#', ''));
         if (element) {
@@ -231,8 +226,13 @@ const ViewPostPage = () => {
           <div className={styles.main_content}>
             <div className={styles.top_info}>
               <div className={styles.lin_container}>
-                <img src={IconUser} alt='usericon'/>
-
+                {
+                  isLoadingUser ? <MiniLoader />
+                  :
+                    <>
+                      <img className={styles.user_icon} src={(((user as IUser).img_link != "") ? (user as IUser).img_link : IconUser)} alt='usericon'/>
+                    </>
+                }
                 {
                   screenSize.width > screenSizes.__1200.width ?
                     <p><b>{ postData?.author_id === userData.uid ? "You" : user?.username }</b> | { getDate(postData?.created_at || 0) }</p>
