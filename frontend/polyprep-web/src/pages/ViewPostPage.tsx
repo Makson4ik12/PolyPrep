@@ -1,7 +1,7 @@
 import styles from './ViewPostPage.module.scss'
 import store from '../redux-store/store';
 import { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { getPostComments, IComment, postComment } from '../server-api/comments';
 import { deleteLike, getPostLikes, ILikes, postLike } from '../server-api/likes';
 import { checkPostIsFavourite, deleteFavourite, postFavourite } from '../server-api/favourites';
@@ -37,24 +37,8 @@ import remarkGfm from 'remark-gfm';
 import TextareaAutosize from 'react-textarea-autosize';
 import { fetchUserData } from '../components/Header';
 import ViewUserProfile from '../components/modals/ViewUserProfile';
-
-interface IInclude {
-  name: string;
-}
-
-const Include = (data: IInclude) => {
-  return (
-    <div className={styles.include}>
-      <div className={styles.lin_container}>
-        <img src={
-          (data.name.endsWith(".png") || data.name.endsWith(".jpg")) ? IconImage : data.name.endsWith(".mp3") ? IconAudio : IconDoc
-        } alt='inlude' />
-        <p>{data.name}</p>
-      </div>
-      <img src={IconDownload} alt='download' className={styles.action_btn}/>
-    </div>
-  )
-}
+import { Include } from '../components/Include';
+import { getPostIncludes, IInclude } from '../server-api/includes';
 
 const fetchPost = async (post_id: number) => {
   const resp = await getPost(post_id);
@@ -73,6 +57,7 @@ const ViewPostPage = () => {
   const [postComments, setPostComments] = useState<IComment[]>();
   const [userLike, setUserLike] = useState(false);
   const [likes, setLikes] = useState<ILikes>();
+  const [includes, setPostIncludes] = useState<IInclude[]>([]);
   const [isFavourite, setIsFavourite] = useState<boolean>(false);
   const [viewShare, setViewShare] = useState<boolean>(false);
   const [viewIncludes, setViewIncludes] = useState(false);
@@ -81,6 +66,7 @@ const ViewPostPage = () => {
   const [isUpdate, updateComponent] = useState<boolean>(false);
   const [isUpdateComments, updateComments] = useState<boolean>(false);
   const [isLoadingComments, setIsLoadingComments] = useState(true);
+  const [isLoadingIncludes, setIsLoadingIncludes] = useState(true);
 
   const screenSize = HandleResponsiveView();
   const commentRef = useRef<HTMLTextAreaElement>(null);
@@ -169,7 +155,7 @@ const ViewPostPage = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: user, isLoading: isLoadingUser } = useQuery({
+  const { data: user, isLoading: isLoadingUser, error: errLoadUser } = useQuery({
     queryKey: ['user-' + postData?.author_id + '-image'],
     queryFn: () => fetchUserData(postData?.author_id || "-1"),
     staleTime: 5 * 60 * 1000,
@@ -212,6 +198,20 @@ const ViewPostPage = () => {
   }, [isUpdate]);
 
   useEffect(() => {
+    (async () => {
+      setIsLoadingIncludes(true);
+
+      await getPostIncludes(post_id)
+      .then((resp) => {
+        setPostIncludes(resp as IInclude[]);
+      })
+      .catch((error) => console.log("cannot load post includes"));
+
+      setIsLoadingIncludes(false);
+    }) ()
+  }, []);
+
+  useEffect(() => {
       if (location.hash) {
         const element = document.getElementById(location.hash.replace('#', ''));
         if (element) {
@@ -225,6 +225,8 @@ const ViewPostPage = () => {
       {
         isLoadingPost ? <Loader />
         :
+          errLoadPost ? <Navigate to="/error" replace={true}/>
+          :
           <div className={styles.main_content}>
             <div className={styles.top_info}>
               <div className={styles.user_info} onClick={() => setViewUserProfile(true)}>
@@ -337,16 +339,34 @@ const ViewPostPage = () => {
           </div>
       }
 
-      <div className={styles.title_razdel} onClick={() => setViewIncludes(prev => !prev)}>
-        <h2>Вложения</h2>
-        <img src={!viewIncludes ? IconArrowDown : IconArrowUp} alt='arrow' />
-      </div>
+      { 
+        isLoadingIncludes ?
+          <>
+            <div className={styles.title_razdel} onClick={() => setViewIncludes(prev => !prev)}>
+              <h2>Вложения</h2>
+            </div>
 
-      <div className={viewIncludes ? styles.includes_container : styles.includes_container_hidden}>
-        <Include name='text.pdf' />
-        <Include name='myrecords.mp3' />
-        <Include name='photo-2002020.png' />
-      </div>
+            <Loader />
+          </>
+        :
+          includes?.length === 0 ? 
+            <></>
+          :
+            <>
+              <div className={styles.title_razdel} onClick={() => setViewIncludes(prev => !prev)}>
+                <h2>Вложения</h2>
+                <img src={!viewIncludes ? IconArrowDown : IconArrowUp} alt='arrow' />
+              </div>
+
+              <div className={viewIncludes ? styles.includes_container : styles.includes_container_hidden}>
+                {
+                  includes?.map((item) => 
+                    <Include link={item.link} />
+                  )
+                }
+              </div>
+            </>
+      }
       
       <div className={styles.title_razdel} id='comments'>
         <h2>Комментарии</h2>
@@ -376,8 +396,7 @@ const ViewPostPage = () => {
         }
         
         <div className={styles.divider} />
-
-        {
+          {
             isLoadingComments ?
               <Loader />
             :

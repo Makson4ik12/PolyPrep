@@ -6,7 +6,7 @@ import { ISearchPostsResponse, searchPosts } from "../server-api/posts";
 import Loader from "../components/Loader";
 import Masonry from "react-layout-masonry";
 import cardStyles from '../components/Card.module.scss'
-import { useLocation, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 
 const fetchSearchPosts = async (text: string) => {
   const resp = await searchPosts({ from: "0", to: "60", text: text});

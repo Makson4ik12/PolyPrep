@@ -94,7 +94,7 @@ const Header = () => {
           modalAnimationOut: 'customLeaveModalAnimation'
         }}
         animationDuration={400}
-        blockScroll={false}
+        blockScroll={true}
       >
         <MobileHeader 
           onClose={() => setViewMobileMenu(false)}

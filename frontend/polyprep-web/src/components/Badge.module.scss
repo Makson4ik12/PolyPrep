@@ -43,9 +43,10 @@
 @media screen and (width <= 480px) {
     .badge {
         gap: 5px;
+        padding: 5px 12px;
 
         p {
-            font-size: 14px;
+            font-size: 14px !important;
         }
 
         img {
