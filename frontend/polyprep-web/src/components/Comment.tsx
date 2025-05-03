@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import store from '../redux-store/store';
 import { deleteComment, IComment, putComment } from '../server-api/comments';
 import styles from '../pages/ViewPostPage.module.scss'
-import { getUser, IUser } from '../server-api/user';
-import useAutosizeTextArea from '../utils/CustomHooks';
+import {  IUser } from '../server-api/user';
 import { getDate, getImgLink } from '../utils/UtilFunctions';
 import IconCancel from '../icons/delete.svg'
 import IconSuccess from '../icons/success.svg'
@@ -14,6 +13,9 @@ import TextareaAutosize from 'react-textarea-autosize';
 import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
 import { fetchUserData } from './Header';
 import { useQuery } from '@tanstack/react-query';
+import Modal from 'react-responsive-modal';
+import ViewUserProfile from './modals/ViewUserProfile';
+import { MiniLoader } from './Loader';
 
 interface ICommentMeta {
   setIsLoading: (val: boolean) => void;
@@ -25,6 +27,7 @@ const Comment = (data: IComment & ICommentMeta) => {
 
   const [value, setValue] = useState(data.text);
   const [isEdit, setIsEdit] = useState(false);
+  const [viewUserProfile, setViewUserProfile] = useState<boolean>(false);
   
   const screenSize = HandleResponsiveView();
   const commentRef = useRef<HTMLTextAreaElement>(null);
@@ -76,8 +79,13 @@ const Comment = (data: IComment & ICommentMeta) => {
   return (
     <div className={styles.info_container}>
       <div className={styles.top_info}>
-        <div className={styles.lin_container}>
-          <img className={styles.user_icon} src={(((user as IUser).img_link != "") ? getImgLink((user as IUser).img_link || "1") : IconUser)} alt='usericon'/>
+        <div className={styles.user_info} onClick={() => setViewUserProfile(true)}>
+          {
+            isLoadingUser ? <MiniLoader />
+            :
+              <img className={styles.user_icon} src={(((user as IUser).img_link != "") ? getImgLink((user as IUser).img_link || "1") : IconUser)} alt='usericon'/>
+          }
+          
           <p>
             <b>{ data?.author_id === userData.uid ? "You" : user?.username }</b>{screenSize.width <= screenSizes.__320.width ? <br></br> : " | "}{ getDate(data.created_at || 0) }
           </p>
@@ -124,6 +132,22 @@ const Comment = (data: IComment & ICommentMeta) => {
         :
           <p className={styles.text}>{value}</p>
       }
+
+      <Modal 
+        open={viewUserProfile} 
+        onClose={() => setViewUserProfile(false)} 
+        showCloseIcon={true} 
+        animationDuration={400}
+        blockScroll={true}
+        center
+      >
+        <ViewUserProfile 
+          id={user?.id || "-1"}
+          username={user?.username|| "-1"}
+          img_link={user?.img_link|| ""}
+          onClose={() => setViewUserProfile(false)}
+        />
+      </Modal>
     </div>
   )
 }

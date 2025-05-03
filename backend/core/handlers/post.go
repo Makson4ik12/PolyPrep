@@ -349,12 +349,26 @@ func SearchPosts(c *gin.Context) {
 		return
 	}
 
+	formattedPosts := make([]gin.H, len(posts))
+	for i, post := range posts {
+		formattedPosts[i] = gin.H{
+			"id":           post.ID,
+			"title":        post.Title,
+			"text":         post.Text,
+			"hashtages":    post.Hashtages,
+			"public":       post.Public,
+			"scheduled_at": post.ScheduledAt.Unix(),
+			"created_at":   post.CreatedAt.Unix(),
+			"updated_at":   post.UpdatedAt.Unix(),
+			"author_id":    post.AuthorID,
+		}
+	}
+
 	response := gin.H{
-		"total":   total,
-		"from":    from,
-		"to":      from + len(posts),
-		"results": posts,
-		"search":  searchText,
+		"total":  total,
+		"from":   from,
+		"to":     from + len(posts),
+		"result": formattedPosts,
 	}
 
 	c.JSON(http.StatusOK, response)

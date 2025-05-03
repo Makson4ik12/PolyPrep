@@ -437,7 +437,7 @@ const ViewPostPage = () => {
           id={user?.id || "-1"}
           username={user?.username|| "-1"}
           img_link={user?.img_link|| ""}
-          onClose={() => setViewShare(false)}
+          onClose={() => setViewUserProfile(false)}
         />
       </Modal>
     </div>
