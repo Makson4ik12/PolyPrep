@@ -28,7 +28,7 @@ export const authLogout = async () => {
 
   try {
       const response = await axios.post(
-        `${SERVER_ADDRESS}${SERVER_API_VERSION}auth/logout`, tokens
+        `${SERVER_ADDRESS}${SERVER_API_VERSION}auth/logout`, { access_token: tokens.access_token, refresh_token: tokens.refresh_token, next_page: ""}
       );
   
       store.dispatch(setStateLogout());
