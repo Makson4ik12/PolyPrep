@@ -13,7 +13,7 @@ import MobileHeader from './modals/MobileHeader';
 import { useAppSelector } from '../redux-store/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { getUser, IUser } from '../server-api/user';
-import Loader, { MiniLoader } from './Loader';
+import { MiniLoader } from './Loader';
 import { getImgLink } from '../utils/UtilFunctions';
 
 export const fetchUserData = async (uid: string) => {
