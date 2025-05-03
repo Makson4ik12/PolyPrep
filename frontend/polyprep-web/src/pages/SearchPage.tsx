@@ -9,7 +9,7 @@ import cardStyles from '../components/Card.module.scss'
 import { useLocation, useSearchParams } from "react-router-dom";
 
 const fetchSearchPosts = async (text: string) => {
-  const resp = await searchPosts({ from: "0", to: "20", text: text});
+  const resp = await searchPosts({ from: "0", to: "60", text: text});
   return resp as ISearchPostsResponse;
 };
 
@@ -24,9 +24,20 @@ const SearchPage = () => {
     enabled: !!querySearch
   });
 
+  const handleOnSubmit = (e: React.FormEvent<HTMLFormElement>)=>{
+    e.preventDefault();
+
+    const formElements = e.currentTarget.elements as typeof e.currentTarget.elements & {
+      q: HTMLInputElement,
+    };
+
+    if (formElements.q.value != "")
+      setSearchParams({["q"]: formElements.q.value});    
+  }
+
   return (
     <div className={styles.container}>
-      <form>
+      <form onSubmit={handleOnSubmit}>
         <input 
           name='q' 
           type='text' 
@@ -37,7 +48,7 @@ const SearchPage = () => {
         </input>
 
         <button type='submit'>
-          <img src={IconSearch} alt='send'/>
+          <img src={IconSearch} alt='search'/>
         </button>
       </form>
 

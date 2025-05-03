@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { getTextColor } from "../utils/UtilFunctions";
+import { useNavigate } from "react-router-dom";
 import styles from "./Badge.module.scss"
 
 interface IBadge {
@@ -8,19 +7,14 @@ interface IBadge {
 }
 
 export function Badge (data: IBadge) {
-  const [colors, setColors] = useState<{bgColor: string, textColor: string}>({bgColor: "white", textColor: "black"});
-
-  useEffect(() => {
-    const bgColor = "#" + ((1 << 24) * Math.random() | 0).toString(16).padStart(6, "0");
-    setColors({bgColor: bgColor, textColor: getTextColor(bgColor)});
-  }, []);
+  const navigate = useNavigate();
 
   return (
-    <div className={styles.badge} style={{backgroundColor: "white"}}>
+    <div className={styles.badge} onClick={ () => navigate("/search?q=" + data.text.slice(1, data.text.length)) }>
       {
         data.icon ? <img src={data.icon} alt='icon'/> : <></>
       }
-      <p style={{color: "black"}}>{data.text}</p>
+      <p>{data.text}</p>
     </div>
   )
 }
