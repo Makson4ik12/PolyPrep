@@ -2,6 +2,9 @@ package handlers
 
 import (
 	"bytes"
+	"errors"
+	"io"
+	"log"
 	"net/http"
 	"polyprep/config"
 	"polyprep/database"
@@ -19,6 +22,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/google/uuid"
 )
 
@@ -46,17 +50,17 @@ func GetIncludes(c *gin.Context) {
 
 	currentUserID := c.GetString("user_id")
 	if currentUserID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"message": "Authorization required",
+		c.JSON(http.StatusUnauthorized, gin.H{ //401
+			"message": "User not authenticated",
 		})
 		return
 	}
 
 	var post models.Post
 	if err := database.DB.First(&post, postID).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusForbidden, gin.H{
-				"message": "Post not found",
+				"message": "includes not found",
 			})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -68,19 +72,13 @@ func GetIncludes(c *gin.Context) {
 
 	if !post.Public && post.AuthorID != currentUserID {
 		c.JSON(http.StatusMethodNotAllowed, gin.H{
-			"message": "No access to private post",
+			"message": "no access",
 		})
 		return
 	}
 
-	var includes []struct {
-		ID uint `json:"id"`
-	}
-
-	if err := database.DB.Model(&models.Include{}).
-		Where("post_id = ?", postID).
-		Select("id").
-		Find(&includes).Error; err != nil {
+	var includes []models.Include
+	if err := database.DB.Where("post_id = ?", postID).Find(&includes).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed to get includes",
 			"error":   err.Error(),
@@ -88,143 +86,128 @@ func GetIncludes(c *gin.Context) {
 		return
 	}
 
-	includeIDs := make([]uint, len(includes))
-	for i, inc := range includes {
-		includeIDs[i] = inc.ID
-	}
-
-	if len(includeIDs) == 0 {
+	if len(includes) == 0 {
 		c.JSON(http.StatusForbidden, gin.H{
-			"message": "No includes found for this post",
+			"message": "includes not found",
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, includeIDs)
+	s3Config := config.LoadBegetS3Config()
+	response := make([]gin.H, len(includes))
+	for i, include := range includes {
+		response[i] = gin.H{
+			"link": fmt.Sprintf("%s/%s/%s", s3Config.Endpoint, s3Config.Bucket, include.Data),
+		}
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // ------------------------------POST/include-----------------------------//
 
 func UploadIncludes(c *gin.Context) {
 
-	currentUserID := c.GetString("user_id")
-	if currentUserID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "Authorization required"})
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "User not authenticated"})
 		return
 	}
 
-	var request struct {
-		PostID   uint   `json:"post_id" binding:"required"`
-		Filename string `json:"filename" binding:"required"`
-		Blob     struct {
-			Data []byte `json:"data"`
-		} `json:"blob" binding:"required"`
+	postIDStr := c.GetHeader("Post-Id")
+	filename := c.GetHeader("Filename")
+
+	if postIDStr == "" || filename == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Missing Post-Id or Filename headers"})
+		return
 	}
 
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Invalid request format",
-			"details": err.Error(),
-		})
+	postID, err := strconv.ParseUint(postIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid Post-Id format"})
 		return
 	}
 
 	var post models.Post
-	if err := database.DB.First(&post, request.PostID).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusForbidden, gin.H{"message": "Post not found"})
+	if err := database.DB.First(&post, postID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusForbidden, gin.H{"message": "Пост не найден"})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "Database error"})
 		}
 		return
 	}
 
-	if !post.Public && post.AuthorID != currentUserID {
-		c.JSON(http.StatusMethodNotAllowed, gin.H{"message": "No access to private post"})
+	if !post.Public && post.AuthorID != userID {
+		c.JSON(http.StatusMethodNotAllowed, gin.H{"message": "Нет доступа (пост приватный)"})
 		return
 	}
 
-	if !isValidFilename(request.Filename) {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid filename"})
-		return
-	}
-
-	fileExt := filepath.Ext(request.Filename)
-	fileName := fmt.Sprintf("%s%s", uuid.New().String(), fileExt)
-	s3Key := fmt.Sprintf("posts/%d/%s", request.PostID, fileName)
-	contentType := detectContentType(fileExt)
-
-	cfg := config.LoadBegetS3Config()
-	sess, err := session.NewSession(&aws.Config{
-		Endpoint: aws.String(cfg.Endpoint),
-		Region:   aws.String(cfg.Region),
-		Credentials: credentials.NewStaticCredentials(
-			cfg.AccessKeyID,
-			cfg.SecretAccessKey,
-			"",
-		),
-		S3ForcePathStyle: aws.Bool(true),
-	})
+	fileBytes, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to create S3 session",
-			"error":   err.Error(),
-		})
+		log.Printf("Error reading file: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid file data"})
 		return
 	}
 
-	s3Client := s3.New(sess)
-	_, err = s3Client.PutObject(&s3.PutObjectInput{
-		Bucket:      aws.String(cfg.Bucket),
+	fileExt := strings.ToLower(filepath.Ext(filename))
+	contentType := detectContentType(fileExt)
+	fileUUID := uuid.New().String()
+	s3Key := fmt.Sprintf("posts/%d/includes/%s%s", post.ID, fileUUID, fileExt)
+
+	s3Config := config.LoadBegetS3Config()
+	_, err = s3manager.NewUploader(session.Must(session.NewSession(&aws.Config{
+		Endpoint:         aws.String(s3Config.Endpoint),
+		Region:           aws.String(s3Config.Region),
+		Credentials:      credentials.NewStaticCredentials(s3Config.AccessKeyID, s3Config.SecretAccessKey, ""),
+		S3ForcePathStyle: aws.Bool(true),
+	}))).Upload(&s3manager.UploadInput{
+		Bucket:      aws.String(s3Config.Bucket),
 		Key:         aws.String(s3Key),
-		Body:        bytes.NewReader(request.Blob.Data),
+		Body:        bytes.NewReader(fileBytes),
 		ContentType: aws.String(contentType),
 	})
+
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to upload file to S3",
-			"error":   err.Error(),
-		})
+		log.Printf("S3 upload error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "File upload failed"})
 		return
 	}
 
 	include := models.Include{
-		PostID: request.PostID,
+		PostID: post.ID,
 		Data:   s3Key,
 		Type:   contentType,
-		Size:   int64(len(request.Blob.Data)),
+		Size:   int64(len(fileBytes)),
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "File uploaded successfully",
-		"data": gin.H{
-			"id":       include.ID,
-			"post_id":  include.PostID,
-			"filename": request.Filename,
-			"size":     include.Size,
-			"type":     include.Type,
-		},
-	})
-}
+	if err := database.DB.Create(&include).Error; err != nil {
+		log.Printf("DB create error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to save include"})
+		return
+	}
 
-func isValidFilename(filename string) bool {
-	return !strings.ContainsAny(filename, "/\\?%*:|\"<>")
+	c.Status(http.StatusOK)
 }
 
 func detectContentType(ext string) string {
-	switch strings.ToLower(ext) {
+	switch ext {
 	case ".jpg", ".jpeg":
 		return "image/jpeg"
 	case ".png":
 		return "image/png"
 	case ".pdf":
 		return "application/pdf"
-	case ".mp4":
-		return "video/mp4"
+	case ".doc":
+		return "application/msword"
+	case ".docx":
+		return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+	case ".zip":
+		return "application/zip"
 	case ".mp3":
 		return "audio/mpeg"
-	case ".txt":
-		return "text/plain"
+	case ".mp4":
+		return "video/mp4"
 	default:
 		return "application/octet-stream"
 	}
