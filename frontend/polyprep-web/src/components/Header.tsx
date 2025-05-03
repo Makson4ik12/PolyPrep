@@ -17,7 +17,7 @@ import Loader, { MiniLoader } from './Loader';
 import { getImgLink } from '../utils/UtilFunctions';
 
 export const fetchUserData = async (uid: string) => {
-  const resp: IUser = await getUser(uid);
+  const resp = await getUser(uid) as IUser;
   return { id: resp.id, username: resp.username, img_link: getImgLink(resp.img_link)};
 };
 
