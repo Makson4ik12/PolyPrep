@@ -26,8 +26,6 @@ func main() {
 			"Authorization",
 			"Accept",
 			"X-Requested-With",
-			"PostId",
-			"Filename",
 		},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
