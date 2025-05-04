@@ -20,27 +20,8 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useQuery } from '@tanstack/react-query';
 import { fetchUserData } from '../components/Header';
-
-interface IInclude {
-  name: string;
-}
-
-const Include = (data: IInclude) => {
-  return (
-    <div className={styles.include}>
-      <div className={styles.lin_container}>
-        <img src={
-          (data.name.endsWith(".png") || data.name.endsWith(".jpg")) ? IconImage : data.name.endsWith(".mp3") ? IconAudio : IconDoc
-        } alt='inlude' />
-        <p>{data.name}</p>
-      </div>
-      <img src={IconDownload} alt='download' className={styles.action_btn}/>
-    </div>
-  )
-}
-
-// TODO: увеличить фотки в комментах
-// добавить поиск
+import { getSharedIncludes, IInclude } from '../server-api/includes';
+import { ViewPostInclude } from '../components/Include';
 
 const ViewSharedPost = () => {
   const navigate = useNavigate();
@@ -49,8 +30,10 @@ const ViewSharedPost = () => {
   const userData = store.getState().auth.userData;
 
   const [postData, setPostData] = useState<IPost>();
+  const [includes, setPostIncludes] = useState<IInclude[]>([]);
 
   const [isLoadingPost, setIsLoadingPost] = useState(true);
+  const [isLoadingIncludes, setIsLoadingIncludes] = useState(false);
   const [viewIncludes, setViewIncludes] = useState(false);
 
   useEffect(() => {
@@ -64,6 +47,20 @@ const ViewSharedPost = () => {
       .catch((err) => navigate("/error"))
 
       setIsLoadingPost(false);
+    }) ()
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      setIsLoadingIncludes(true);
+
+      await getSharedIncludes(post_id)
+      .then((resp) => {
+        setPostIncludes(resp as IInclude[]);
+      })
+      .catch((error) => console.log("cannot load post includes"));
+
+      setIsLoadingIncludes(false);
     }) ()
   }, []);
 
@@ -83,7 +80,7 @@ const ViewSharedPost = () => {
             <div className={styles.top_info}>
               <div className={styles.lin_container}>
                 {
-                  isLoadingUser ? <MiniLoader />
+                  isLoadingUser || !user ? <MiniLoader />
                   :
                     <>
                       <img className={styles.user_icon} src={(((user as IUser).img_link != "") ? (user as IUser).img_link : IconUser)} alt='usericon'/>
@@ -127,16 +124,40 @@ const ViewSharedPost = () => {
           </div>
       }
 
-      <div className={styles.title_razdel} onClick={() => setViewIncludes(prev => !prev)}>
-        <h2>Вложения</h2>
-        <img src={!viewIncludes ? IconArrowDown : IconArrowUp} alt='arrow' />
-      </div>
+      { 
+        isLoadingIncludes ?
+          <>
+            <div className={styles.title_razdel} onClick={() => setViewIncludes(prev => !prev)}>
+              <h2>Вложения</h2>
+            </div>
 
-      <div className={viewIncludes ? styles.includes_container : styles.includes_container_hidden}>
-        <Include name='text.pdf' />
-        <Include name='myrecords.mp3' />
-        <Include name='photo-2002020.png' />
-      </div>
+            <Loader />
+          </>
+        :
+          includes?.length === 0 ? 
+            <></>
+          :
+            <>
+              <div className={styles.title_razdel} onClick={() => setViewIncludes(prev => !prev)}>
+                <h2>Вложения</h2>
+                <img src={!viewIncludes ? IconArrowDown : IconArrowUp} alt='arrow' />
+              </div>
+
+              <div className={viewIncludes ? styles.includes_container : styles.includes_container_hidden}>
+                {
+                  includes?.map((item) => 
+                    <ViewPostInclude 
+                      key={item.id}
+                      link={item.link} 
+                      id={item.id} 
+                      filename={item.filename} 
+                      size={item.size}
+                    />
+                  )
+                }
+              </div>
+            </>
+      }
     </div>
   )
 }

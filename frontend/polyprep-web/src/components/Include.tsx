@@ -4,16 +4,9 @@ import newIncludeStyle from '../pages/NewPostPage.module.scss'
 import { JSX, useState } from 'react';
 import IconDelete from '../icons/delete.svg'
 import IconDownload from '../icons/download.svg'
-import IconCloud from '../icons/cloud.svg'
-import IconMd from '../icons/md.svg'
-import IconDoc from '../icons/doc.svg'
-import IconAudio from '../icons/audio.svg'
-import IconWord from '../icons/word.svg'
-import IconExcel from '../icons/excel.svg'
-import IconPowerpoint from '../icons/powerpoint.svg'
-import IconPdf from '../icons/pdf.svg'
-import IconVideo from '../icons/pdf.svg'
 import { detectFileType } from '../utils/UtilFunctions';
+import Modal from 'react-responsive-modal';
+import PreviewInclude from './modals/PreviewInclude';
 
 interface IIncludeTemp {
   id: number;
@@ -27,17 +20,38 @@ export interface IIncludeData {
 }
 
 export const ViewPostInclude = (data: IInclude) => {
+  const [viewPreview, setViewPreview] = useState(false);
+  const isImg = detectFileType(data.filename, data.link) === data.link;
+
   return (
-    <div className={viewPoststyles.include}>
-      <div className={viewPoststyles.lin_container}>
-        <img 
-          src={detectFileType(data.filename, data.link)}
-          alt='include' 
+    <>
+      <div className={viewPoststyles.include} onClick={isImg ? () => setViewPreview(true) : () => {}}>
+        <div className={viewPoststyles.lin_container}>
+          <img 
+            src={detectFileType(data.filename, data.link)}
+            alt='include' 
+          />
+          <p>{data.filename}</p>
+        </div>
+        <img src={IconDownload} alt='download' className={viewPoststyles.action_btn} onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            window.open(data.link, "_blank");
+          }}
         />
-        <p>{data.filename}</p>
       </div>
-      <img src={IconDownload} alt='download' className={viewPoststyles.action_btn} onClick={() => window.open(data.link, "_blank")}/>
-    </div>
+
+      <Modal 
+        open={viewPreview} 
+        onClose={() => setViewPreview(false)} 
+        showCloseIcon={true} 
+        animationDuration={400}
+        blockScroll={true}
+        center
+      >
+        <PreviewInclude url={data.link} filename={data.filename}/>
+      </Modal>
+    </>
   )
 }
 

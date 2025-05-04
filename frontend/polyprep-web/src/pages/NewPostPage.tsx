@@ -73,7 +73,7 @@ const NewPostPage = () => {
         public: !isPrivate,
         hashtages: formElements.hashtages.value.split(" "),
         scheduled_at: isScheduled ? new Date(formElements.data.value).getTime() : null
-      });
+      }) as IPost;
       
       const postId = postResponse.id;
 
@@ -129,12 +129,14 @@ const NewPostPage = () => {
       }
 
        // delete post
-      try {
-        await deletePost(postResponse.id);
-      } catch (deleteError) {
-        console.error('error delete post:', deleteError);
+      if (postResponse?.id) {
+        try {
+          await deletePost(postResponse.id);
+        } catch (deleteError) {
+          console.error('error delete post:', deleteError);
+        }
       }
-    
+      
       setIsError({
         ind: true,
         error: "Ошибка при создании поста :("

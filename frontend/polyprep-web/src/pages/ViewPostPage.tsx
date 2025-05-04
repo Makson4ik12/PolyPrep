@@ -356,14 +356,20 @@ const ViewPostPage = () => {
               <div className={viewIncludes ? styles.includes_container : styles.includes_container_hidden}>
                 {
                   includes?.map((item) => 
-                    <ViewPostInclude link={item.link} id={item.id} filename={item.filename} size={item.size}/>
+                    <ViewPostInclude 
+                      key={item.id}
+                      link={item.link} 
+                      id={item.id} 
+                      filename={item.filename} 
+                      size={item.size}
+                    />
                   )
                 }
               </div>
             </>
       }
       
-      <div className={styles.title_razdel} id='comments'>
+      <div className={styles.title_razdel_static} id='comments'>
         <h2>Комментарии</h2>
       </div>
 

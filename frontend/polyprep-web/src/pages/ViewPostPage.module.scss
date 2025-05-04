@@ -129,6 +129,19 @@
         }
     }
 
+    .title_razdel_static {
+        @extend .title_razdel;
+        cursor: auto;
+
+        &:hover {
+            background-color: white;
+
+            h2 {
+                color: black;
+            }
+        }
+    }
+
     .top_info {
         width: 100%;
         display: flex;
@@ -342,6 +355,12 @@
             align-items: center;
             justify-content: space-between;
             gap: 10px;
+            cursor: pointer;
+
+            &:hover {
+                transform: scale(0.995);
+                transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+            }
 
             .action_btn {
                 width: 35px;
