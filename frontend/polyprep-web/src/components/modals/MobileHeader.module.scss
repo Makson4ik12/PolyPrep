@@ -195,10 +195,15 @@
 
             .user {
                 a {
-                    gap: 15px;
+                    gap: 10px;
 
                     p {
                         font-size: 16px;
+                    }
+
+                    .user_icon {
+                        width: 30px;
+                        height: 30px;
                     }
                 }
             }

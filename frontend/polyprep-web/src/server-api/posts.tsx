@@ -19,6 +19,19 @@ export interface IRandomPosts {
   count: number;
   posts: IPost[];
 }
+
+export interface ISearchPosts {
+  text: string;
+  from: string;
+  to: string;
+}
+
+export interface ISearchPostsResponse {
+  total: number;
+  from: number;
+  to: number;
+  result: IPost[];
+}
   
 export async function postPost(data: IPost) {
   try {
@@ -112,6 +125,19 @@ export async function deletePost(post_id: number) {
     );
 
     return response;
+  } catch (error: any) {
+    throw error;
+  }
+}
+
+export async function searchPosts(data: ISearchPosts) {
+  try {
+    const response = await axios.get(
+    `${SERVER_ADDRESS}${SERVER_API_VERSION}post/search?text=${data.text}&from=${data.from}&to=${data.to}`,
+    { headers: { Authorization: `Bearer ${store.getState().auth.authTokens.access_token}` } }
+    );
+
+    return response.data;
   } catch (error: any) {
     throw error;
   }

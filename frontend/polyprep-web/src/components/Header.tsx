@@ -13,11 +13,11 @@ import MobileHeader from './modals/MobileHeader';
 import { useAppSelector } from '../redux-store/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { getUser, IUser } from '../server-api/user';
-import Loader, { MiniLoader } from './Loader';
+import { MiniLoader } from './Loader';
 import { getImgLink } from '../utils/UtilFunctions';
 
 export const fetchUserData = async (uid: string) => {
-  const resp: IUser = await getUser(uid);
+  const resp = await getUser(uid) as IUser;
   return { id: resp.id, username: resp.username, img_link: getImgLink(resp.img_link)};
 };
 
@@ -94,7 +94,7 @@ const Header = () => {
           modalAnimationOut: 'customLeaveModalAnimation'
         }}
         animationDuration={400}
-        blockScroll={false}
+        blockScroll={true}
       >
         <MobileHeader 
           onClose={() => setViewMobileMenu(false)}

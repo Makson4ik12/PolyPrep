@@ -4,6 +4,8 @@ import IconUser from '../icons/user.svg'
 import IconMail from '../icons/mail.svg'
 import IconArrowDown from '../icons/arrow_down.svg'
 import IconArrowUp from '../icons/arrow_up.svg'
+import IconEdit from '../icons/edit.svg'
+import IconExit from '../icons/exit.svg'
 import Card from "../components/Card";
 import { useEffect, useState } from "react";
 import { getPost, getPosts, IPost } from "../server-api/posts";
@@ -11,7 +13,7 @@ import Loader from "../components/Loader";
 import Masonry from "react-layout-masonry";
 import cardStyles from '../components/Card.module.scss'
 import { getFavouritePosts, IFavourite } from "../server-api/favourites";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { KEYCLOAK_ADDRESS } from "../server-api/config";
 import ChangeUserImage from "../components/modals/ChangeUserImage";
@@ -20,6 +22,7 @@ import { useAppSelector } from "../redux-store/hooks";
 import { fetchUserData } from "../components/Header";
 import { getImgLink } from "../utils/UtilFunctions";
 import { setViewFavourite, setViewUserPosts } from "../redux-store/user-settings";
+import { authLogout } from "../server-api/auth";
 
 const FavouritePost = ( { post_id }: { post_id: number }) => {
   const [postData, setPostData] = useState<IPost>();
@@ -76,6 +79,7 @@ const fetchFavouritePosts = async () => {
 const UserPage = () => {
   const current_state = store.getState().auth;
   const location = useLocation();
+  const navigate = useNavigate();
 
   const uid = useAppSelector((state) => state.auth.userData.uid);
   const viewFavourites = useAppSelector((state) => state.settings.viewFavourite);
@@ -110,6 +114,14 @@ const UserPage = () => {
     }
   }, [location, loadingPosts, loadingFavourite]);
   
+  const handleOnLogout = async () => {
+    await authLogout()
+      .then((resp) => {
+        navigate("/");
+      })
+      .catch((error) => console.log("cannot logout"));
+  }
+
   return (
     <div className={styles.container}>
       <div className={styles.lin_container}>
@@ -135,7 +147,13 @@ const UserPage = () => {
                 </div>
 
                 <button onClick={() => window.open(`${KEYCLOAK_ADDRESS}realms/master/account`, "_blank")}>
+                  <img src={IconEdit} alt='edit' />
                   <p>Редактировать</p>
+                </button>
+
+                <button className={styles.outline_button} onClick={() => handleOnLogout()}>
+                  <img src={IconExit} alt='exit' />
+                  <p>Выйти из аккаунта</p>
                 </button>
               </div>
             </> 

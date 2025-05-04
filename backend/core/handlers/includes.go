@@ -48,12 +48,6 @@ func GetIncludes(c *gin.Context) {
 	}
 
 	currentUserID := c.GetString("user_id")
-	if currentUserID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{ //401
-			"message": "User not authenticated",
-		})
-		return
-	}
 
 	var post models.Post
 	if err := database.DB.First(&post, postID).Error; err != nil {

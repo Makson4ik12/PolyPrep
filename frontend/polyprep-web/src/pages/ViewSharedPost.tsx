@@ -39,6 +39,9 @@ const Include = (data: IInclude) => {
   )
 }
 
+// TODO: увеличить фотки в комментах
+// добавить поиск
+
 const ViewSharedPost = () => {
   const navigate = useNavigate();
   const location = useLocation();
