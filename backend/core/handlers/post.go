@@ -1,14 +1,21 @@
 package handlers
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
+	"polyprep/config"
 	"polyprep/database"
 	models "polyprep/model"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
 	"gorm.io/gorm"
@@ -220,59 +227,137 @@ func UpdatePost(c *gin.Context) {
 
 func DeletePost(c *gin.Context) {
 
-	postID, err := strconv.ParseUint(c.Query("id"), 10, 32) //get id(integer)
+	postID, err := strconv.ParseUint(c.Query("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{ //400
+		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Invalid post ID format",
 		})
 		return
 	}
 
-	currentUserID := c.GetString("user_id") //get id_user
+	currentUserID := c.GetString("user_id")
 	if currentUserID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{ //401
+		c.JSON(http.StatusUnauthorized, gin.H{
 			"message": "Authentication required",
 		})
 		return
 	}
 
+	tx := database.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
 	var post models.Post
-	result := database.DB.First(&post, postID) //get post
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{ //404
+	if err := tx.Set("gorm:query_option", "FOR UPDATE").First(&post, postID).Error; err != nil {
+		tx.Rollback()
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{
 				"message": "Post not found",
 			})
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{ //500
+			c.JSON(http.StatusInternalServerError, gin.H{
 				"message": "Database error",
 			})
 		}
 		return
 	}
 
-	if post.AuthorID != currentUserID { //check "Public"
+	if post.AuthorID != currentUserID {
+		tx.Rollback()
 		if !post.Public {
-			c.JSON(http.StatusMethodNotAllowed, gin.H{ //405
+			c.JSON(http.StatusMethodNotAllowed, gin.H{
 				"message": "No access to private post",
 			})
 		} else {
-			c.JSON(http.StatusForbidden, gin.H{ //403
+			c.JSON(http.StatusForbidden, gin.H{
 				"message": "You don't have permission to delete this post",
 			})
 		}
 		return
 	}
 
-	if err := database.DB.Delete(&post).Error; err != nil { //delete post
-		c.JSON(http.StatusInternalServerError, gin.H{ //500
+	var includes []models.Include
+	if err := tx.Where("post_id = ?", postID).Find(&includes).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to find post includes",
+		})
+		return
+	}
+
+	if len(includes) > 0 {
+		s3Config := config.LoadBegetS3Config()
+		sess, err := session.NewSession(&aws.Config{
+			Endpoint:         aws.String(s3Config.Endpoint),
+			Region:           aws.String(s3Config.Region),
+			Credentials:      credentials.NewStaticCredentials(s3Config.AccessKeyID, s3Config.SecretAccessKey, ""),
+			S3ForcePathStyle: aws.Bool(true),
+		})
+		if err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Failed to initialize S3 session",
+			})
+			return
+		}
+
+		s3Client := s3.New(sess)
+		for _, include := range includes {
+
+			key := strings.TrimPrefix(include.Data, fmt.Sprintf("%s/%s/", s3Config.Endpoint, s3Config.Bucket))
+			_, err := s3Client.DeleteObject(&s3.DeleteObjectInput{
+				Bucket: aws.String(s3Config.Bucket),
+				Key:    aws.String(key),
+			})
+			if err != nil {
+				tx.Rollback()
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"message": "Failed to delete files from storage",
+				})
+				return
+			}
+		}
+	}
+
+	entitiesToDelete := []interface{}{
+		&models.Like{},
+		&models.Comment{},
+		&models.Favourite{},
+		&models.Share{},
+		&models.Include{},
+	}
+
+	for _, entity := range entitiesToDelete {
+		if err := tx.Where("post_id = ?", postID).Delete(entity).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": fmt.Sprintf("Failed to delete related entities: %v", err),
+			})
+			return
+		}
+	}
+
+	if err := tx.Delete(&post).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed to delete post",
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{ //200
-		"message": "Post deleted successfully",
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Transaction failed",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Post and all related data deleted successfully",
 		"data": gin.H{
 			"post_id":    post.ID,
 			"deleted_at": time.Now().Unix(),
