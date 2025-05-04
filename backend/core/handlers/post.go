@@ -85,7 +85,7 @@ type CreatePostRequest struct {
 	Title       string   `json:"title" binding:"required"`
 	Text        string   `json:"text" binding:"required"`
 	Hashtages   []string `json:"hashtages" binding:"required"`
-	Public      *bool    `json:"public" binding:"required"`
+	Public      *bool    `json:"public"`
 	ScheduledAt int64    `json:"scheduled_at"`
 }
 
@@ -108,7 +108,7 @@ func CreatePost(c *gin.Context) {
 		return
 	}
 
-	public := true
+	public := false
 
 	if req.Public != nil {
 		public = *req.Public
