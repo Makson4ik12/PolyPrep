@@ -47,7 +47,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Tokens"
+                $ref: "#/components/schemas/AuthCheck"
 
         default:
           description: "Ошибка запроса"
@@ -66,7 +66,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Tokens"   
+              $ref: "#/components/schemas/AuthBody" 
         description: "Входные данные"
         required: true
 
@@ -122,13 +122,18 @@ paths:
       tags:
         - "OAuth 2.0"
 
-      parameters:
-        - in: header
-          name: Authorization
-          description: "Refresh токен"
-          required: true
-          schema:
-            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+                - refresh_token
+              properties:
+                refresh_token:
+                  type: "string"
+              
+        description: "Входные данные"
+        required: true
 
       responses:
         200:
@@ -242,7 +247,7 @@ paths:
         - in: header
           name: Authorization
           description: "Access токен"
-          required: true
+          required: false
           schema:
             type: string
 
@@ -290,6 +295,11 @@ paths:
       responses:
         200:
           description: "Успешно"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetPost"   
+                required: true
 
         default:
           description: "Ошибка запроса"
@@ -383,7 +393,7 @@ paths:
         - in: header
           name: Authorization
           description: "Access токен"
-          required: true
+          required: false
           schema:
             type: string
 
@@ -439,7 +449,7 @@ paths:
         - in: header
           name: Authorization
           description: "Access токен"
-          required: true
+          required: false
           schema:
             type: string
         
@@ -456,7 +466,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Search"
+                $ref: "#/components/schemas/Random"
         
         403:
           description: "Посты не найдены"
@@ -478,7 +488,7 @@ paths:
         - in: header
           name: Authorization
           description: "Access токен"
-          required: true
+          required: false
           schema:
             type: string
         
@@ -508,7 +518,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiError"
 
-
   /comment:
     get:
       description: "Получение комментариев поста"
@@ -526,7 +535,7 @@ paths:
         - in: header
           name: Authorization
           description: "Access токен"
-          required: true
+          required: false
           schema:
             type: string
 
@@ -680,7 +689,7 @@ paths:
         - in: header
           name: Authorization
           description: "Access токен"
-          required: true
+          required: false
           schema:
             type: string
 
@@ -780,7 +789,7 @@ paths:
                 $ref: "#/components/schemas/ApiError"
 
 
-  /include:
+  /includes:
     get:
       description: "Получение вложений поста"
       tags:
@@ -797,7 +806,7 @@ paths:
         - in: header
           name: Authorization
           description: "Access токен"
-          required: true
+          required: false
           schema:
             type: string
 
@@ -834,12 +843,29 @@ paths:
           required: true
           schema:
             type: string
+        - in: query
+          name: post_id
+          description: Id поста
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: filename
+          description: Имя файла
+          required: true
+          schema:
+            type: string
 
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: "#/components/schemas/PostInclude"   
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+
         required: true
 
       responses:
@@ -885,6 +911,48 @@ paths:
 
         403:
           description: "Вложения не найдено"
+
+        405:
+          description: "Нет доступа (если пост приватный)"
+
+        default:
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /post/shared/includes:
+    get:
+      description: "Получение вложений расшаренного поста"
+      tags:
+        - "Вложения"
+
+      parameters:
+        - in: query
+          name: uuid
+          description: Uuid поста
+          required: true
+          schema:
+            type: string
+
+        - in: header
+          name: Authorization
+          description: "Access токен"
+          required: false
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: "Вложения найдены"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetInclude"
+        
+        403:
+          description: "Вложения не найдены"
 
         405:
           description: "Нет доступа (если пост приватный)"
@@ -1122,7 +1190,7 @@ paths:
 
       requestBody:  
         content:
-          image/png:
+          multipart/form-data:
             schema:
               type: string
               format: binary
@@ -1136,49 +1204,6 @@ paths:
                 required:
                   - "img_link"
                 properties:
-                  img_link:
-                    type: "string"
-                    example: "http://abc.png"
-
-        default:
-          description: "Ошибка запроса"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-
-    put:
-      description: "Обновление фото для текущего пользователя"
-      tags:
-        - "Пользователь"
-
-      parameters:
-        - in: header
-          name: Authorization
-          description: "Access токен"
-          required: true
-          schema:
-            type: string
-
-      requestBody:  
-        content:
-          image/png:
-            schema:
-              type: string
-              format: binary
-
-      responses:
-        200:
-          description: "Фото обновлено"
-          content:
-            application/json:
-              schema:
-                required:
-                  - "id"
-                  - "img_link"
-                properties:
-                  id:
-                    type: "integer"
                   img_link:
                     type: "string"
                     example: "http://abc.png"
@@ -1267,10 +1292,13 @@ paths:
               schema:
                 required:
                   - "uuid"
+                  - "expires_at"
                 properties:
                   uuid:
                     type: "string"
                     example: xxxx-xxxx-xxxx-xxxx
+                  expires_at:
+                    type: number
         
         403:
           description: "Пост не найден"
@@ -1403,8 +1431,8 @@ components:
           type: "integer"
           example: 12345679
         author_id:
-          type: "integer"
-          example: 1
+          type: "string"
+          example: xxxx-xxxx-xxxx-xxxx
         title:
           type: "string"
           example: "Основы математики"
@@ -1468,12 +1496,36 @@ components:
           example: 12345679
 
     Search:
-      type: array
-      items:
-        type: object
-        properties:
-          post_id::
-            type: "integer"
+      type: object
+      required:
+        - result
+        - total
+        - from
+        - to
+      properties:
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/GetPost"
+        total:
+          type: integer
+        from:
+          type: integer
+        to:
+          type: integer
+
+    Random:
+      type: object
+      required:
+        - count
+        - posts
+      properties:
+        posts:
+          type: array
+          items:
+            $ref: "#/components/schemas/GetPost"
+        count:
+          type: integer
 
 
     PostPostShared:
@@ -1498,7 +1550,8 @@ components:
           updated_at:
             type: "integer"
           author_id:
-            type: "integer"
+            type: "string"
+            example: xxxx-xxxx-xxxx-xxxx
           post_id:
             type: "integer"
           text:
@@ -1529,18 +1582,33 @@ components:
  
 
     GetLike:
-      type: array
-      items:
-        type: object
-        properties:
-          id:
-            type: "integer"
-          created_at:
-            type: "integer"
-          author_id:
-            type: "integer"
-          post_id:
-            type: "integer"
+      type: object
+      required:
+        - count
+        - likes
+        - post_id
+        - created_at
+      properties:
+        likes:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: "integer"
+              created_at:
+                type: "integer"
+              user_id:
+                type: "string"
+                example: xxxx-xxxx-xxxx-xxxx
+              post_id:
+                type: "integer"
+        count:
+          type: integer
+        post_id:
+          type: integer
+        created_at:
+          type: integer
   
     PostLike:
       required:
@@ -1557,11 +1625,11 @@ components:
         properties:
           id:
             type: "integer"
-          created_at:
-            type: "integer"
+          filename:
+            type: "string"
           link:
             type: "string"
-          post_id:
+          size:
             type: "integer"
   
     PostInclude:
@@ -1631,8 +1699,8 @@ components:
             type: "integer"
             example: 12345679
           author_id:
-            type: "integer"
-            example: 1
+            type: "string"
+            example: xxxx-xxxx-xxxx-xxxx
           title:
             type: "string"
             example: "Основы математики"

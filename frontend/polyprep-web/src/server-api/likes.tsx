@@ -11,10 +11,10 @@ export interface ILike {
 }
 
 export interface ILikes {
-    count: number;
-    likes: ILike[];
-    post_id: number;
-    created_at: number;
+  count: number;
+  likes: ILike[];
+  post_id: number;
+  created_at: number;
 }
   
 export async function postLike(post_id: number) {
