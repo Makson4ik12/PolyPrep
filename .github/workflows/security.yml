@@ -1,0 +1,96 @@
+name: Security Checks
+
+on:
+  push:
+    branches: [devsec]
+  pull_request:
+    branches: [devsec]
+  workflow_dispatch:
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      has-go: ${{ steps.filter.outputs.go == 'true' }}
+      has-python: ${{ steps.filter.outputs.python == 'true' }}
+      has-js: ${{ steps.filter.outputs.js == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Identify changed files
+        id: filter
+        uses: tj-actions/changed-files@v42
+        with:
+          files: |
+            **/*.go
+            **/*.py
+            **/*.js
+            **/*.ts
+
+  go-checks:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has-go == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+      
+      - name: Run golangci-lint
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+          golangci-lint run ./...
+      
+      - name: Run gosec
+        run: |
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          gosec ./...
+
+  python-checks:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has-python == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Run Bandit
+        run: |
+          pip install bandit
+          bandit -r PolyPrep/
+      
+      - name: Run Safety
+        run: |
+          pip install safety
+          safety check
+
+  js-checks:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has-js == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Run npm audit
+        working-directory: ./PolyPrep/static/js
+        run: |
+          npm install
+          npm audit
+      
+      - name: Run Snyk
+        working-directory: ./PolyPrep/static/js
+        run: |
+          npm install -g snyk
+          snyk test
