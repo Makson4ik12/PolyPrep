@@ -1,3 +1,12 @@
+import IconMd from '../icons/md.svg'
+import IconDoc from '../icons/doc.svg'
+import IconAudio from '../icons/audio.svg'
+import IconWord from '../icons/word.svg'
+import IconExcel from '../icons/excel.svg'
+import IconPowerpoint from '../icons/powerpoint.svg'
+import IconPdf from '../icons/pdf.svg'
+import IconVideo from '../icons/pdf.svg'
+
 export const getDate = (timestamp: number) => {
   const date = new Date(timestamp * 1000);
   
@@ -35,9 +44,7 @@ export const getImgLink = (url: string) => {
   return url + `?t=${Date.now().toString()}`;
 }
 
-type FileType = "img" | "word" | "excel" | "pdf" | "powerpoint" | "audio" | "video" | "other";
-
-export const detectFileType = (filename: string): FileType => {
+export const detectFileType = (filename: string, link: string) => {
   const extension = filename.split('.').pop()?.toLowerCase();
 
   switch (extension) {
@@ -45,35 +52,31 @@ export const detectFileType = (filename: string): FileType => {
     case 'png':
     case 'jpg':
     case 'jpeg':
-    case 'gif':
-    case 'webp':
-    case 'svg':
-    case 'bmp':
-      return 'img';
+      return link;
 
     // word
     case 'doc':
     case 'docx':
     case 'rtf':
     case 'odt':
-      return 'word';
+      return IconWord;
 
     // excel
     case 'xls':
     case 'xlsx':
     case 'csv':
     case 'ods':
-      return 'excel';
+      return IconExcel;
 
     // pdf
     case 'pdf':
-      return 'pdf';
+      return IconPdf;
 
     // powerpoint
     case 'ppt':
     case 'pptx':
     case 'odp':
-      return 'powerpoint';
+      return IconPowerpoint;
 
     // audio
     case 'mp3':
@@ -81,7 +84,7 @@ export const detectFileType = (filename: string): FileType => {
     case 'ogg':
     case 'aac':
     case 'flac':
-      return 'audio';
+      return IconAudio;
 
     // video
     case 'mp4':
@@ -89,10 +92,14 @@ export const detectFileType = (filename: string): FileType => {
     case 'avi':
     case 'mkv':
     case 'webm':
-      return 'video';
+      return IconVideo;
+
+    // md
+    case 'md':
+      return IconMd;
 
     // other
     default:
-      return 'other';
+      return IconDoc;
   }
 }
