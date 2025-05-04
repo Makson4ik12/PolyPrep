@@ -3,7 +3,7 @@ package handlers
 import (
 	"log"
 	"net/http"
-	"net/url"
+	// "net/url"
 	"polyprep/config"
 	"polyprep/database"
 	models "polyprep/model"
