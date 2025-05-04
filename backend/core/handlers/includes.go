@@ -10,7 +10,6 @@ import (
 	"polyprep/database"
 	models "polyprep/model"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -114,17 +113,17 @@ func UploadIncludes(c *gin.Context) {
 		return
 	}
 
-	postIDStr := c.GetHeader("Post-Id")
+	postIDStr := c.GetHeader("PostId")
 	filename := c.GetHeader("Filename")
 
 	if postIDStr == "" || filename == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Missing Post-Id or Filename headers"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Missing PostId or Filename headers"})
 		return
 	}
 
 	postID, err := strconv.ParseUint(postIDStr, 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid Post-Id format"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid PostId format"})
 		return
 	}
 
@@ -150,8 +149,7 @@ func UploadIncludes(c *gin.Context) {
 		return
 	}
 
-	fileExt := strings.ToLower(filepath.Ext(filename))
-	contentType := detectContentType(fileExt)
+	fileExt := filepath.Ext(filename)
 	fileUUID := uuid.New().String()
 	s3Key := fmt.Sprintf("posts/%d/includes/%s%s", post.ID, fileUUID, fileExt)
 
@@ -165,7 +163,7 @@ func UploadIncludes(c *gin.Context) {
 		Bucket:      aws.String(s3Config.Bucket),
 		Key:         aws.String(s3Key),
 		Body:        bytes.NewReader(fileBytes),
-		ContentType: aws.String(contentType),
+		ContentType: aws.String("application/octet-stream"),
 	})
 
 	if err != nil {
@@ -176,8 +174,8 @@ func UploadIncludes(c *gin.Context) {
 
 	include := models.Include{
 		PostID: post.ID,
-		Data:   s3Key,
-		Type:   contentType,
+		Data:   fmt.Sprintf("%s/%s/%s", s3Config.Endpoint, s3Config.Bucket, s3Key),
+		Type:   filename,
 		Size:   int64(len(fileBytes)),
 	}
 
