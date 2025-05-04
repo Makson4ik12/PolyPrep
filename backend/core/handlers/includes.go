@@ -86,11 +86,10 @@ func GetIncludes(c *gin.Context) {
 		return
 	}
 
-	s3Config := config.LoadBegetS3Config()
 	response := make([]gin.H, len(includes))
 	for i, include := range includes {
 		response[i] = gin.H{
-			"link": fmt.Sprintf("%s/%s/%s", s3Config.Endpoint, s3Config.Bucket, include.Data),
+			"link": fmt.Sprintf("%s", include.Data),
 			"id":   include.ID,
 		}
 	}
@@ -108,8 +107,8 @@ func UploadIncludes(c *gin.Context) {
 		return
 	}
 
-	postIDStr := c.GetHeader("PostId")
-	filename := c.GetHeader("Filename")
+	postIDStr := c.Query("post_id")
+	filename := c.Query("filename")
 
 	if postIDStr == "" || filename == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Missing PostId or Filename headers"})
