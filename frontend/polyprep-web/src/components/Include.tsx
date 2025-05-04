@@ -5,8 +5,14 @@ import { JSX, useState } from 'react';
 import IconDelete from '../icons/delete.svg'
 import IconDownload from '../icons/download.svg'
 import IconCloud from '../icons/cloud.svg'
+import IconMd from '../icons/md.svg'
 import IconDoc from '../icons/doc.svg'
 import IconAudio from '../icons/audio.svg'
+import IconWord from '../icons/word.svg'
+import IconExcel from '../icons/excel.svg'
+import IconPowerpoint from '../icons/powerpoint.svg'
+import IconPdf from '../icons/pdf.svg'
+import IconVideo from '../icons/pdf.svg'
 import { detectFileType } from '../utils/UtilFunctions';
 
 interface IIncludeTemp {
@@ -20,43 +26,17 @@ export interface IIncludeData {
   file: File | null;
 }
 
-// type FileType = "img" | "word" | "excel" | "pdf" | "powerpoint" | "audio" | "video" | "other";
 export const ViewPostInclude = (data: IInclude) => {
-  const file_type = detectFileType(data.filename);
-
   return (
     <div className={viewPoststyles.include}>
       <div className={viewPoststyles.lin_container}>
         <img 
-          src={
-            file_type === "img" ?
-              data.link
-            :
-              file_type === "word" ?
-              IconCloud
-            :
-              file_type === "excel" ?
-              IconCloud
-            :
-              file_type === "pdf" ?
-              IconCloud
-            :
-              file_type === "powerpoint" ?
-              IconCloud
-            :
-              file_type === "audio" ?
-              IconAudio
-            :
-              file_type === "video" ?
-              IconCloud
-            :
-              IconDoc
-          } 
-          alt='inlude' 
+          src={detectFileType(data.filename, data.link)}
+          alt='include' 
         />
         <p>{data.filename}</p>
       </div>
-      <img src={IconDownload} alt='download' className={viewPoststyles.action_btn}/>
+      <img src={IconDownload} alt='download' className={viewPoststyles.action_btn} onClick={() => window.open(data.link, "_blank")}/>
     </div>
   )
 }
@@ -65,7 +45,10 @@ export const EditPostInclude = (data: IInclude & { onDelete: (id: number) => voi
   return (
     <div className={newIncludeStyle.includes_edit}>
       <div className={newIncludeStyle.linerar}>
-        <img src={IconCloud} alt='cloud' className={newIncludeStyle.action_btn}/>
+        <img 
+          src={detectFileType(data.filename, data.link)}
+          alt='include' 
+        />
         <p>{data.filename}</p>
       </div>
 
@@ -90,7 +73,7 @@ const TemporaryInclude = (data: IIncludeTemp) => {
           type="file" 
           id="img" 
           name="img" 
-          accept="image/jpeg,image/png,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" 
+          accept="image/jpeg, image/png, application/pdf, .doc, .docx, .rtf, .odt, .xls, .xlsx, .csv, .ods, .ppt, .pptx, .odp, .mp3, .mp4, .avi, .mov, .txt, .md" 
           required 
           onChange={handleFileChange}
           placeholder='image'

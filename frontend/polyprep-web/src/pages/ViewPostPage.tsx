@@ -136,7 +136,7 @@ const ViewPostPage = () => {
 
     await deletePost(post_id)
       .then((resp) => {
-        navigate(-2);
+        navigate("/user");
       })
       .catch((error) => console.log("cannot delete post"));
     
