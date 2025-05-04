@@ -1,0 +1,106 @@
+name: PolyPrep Security Pipeline
+
+on:
+  push:
+    branches: [devsec]
+  pull_request:
+    branches: [devsec]
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      python-files: ${{ steps.filter.outputs.python }}
+      js-files: ${{ steps.filter.outputs.js }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  
+        
+      - name: Get changed files
+        id: filter
+        uses: tj-actions/changed-files@v42
+        with:
+          files: |
+            **/*.py
+            **/*.js
+            **/*.ts
+            **/*.go
+
+  python-checks:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.python-files == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Cache Python dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install security tools
+        run: |
+          pip install bandit safety pylint
+
+      - name: Run Python security scans
+        run: |
+          bandit -r PolyPrep/ -f json -o bandit-results.json || true
+          safety check --json --output safety-report.json || true
+          pylint --output-format=json PolyPrep/ > pylint-report.json || true
+
+      - name: Upload Python scan results
+        uses: actions/upload-artifact@v3
+        with:
+          name: python-security-reports
+          path: |
+            bandit-results.json
+            safety-report.json
+            pylint-report.json
+
+  js-checks:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.js-files == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Cache Node modules
+        uses: actions/cache@v3
+        with:
+          path: PolyPrep/static/js/node_modules
+          key: ${{ runner.os }}-js-${{ hashFiles('PolyPrep/static/js/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-js-
+
+      - name: Install JS dependencies
+        working-directory: ./PolyPrep/static/js
+        run: npm install
+
+      - name: Run JS security scans
+        working-directory: ./PolyPrep/static/js
+        run: |
+          npm audit --json > npm-audit.json || true
+          npx snyk test --json > snyk-report.json || true
+
+      - name: Upload JS scan results
+        uses: actions/upload-artifact@v3
+        with:
+          name: js-security-reports
+          path: |
+            PolyPrep/static/js/npm-audit.json
+            PolyPrep/static/js/snyk-report.json
+
