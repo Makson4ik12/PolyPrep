@@ -3,7 +3,7 @@ package config
 type Config struct {
 	ServerPort        string
 	KeycloakURL       string
-	ClientID          string
+	ClientID          uint
 	ClientSecret      string
 	Realm             string
 	RedirectURL       string
