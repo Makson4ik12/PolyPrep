@@ -83,7 +83,7 @@ const SearchPage = () => {
               }
             </Masonry>
           :
-            <p>Ничего не найдено :(</p>
+            querySearch ? <p>Ничего не найдено :(</p> : <></>
         }
     </div>
   )

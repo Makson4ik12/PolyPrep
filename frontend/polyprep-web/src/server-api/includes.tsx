@@ -3,31 +3,18 @@ import { validateTokens } from "./auth";
 import { SERVER_ADDRESS, SERVER_API_VERSION } from "./config";
 import store from "../redux-store/store";
 
-export interface IIncludes {
-  id: number;
-  created_at: number;
-  user_id: string;
-  post_id: number;
-}
-
 export interface IInclude {
   link: string;
+  id: number;
+  filename: string;
+  size: number;
 }
-  
-// export async function postLike(post_id: number) {
-//   try {
-//     await validateTokens();
-    
-//     const response = await axios.post(
-//     `${SERVER_ADDRESS}${SERVER_API_VERSION}like`, { post_id: post_id},
-//     { headers: { Authorization: `Bearer ${store.getState().auth.authTokens.access_token}` } }
-//     );
 
-//     return response.data;
-//   } catch (error: any) {
-//     throw error;
-//   }
-// }
+interface IpostInclude {
+  File: File;
+  Filename: string;
+  PostId: number;
+}
 
 export async function getPostIncludes(post_id: number) {
   try {
@@ -44,17 +31,41 @@ export async function getPostIncludes(post_id: number) {
   }
 }
 
-// export async function deleteLike(post_id: number) {
-//   try {
-//     await validateTokens();
-    
-//     const response = await axios.delete(
-//     `${SERVER_ADDRESS}${SERVER_API_VERSION}like?id=${post_id}`,
-//     { headers: { Authorization: `Bearer ${store.getState().auth.authTokens.access_token}` }}
-//     );
+export async function postInclude(data: IpostInclude) {
+  try {
+    await validateTokens();
 
-//     return response;
-//   } catch (error: any) {
-//     throw error;
-//   }
-// }
+    const response = await axios.post(
+    `${SERVER_ADDRESS}${SERVER_API_VERSION}includes?filename=${data.Filename}&post_id=${data.PostId}`, data.File,
+    { headers: 
+      { 
+        Authorization: `Bearer ${store.getState().auth.authTokens.access_token}`,
+       'Content-Type': 'multipart/form-data'
+      } 
+    }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    throw error;
+  }
+}
+
+export async function deleteInclude(id: number) {
+  try {
+    await validateTokens();
+
+    const response = await axios.delete(
+    `${SERVER_ADDRESS}${SERVER_API_VERSION}includes?id=${id}`,
+    { headers: 
+      { 
+        Authorization: `Bearer ${store.getState().auth.authTokens.access_token}`,
+      } 
+    }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    throw error;
+  }
+}

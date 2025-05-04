@@ -102,6 +102,20 @@
             justify-content: flex-start;
             gap: 20px;
 
+            form {
+                .button_dark {
+                    border: 2px solid black;
+                    background-color: black;
+                    color: white;
+                    font-size: 20px;
+            
+                    &:hover {
+                        background-color: white;
+                        color: black;
+                    }
+                }
+            }
+
             .include {
                 @extend input;
     
@@ -110,6 +124,82 @@
                 align-items: center;
                 justify-content: space-between;
                 gap: 10px;
+
+                
+            }
+
+            .includes_new {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-start;
+                align-items: flex-start;
+
+                .linerar {
+                    width: 100%;
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 10px;
+
+                    img {
+                        transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+                        width: 30px;
+                        height: 30px;
+                        border: 2px solid white;
+                        border-radius: 20px;
+                        padding: 5px;
+                        cursor: pointer;
+
+                        &:hover {
+                            background-color: #ffffff;
+                            filter: brightness(80%) contrast(120%);
+                        }
+                    }
+                }
+            }
+
+            .includes_edit {
+                width: 100%;
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                gap: 10px;
+
+                img {
+                    transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+                    width: 30px;
+                    height: 30px;
+                    border: 2px solid white;
+                    border-radius: 20px;
+                    padding: 5px;
+                    cursor: pointer;
+
+                    &:hover {
+                        background-color: #ffffff;
+                        filter: brightness(80%) contrast(120%);
+                    }
+                }
+
+                .linerar {
+                    @extend input;
+                    width: 100%;
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: flex-start;
+                    align-items: center;
+                    gap: 10px;
+
+                    img {
+                        cursor: auto;
+                        
+                        &:hover {
+                            filter: none;
+                        }
+                    }
+                }
             }
 
             .lin_container {

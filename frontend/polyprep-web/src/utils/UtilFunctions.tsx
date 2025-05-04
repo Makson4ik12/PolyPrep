@@ -34,3 +34,65 @@ export const getImgLink = (url: string) => {
   
   return url + `?t=${Date.now().toString()}`;
 }
+
+type FileType = "img" | "word" | "excel" | "pdf" | "powerpoint" | "audio" | "video" | "other";
+
+export const detectFileType = (filename: string): FileType => {
+  const extension = filename.split('.').pop()?.toLowerCase();
+
+  switch (extension) {
+    // img
+    case 'png':
+    case 'jpg':
+    case 'jpeg':
+    case 'gif':
+    case 'webp':
+    case 'svg':
+    case 'bmp':
+      return 'img';
+
+    // word
+    case 'doc':
+    case 'docx':
+    case 'rtf':
+    case 'odt':
+      return 'word';
+
+    // excel
+    case 'xls':
+    case 'xlsx':
+    case 'csv':
+    case 'ods':
+      return 'excel';
+
+    // pdf
+    case 'pdf':
+      return 'pdf';
+
+    // powerpoint
+    case 'ppt':
+    case 'pptx':
+    case 'odp':
+      return 'powerpoint';
+
+    // audio
+    case 'mp3':
+    case 'wav':
+    case 'ogg':
+    case 'aac':
+    case 'flac':
+      return 'audio';
+
+    // video
+    case 'mp4':
+    case 'mov':
+    case 'avi':
+    case 'mkv':
+    case 'webm':
+      return 'video';
+
+    // other
+    default:
+      return 'other';
+  }
+}

@@ -6,17 +6,12 @@ import { getPostComments, IComment, postComment } from '../server-api/comments';
 import { deleteLike, getPostLikes, ILikes, postLike } from '../server-api/likes';
 import { checkPostIsFavourite, deleteFavourite, postFavourite } from '../server-api/favourites';
 import { deletePost, getPost, IPost } from '../server-api/posts';
-import { getDate, getImgLink } from '../utils/UtilFunctions';
+import { getDate } from '../utils/UtilFunctions';
 import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
-import IconDoc from '../icons/doc.svg'
-import IconImage from '../icons/image.svg'
-import IconAudio from '../icons/audio.svg'
 import IconUser from '../icons/user.svg'
 import IconPrivate from '../icons/private.svg'
-import IconPublic from '../icons/public.svg'
 import IconArrowDown from '../icons/arrow_down.svg'
 import IconArrowUp from '../icons/arrow_up.svg'
-import IconDownload from '../icons/download.svg'
 import IconDelete from '../icons/trash.svg'
 import IconSend from '../icons/send.svg'
 import IconShare from '../icons/share.svg'
@@ -28,7 +23,7 @@ import IconUnlike from '../icons/unlike.svg'
 import { Badge } from '../components/Badge';
 import Comment from '../components/Comment';
 import Loader, { MiniLoader } from '../components/Loader';
-import { getUser, IUser } from '../server-api/user';
+import { IUser } from '../server-api/user';
 import Modal from 'react-responsive-modal';
 import SharePost from '../components/modals/SharePost';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -37,7 +32,7 @@ import remarkGfm from 'remark-gfm';
 import TextareaAutosize from 'react-textarea-autosize';
 import { fetchUserData } from '../components/Header';
 import ViewUserProfile from '../components/modals/ViewUserProfile';
-import { Include } from '../components/Include';
+import { ViewPostInclude } from '../components/Include';
 import { getPostIncludes, IInclude } from '../server-api/includes';
 
 const fetchPost = async (post_id: number) => {
@@ -361,7 +356,7 @@ const ViewPostPage = () => {
               <div className={viewIncludes ? styles.includes_container : styles.includes_container_hidden}>
                 {
                   includes?.map((item) => 
-                    <Include link={item.link} />
+                    <ViewPostInclude link={item.link} id={item.id} filename={item.filename} size={item.size}/>
                   )
                 }
               </div>
