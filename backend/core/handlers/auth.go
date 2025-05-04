@@ -251,7 +251,7 @@ func MobileAuthCallback(c *gin.Context) {
 		Code:         &code,
 		ClientID:     &cfg.ClientID,
 		ClientSecret: &cfg.ClientSecret,
-		RedirectURI:  gocloak.StringP(cfg.MobileRedirectURL + "?next_view=" + url.QueryEscape(nextView)),
+		RedirectURI:  gocloak.StringP(cfg.MobileRedirectURL),
 	})
 
 	if err != nil {
