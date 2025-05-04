@@ -613,14 +613,6 @@ func GetSharedPostIncludes(c *gin.Context) {
 		return
 	}
 
-	currentUserID := c.GetString("user_id")
-	if !post.Public && post.AuthorID != currentUserID {
-		c.JSON(http.StatusMethodNotAllowed, gin.H{
-			"message": "No access to private post",
-		})
-		return
-	}
-
 	var includes []models.Include
 	if err := database.DB.Where("post_id = ?", share.PostID).Find(&includes).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
