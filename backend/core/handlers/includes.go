@@ -91,6 +91,7 @@ func GetIncludes(c *gin.Context) {
 	for i, include := range includes {
 		response[i] = gin.H{
 			"link": fmt.Sprintf("%s/%s/%s", s3Config.Endpoint, s3Config.Bucket, include.Data),
+			"id":   include.ID,
 		}
 	}
 
