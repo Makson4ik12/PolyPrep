@@ -126,16 +126,18 @@ const NewPostPage = () => {
         } catch (getIncludesError) {
           console.error('error delete include:', getIncludesError);
         }
-      }
 
-       // delete post
-      if (postResponse?.id) {
-        try {
-          await deletePost(postResponse.id);
-        } catch (deleteError) {
-          console.error('error delete post:', deleteError);
+        // delete post
+        if (postResponse?.id) {
+          try {
+            await deletePost(postResponse.id);
+          } catch (deleteError) {
+            console.error('error delete post:', deleteError);
+          }
         }
       }
+
+      console.log("error create post: " + error)
       
       setIsError({
         ind: true,
