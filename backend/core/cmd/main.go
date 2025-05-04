@@ -47,6 +47,7 @@ func main() {
 		api.GET("/post/search", handlers.SearchPosts)
 		api.GET("/post/random", handlers.GetRandomPosts)
 		api.GET("/post/shared", handlers.GetSharePost)
+		api.GET("/post/shared/includes", handlers.GetSharedPostIncludes)
 		api.GET("/user", handlers.GetUser)
 
 		api.Use(middleware.VariableAuthMiddleware())

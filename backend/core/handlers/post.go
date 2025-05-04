@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
@@ -556,4 +557,95 @@ func GetSharePost(c *gin.Context) {
 		"public":       post.Public,
 		"hashtages":    post.Hashtages,
 	})
+}
+
+// ------------------------------GET/post/shared/includes------------------------------//
+
+func GetSharedPostIncludes(c *gin.Context) {
+
+	shareUUID := c.Query("uuid")
+	if shareUUID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Share UUID is required",
+		})
+		return
+	}
+
+	if _, err := uuid.Parse(shareUUID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid share UUID format",
+		})
+		return
+	}
+
+	var share models.Share
+	if err := database.DB.Where("uuid = ?", shareUUID).First(&share).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusForbidden, gin.H{
+				"message": "Shared post not found or expired",
+			})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Database error",
+			})
+		}
+		return
+	}
+
+	if time.Now().After(share.ExpiresAt) {
+		c.JSON(http.StatusForbidden, gin.H{
+			"message": "Share link has expired",
+		})
+		return
+	}
+
+	var post models.Post
+	if err := database.DB.First(&post, share.PostID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusForbidden, gin.H{
+				"message": "Post not found",
+			})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Database error",
+			})
+		}
+		return
+	}
+
+	currentUserID := c.GetString("user_id")
+	if !post.Public && post.AuthorID != currentUserID {
+		c.JSON(http.StatusMethodNotAllowed, gin.H{
+			"message": "No access to private post",
+		})
+		return
+	}
+
+	var includes []models.Include
+	if err := database.DB.Where("post_id = ?", share.PostID).Find(&includes).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to get includes",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	if len(includes) == 0 {
+		c.JSON(http.StatusForbidden, gin.H{
+			"message": "No includes found for this post",
+		})
+		return
+	}
+
+	response := make([]gin.H, len(includes))
+	for i, include := range includes {
+		response[i] = gin.H{
+			"id":       include.ID,
+			"link":     include.Data,
+			"filename": include.Type,
+			"size":     include.Size,
+		}
+	}
+
+	c.JSON(http.StatusOK, response)
 }
