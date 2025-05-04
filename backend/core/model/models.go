@@ -14,7 +14,7 @@ type Post struct {
 	AuthorID    string         `gorm:"not null" json:"author_id"`
 	Title       string         `gorm:"size:255;not null" json:"title"`
 	Text        string         `gorm:"type:text;not null" json:"text"`
-	Public      bool           `gorm:"default:true" json:"public"`
+	Public      bool           `json:"public"`
 	Hashtages   pq.StringArray `gorm:"type:text[]" json:"hashtages"`
 }
 

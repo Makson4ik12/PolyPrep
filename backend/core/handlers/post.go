@@ -85,7 +85,7 @@ type CreatePostRequest struct {
 	Title       string   `json:"title" binding:"required"`
 	Text        string   `json:"text" binding:"required"`
 	Hashtages   []string `json:"hashtages" binding:"required"`
-	Public      *bool    `json:"public"`
+	Public      bool     `json:"public"`
 	ScheduledAt int64    `json:"scheduled_at"`
 }
 
@@ -108,17 +108,11 @@ func CreatePost(c *gin.Context) {
 		return
 	}
 
-	public := false
-
-	if req.Public != nil {
-		public = *req.Public
-	}
-
 	post := models.Post{ //take struct
 		Title:       req.Title,
 		Text:        req.Text,
 		Hashtages:   pq.StringArray(req.Hashtages),
-		Public:      public,
+		Public:      req.Public,
 		AuthorID:    authorID,
 		ScheduledAt: time.Unix(req.ScheduledAt, 0),
 	}
