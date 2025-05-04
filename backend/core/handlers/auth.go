@@ -3,6 +3,7 @@ package handlers
 import (
 	"log"
 	"net/http"
+
 	// "net/url"
 	"polyprep/config"
 	"polyprep/database"
@@ -181,7 +182,7 @@ func RefreshToken(c *gin.Context) {
 func MobileAuthCheck(c *gin.Context) {
 
 	var req struct {
-		SuccessToken  string `json:"success_token"`
+		AccessToken   string `json:"access_token"`
 		ReferendToken string `json:"referend_token"`
 		NextToken     string `json:"next_token"`
 	}
@@ -195,12 +196,12 @@ func MobileAuthCheck(c *gin.Context) {
 
 	cfg := config.LoadConfig()
 
-	if req.SuccessToken != "" {
-		token, _, err := keycloakClient.DecodeAccessToken(c.Request.Context(), req.SuccessToken, cfg.Realm)
+	if req.AccessToken != "" {
+		token, _, err := keycloakClient.DecodeAccessToken(c.Request.Context(), req.AccessToken, cfg.Realm)
 		if err == nil && token != nil {
 
 			c.JSON(http.StatusOK, gin.H{
-				"success_token":  req.SuccessToken,
+				"access_token":   req.AccessToken,
 				"referend_token": req.ReferendToken,
 			})
 			return
@@ -218,7 +219,7 @@ func MobileAuthCheck(c *gin.Context) {
 
 		if err == nil {
 			c.JSON(http.StatusOK, gin.H{
-				"success_token":  tokens.AccessToken,
+				"access_token":   tokens.AccessToken,
 				"referend_token": tokens.RefreshToken,
 			})
 			return
@@ -282,7 +283,7 @@ func MobileAuthCallback(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"success_token": token.AccessToken,
+		"access_token":  token.AccessToken,
 		"refresh_token": token.RefreshToken,
 	})
 }
