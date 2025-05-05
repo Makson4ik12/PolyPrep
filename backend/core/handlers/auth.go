@@ -3,6 +3,7 @@ package handlers
 import (
 	"log"
 	"net/http"
+
 	// "net/url"
 	"polyprep/config"
 	"polyprep/database"
@@ -181,9 +182,8 @@ func RefreshToken(c *gin.Context) {
 func MobileAuthCheck(c *gin.Context) {
 
 	var req struct {
-		SuccessToken  string `json:"success_token"`
-		ReferendToken string `json:"referend_token"`
-		NextToken     string `json:"next_token"`
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -195,22 +195,22 @@ func MobileAuthCheck(c *gin.Context) {
 
 	cfg := config.LoadConfig()
 
-	if req.SuccessToken != "" {
-		token, _, err := keycloakClient.DecodeAccessToken(c.Request.Context(), req.SuccessToken, cfg.Realm)
+	if req.AccessToken != "" {
+		token, _, err := keycloakClient.DecodeAccessToken(c.Request.Context(), req.AccessToken, cfg.Realm)
 		if err == nil && token != nil {
 
 			c.JSON(http.StatusOK, gin.H{
-				"success_token":  req.SuccessToken,
-				"referend_token": req.ReferendToken,
+				"access_token":  req.AccessToken,
+				"refresh_token": req.RefreshToken,
 			})
 			return
 		}
 	}
 
-	if req.ReferendToken != "" {
+	if req.RefreshToken != "" {
 		tokens, err := keycloakClient.RefreshToken(
 			c.Request.Context(),
-			req.ReferendToken,
+			req.RefreshToken,
 			cfg.ClientID,
 			cfg.ClientSecret,
 			cfg.Realm,
@@ -218,8 +218,8 @@ func MobileAuthCheck(c *gin.Context) {
 
 		if err == nil {
 			c.JSON(http.StatusOK, gin.H{
-				"success_token":  tokens.AccessToken,
-				"referend_token": tokens.RefreshToken,
+				"access_token":  tokens.AccessToken,
+				"refresh_token": tokens.RefreshToken,
 			})
 			return
 		}
@@ -282,7 +282,7 @@ func MobileAuthCallback(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"success_token": token.AccessToken,
+		"access_token":  token.AccessToken,
 		"refresh_token": token.RefreshToken,
 	})
 }
