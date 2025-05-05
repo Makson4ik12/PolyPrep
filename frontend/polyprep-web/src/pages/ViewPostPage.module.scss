@@ -87,7 +87,15 @@
                 color: #ffffff;
                 size: 10px;
                 border-style: 1px solid #ffffff;
-              }
+            }
+
+            a {
+                color: var(--color-accent-darkest);
+
+                &:hover {
+                    text-decoration: underline;
+                }
+            }
         }
     }
 

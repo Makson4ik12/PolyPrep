@@ -81,7 +81,7 @@ const EditPostPage = () => {
       title: HTMLInputElement,
       text: HTMLTextAreaElement,
       hashtages: HTMLInputElement,
-      data: HTMLInputElement
+      date: HTMLInputElement
     };
 
     setIsLoadingPost(true);
@@ -94,7 +94,7 @@ const EditPostPage = () => {
         text: formElements.text.value,
         public: !isPrivate,
         hashtages: formElements.hashtages.value.split(" "),
-        scheduled_at: isScheduled ? new Date(formElements.data.value).getTime() : null
+        scheduled_at: isScheduled ? new Date(formElements.date.value).getTime() : null
       });
     } catch {
       setIsError({
@@ -236,6 +236,7 @@ const EditPostPage = () => {
           spellCheck={false}
           defaultValue={ postData?.text }
           autoCapitalize='on'
+          maxLength={15000}
           required
         />
 

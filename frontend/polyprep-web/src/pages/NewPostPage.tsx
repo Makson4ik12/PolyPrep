@@ -55,7 +55,7 @@ const NewPostPage = () => {
       title: HTMLInputElement,
       text: HTMLTextAreaElement,
       hashtages: HTMLInputElement,
-      data: HTMLInputElement
+      date: HTMLInputElement
     };
 
     let postResponse = null;
@@ -69,7 +69,7 @@ const NewPostPage = () => {
         text: formElements.text.value,
         public: !isPrivate,
         hashtages: formElements.hashtages.value.split(" "),
-        scheduled_at: isScheduled ? new Date(formElements.data.value).getTime() : null
+        scheduled_at: isScheduled ? new Date(formElements.date.value).getTime() : null
       }) as IPost;
       
       const postId = postResponse.id;
@@ -193,6 +193,7 @@ const NewPostPage = () => {
           ref={textRef}
           spellCheck={false}
           autoCapitalize='on'
+          maxLength={15000}
           required
         />
 
