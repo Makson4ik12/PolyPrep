@@ -177,59 +177,6 @@ func RefreshToken(c *gin.Context) {
 	})
 }
 
-// ------------------------------POST/auth/mobile/check------------------------------//
-
-func MobileAuthCheck(c *gin.Context) {
-
-	var req struct {
-		AccessToken  string `json:"access_token"`
-		RefreshToken string `json:"refresh_token"`
-	}
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Invalid request format",
-		})
-		return
-	}
-
-	cfg := config.LoadConfig()
-
-	if req.AccessToken != "" {
-		token, _, err := keycloakClient.DecodeAccessToken(c.Request.Context(), req.AccessToken, cfg.Realm)
-		if err == nil && token != nil {
-
-			c.JSON(http.StatusOK, gin.H{
-				"access_token":  req.AccessToken,
-				"refresh_token": req.RefreshToken,
-			})
-			return
-		}
-	}
-
-	if req.RefreshToken != "" {
-		tokens, err := keycloakClient.RefreshToken(
-			c.Request.Context(),
-			req.RefreshToken,
-			cfg.ClientID,
-			cfg.ClientSecret,
-			cfg.Realm,
-		)
-
-		if err == nil {
-			c.JSON(http.StatusOK, gin.H{
-				"access_token":  tokens.AccessToken,
-				"refresh_token": tokens.RefreshToken,
-			})
-			return
-		}
-	}
-
-	c.JSON(http.StatusUnauthorized, gin.H{
-		"message": "Authentication failed",
-	})
-}
-
 // ------------------------------GET/auth/mobile/callback------------------------------//
 
 func MobileAuthCallback(c *gin.Context) {
@@ -284,5 +231,47 @@ func MobileAuthCallback(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"access_token":  token.AccessToken,
 		"refresh_token": token.RefreshToken,
+	})
+}
+
+type AuthRequestIOS struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	NextView     string `json:"next_view"`
+}
+
+// ------------------------------POST/auth/mobile/check------------------------------//
+
+func MobileAuthCheck(c *gin.Context) {
+
+	var req AuthRequestIOS
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid request"})
+		return
+	}
+
+	cfg := config.LoadConfig()
+
+	if req.AccessToken == "" {
+		c.JSON(http.StatusOK, gin.H{
+			"url":      getAuthURL(cfg, req.NextView),
+			"redirect": true,
+		})
+		return
+	}
+
+	token, _, err := keycloakClient.DecodeAccessToken(c.Request.Context(), req.AccessToken, cfg.Realm)
+	if err != nil || token == nil {
+		c.JSON(http.StatusOK, gin.H{
+			"url":      getAuthURL(cfg, req.NextView),
+			"redirect": true,
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"url":      getAuthURL(cfg, req.NextView),
+		"redirect": false,
 	})
 }
