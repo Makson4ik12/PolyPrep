@@ -1,5 +1,6 @@
-import { useNavigate } from "react-router-dom";
 import styles from "./Badge.module.scss"
+
+import { useNavigate } from "react-router-dom";
 
 interface IBadge {
   text: string;

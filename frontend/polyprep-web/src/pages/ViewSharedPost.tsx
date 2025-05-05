@@ -1,23 +1,25 @@
 import styles from './ViewPostPage.module.scss'
+
 import store from '../redux-store/store';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { getDate } from '../utils/UtilFunctions';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getSharedPost, IPost } from '../server-api/posts';
-import { getDate } from '../utils/UtilFunctions';
+import { Badge } from '../components/Badge';
+import Loader, { MiniLoader } from '../components/Loader';
+import { IUser } from '../server-api/user';
+import { useQuery } from '@tanstack/react-query';
+import { fetchUserData } from '../components/Header';
+import { getSharedIncludes, IInclude } from '../server-api/includes';
+import { ViewPostInclude } from '../components/Include';
+
 import IconUser from '../icons/user.svg'
 import IconPrivate from '../icons/private.svg'
 import IconPublic from '../icons/public.svg'
 import IconArrowDown from '../icons/arrow_down.svg'
 import IconArrowUp from '../icons/arrow_up.svg'
-import { Badge } from '../components/Badge';
-import Loader, { MiniLoader } from '../components/Loader';
-import { IUser } from '../server-api/user';
-import Markdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { useQuery } from '@tanstack/react-query';
-import { fetchUserData } from '../components/Header';
-import { getSharedIncludes, IInclude } from '../server-api/includes';
-import { ViewPostInclude } from '../components/Include';
 
 const ViewSharedPost = () => {
   const navigate = useNavigate();

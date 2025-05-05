@@ -1,21 +1,23 @@
-import { useRef, useState } from 'react';
-import store from '../redux-store/store';
-import { deleteComment, IComment, putComment } from '../server-api/comments';
 import styles from '../pages/ViewPostPage.module.scss'
+
+import Modal from 'react-responsive-modal';
+import ViewUserProfile from './modals/ViewUserProfile';
+import store from '../redux-store/store';
+import TextareaAutosize from 'react-textarea-autosize';
+import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
+import { useRef, useState } from 'react';
+import { deleteComment, IComment, putComment } from '../server-api/comments';
 import {  IUser } from '../server-api/user';
 import { getDate, getImgLink } from '../utils/UtilFunctions';
+import { fetchUserData } from './Header';
+import { useQuery } from '@tanstack/react-query';
+import { MiniLoader } from './Loader';
+
 import IconCancel from '../icons/delete.svg'
 import IconSuccess from '../icons/success.svg'
 import IconUser from '../icons/user.svg'
 import IconEdit from '../icons/edit.svg'
 import IconDelete from '../icons/trash.svg'
-import TextareaAutosize from 'react-textarea-autosize';
-import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
-import { fetchUserData } from './Header';
-import { useQuery } from '@tanstack/react-query';
-import Modal from 'react-responsive-modal';
-import ViewUserProfile from './modals/ViewUserProfile';
-import { MiniLoader } from './Loader';
 
 interface ICommentMeta {
   setIsLoading: (val: boolean) => void;

@@ -1,30 +1,32 @@
 import styles from './Card.module.scss'
+
+import store from '../redux-store/store';
+import SharePost from './modals/SharePost';
+import Modal from 'react-responsive-modal';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import ViewUserProfile from './modals/ViewUserProfile';
 import { useNavigate } from 'react-router-dom';
+import { getDate } from '../utils/UtilFunctions';
+import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
+import { Badge } from './Badge';
+import { IPost } from '../server-api/posts';
+import { deleteLike, getPostLikes, ILikes, postLike } from '../server-api/likes';
+import { useEffect, useState } from 'react';
+import { getPostComments, IComment } from '../server-api/comments';
+import { checkPostIsFavourite, deleteFavourite, postFavourite } from '../server-api/favourites';
+import { IUser } from '../server-api/user';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { fetchUserData } from './Header';
+import { MiniLoader } from './Loader';
+
 import IconUser from '../icons/user.svg'
 import IconUnlike from '../icons/unlike.svg'
 import IconShare from '../icons/share.svg'
 import IconFavourite from '../icons/favourite.svg'
 import IconFavouriteFilled from '../icons/favourite_fill.svg'
 import IconComments from '../icons/comments.svg'
-import { getDate } from '../utils/UtilFunctions';
-import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
-import { Badge } from './Badge';
-import { IPost } from '../server-api/posts';
-import store from '../redux-store/store';
-import { deleteLike, getPostLikes, ILikes, postLike } from '../server-api/likes';
-import { useEffect, useState } from 'react';
 import IconPrivate from '../icons/private.svg'
-import { getPostComments, IComment } from '../server-api/comments';
-import { checkPostIsFavourite, deleteFavourite, postFavourite } from '../server-api/favourites';
-import { IUser } from '../server-api/user';
-import SharePost from './modals/SharePost';
-import Modal from 'react-responsive-modal';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import Markdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { fetchUserData } from './Header';
-import { MiniLoader } from './Loader';
-import ViewUserProfile from './modals/ViewUserProfile';
 
 const Card = (data: IPost) => {
   const navigate = useNavigate();

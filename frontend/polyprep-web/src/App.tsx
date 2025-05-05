@@ -1,8 +1,9 @@
 import styles from './App.module.scss';
 import 'react-responsive-modal/styles.css';
-import { Outlet, ScrollRestoration } from 'react-router-dom';
+
 import Header from './components/Header';
 import { useEffect } from 'react';
+import { Outlet, ScrollRestoration } from 'react-router-dom';
 import { validateTokens } from './server-api/auth';
   
 const App = () => {

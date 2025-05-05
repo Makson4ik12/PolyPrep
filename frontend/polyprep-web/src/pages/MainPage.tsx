@@ -1,9 +1,10 @@
-import Card from '../components/Card';
 import styles from './MainPage.module.scss'
 import cardStyles from '../components/Card.module.scss'
-import { getRandomPosts, IRandomPosts } from '../server-api/posts';
+
+import Card from '../components/Card';
 import Loader from '../components/Loader';
 import Masonry from 'react-layout-masonry';
+import { getRandomPosts, IRandomPosts } from '../server-api/posts';
 import { useQuery } from '@tanstack/react-query';
 import { Navigate } from 'react-router-dom';
 

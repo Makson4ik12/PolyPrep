@@ -1,14 +1,16 @@
 import styles from '../modals/MobileHeader.module.scss'
-import IconSearch from '../../icons/search.svg'
-import IconCreate from '../../icons/create.svg'
-import IconUser from '../../icons/user.svg'
-import IconFavourite from '../../icons/favourite.svg'
-import IconPosts from '../../icons/posts.svg'
+
 import { Link } from 'react-router-dom';
 import { useAppSelector } from '../../redux-store/hooks'
 import { useQuery } from '@tanstack/react-query'
 import { fetchUserData } from '../Header'
 import { MiniLoader } from '../Loader'
+
+import IconSearch from '../../icons/search.svg'
+import IconCreate from '../../icons/create.svg'
+import IconUser from '../../icons/user.svg'
+import IconFavourite from '../../icons/favourite.svg'
+import IconPosts from '../../icons/posts.svg'
 
 interface IMobileHeader {
   onClose: () => void;

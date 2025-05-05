@@ -1,5 +1,7 @@
 import styles from '../modals/ViewUserProfile.module.scss'
+
 import { IUser } from '../../server-api/user';
+
 import IconUser from '../../icons/user.svg'
 import IconMail from '../../icons/mail.svg'
 

@@ -1,7 +1,7 @@
-import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import Loader from "../components/Loader";
+import { useSearchParams } from "react-router-dom";
 import { authCallback, authCheck, validateTokens } from "../server-api/auth";
 import { JSX, useEffect, useState } from "react";
-import Loader from "../components/Loader";
 
 interface IProtectedPage {
   page: JSX.Element

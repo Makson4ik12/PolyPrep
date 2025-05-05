@@ -1,8 +1,9 @@
 import styles from '../modals/SharePost.module.scss'
-import { IPost } from '../../server-api/posts'
+
 import store from '../../redux-store/store';
-import { useEffect, useState } from 'react';
 import Loader from '../Loader';
+import { IPost } from '../../server-api/posts'
+import { useEffect, useState } from 'react';
 import { deleteSharedLink, getSharedLink, IShareLink, postShareLink } from '../../server-api/shared';
 import { copyToClipboard, getDate } from '../../utils/UtilFunctions';
 

@@ -1,28 +1,30 @@
 import styles from "./UserPage.module.scss"
+import cardStyles from '../components/Card.module.scss'
+
 import store from "../redux-store/store";
+import Card from "../components/Card";
+import ChangeUserImage from "../components/modals/ChangeUserImage";
+import Modal from "react-responsive-modal";
+import Loader from "../components/Loader";
+import Masonry from "react-layout-masonry";
+import { useEffect, useState } from "react";
+import { getPost, getPosts, IPost } from "../server-api/posts";
+import { getFavouritePosts, IFavourite } from "../server-api/favourites";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { KEYCLOAK_ADDRESS } from "../server-api/config";
+import { useAppSelector } from "../redux-store/hooks";
+import { fetchUserData } from "../components/Header";
+import { getImgLink } from "../utils/UtilFunctions";
+import { setViewFavourite, setViewUserPosts } from "../redux-store/user-settings";
+import { authLogout } from "../server-api/auth";
+
 import IconUser from '../icons/user.svg'
 import IconMail from '../icons/mail.svg'
 import IconArrowDown from '../icons/arrow_down.svg'
 import IconArrowUp from '../icons/arrow_up.svg'
 import IconEdit from '../icons/edit.svg'
 import IconExit from '../icons/exit.svg'
-import Card from "../components/Card";
-import { useEffect, useState } from "react";
-import { getPost, getPosts, IPost } from "../server-api/posts";
-import Loader from "../components/Loader";
-import Masonry from "react-layout-masonry";
-import cardStyles from '../components/Card.module.scss'
-import { getFavouritePosts, IFavourite } from "../server-api/favourites";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { KEYCLOAK_ADDRESS } from "../server-api/config";
-import ChangeUserImage from "../components/modals/ChangeUserImage";
-import Modal from "react-responsive-modal";
-import { useAppSelector } from "../redux-store/hooks";
-import { fetchUserData } from "../components/Header";
-import { getImgLink } from "../utils/UtilFunctions";
-import { setViewFavourite, setViewUserPosts } from "../redux-store/user-settings";
-import { authLogout } from "../server-api/auth";
 
 const FavouritePost = ( { post_id }: { post_id: number }) => {
   const [postData, setPostData] = useState<IPost>();

@@ -1,12 +1,14 @@
-import { IInclude } from '../server-api/includes'
 import viewPoststyles from '../pages/ViewPostPage.module.scss'
 import newIncludeStyle from '../pages/NewPostPage.module.scss'
-import { JSX, useState } from 'react';
-import IconDelete from '../icons/delete.svg'
-import IconDownload from '../icons/download.svg'
-import { detectFileType } from '../utils/UtilFunctions';
+
 import Modal from 'react-responsive-modal';
 import PreviewInclude from './modals/PreviewInclude';
+import { IInclude } from '../server-api/includes'
+import { JSX, useState } from 'react';
+import { detectFileType } from '../utils/UtilFunctions';
+
+import IconDelete from '../icons/delete.svg'
+import IconDownload from '../icons/download.svg'
 
 interface IIncludeTemp {
   id: number;

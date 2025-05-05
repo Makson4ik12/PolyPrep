@@ -1,5 +1,15 @@
 import styles from './NewPostPage.module.scss'
+
+import TemporaryInclude from '../components/Include';
+import Loader from '../components/Loader';
+import TextareaAutosize from 'react-textarea-autosize';
 import { useEffect, useRef, useState } from 'react';
+import { getPost, IPost, putPost } from '../server-api/posts';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { deleteInclude, getPostIncludes, IInclude, postInclude } from '../server-api/includes';
+import { EditPostInclude, IIncludeData } from '../components/Include';
+
 import IconTitle from '../icons/title.svg'
 import IconText from '../icons/text.svg'
 import IconInclude from '../icons/include.svg'
@@ -11,14 +21,6 @@ import IconPrivate from '../icons/private.svg'
 import IconSuccess from '../icons/success.svg'
 import IconTime from '../icons/time.svg'
 import IconBolt from '../icons/bolt.svg'
-import { getPost, IPost, putPost } from '../server-api/posts';
-import { useLocation, useNavigate } from 'react-router-dom';
-import Loader from '../components/Loader';
-import { useQueryClient } from '@tanstack/react-query';
-import TextareaAutosize from 'react-textarea-autosize';
-import { deleteInclude, getPostIncludes, IInclude, postInclude } from '../server-api/includes';
-import { EditPostInclude, IIncludeData } from '../components/Include';
-import TemporaryInclude from '../components/Include';
 
 const EditPostPage = () => {
   const location = useLocation();

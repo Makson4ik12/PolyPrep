@@ -1,12 +1,14 @@
 import styles from "./SearchPage.module.scss"
-import IconSearch from "../icons/search.svg"
+import cardStyles from '../components/Card.module.scss'
+
 import Card from "../components/Card";
-import { useQuery } from "@tanstack/react-query";
-import { ISearchPostsResponse, searchPosts } from "../server-api/posts";
 import Loader from "../components/Loader";
 import Masonry from "react-layout-masonry";
-import cardStyles from '../components/Card.module.scss'
+import { useQuery } from "@tanstack/react-query";
+import { ISearchPostsResponse, searchPosts } from "../server-api/posts";
 import { useSearchParams } from "react-router-dom";
+
+import IconSearch from "../icons/search.svg"
 
 const fetchSearchPosts = async (text: string) => {
   const resp = await searchPosts({ from: "0", to: "60", text: text});

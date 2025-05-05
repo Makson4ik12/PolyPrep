@@ -1,5 +1,14 @@
 import styles from './NewPostPage.module.scss'
+
+import Loader from '../components/Loader';
+import TextareaAutosize from 'react-textarea-autosize';
 import { useRef, useState } from 'react';
+import { deletePost, IPost, postPost } from '../server-api/posts';
+import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import IncludeTemp, { IIncludeData } from '../components/Include';
+import { deleteInclude, getPostIncludes, IInclude, postInclude } from '../server-api/includes';
+
 import IconTitle from '../icons/title.svg'
 import IconText from '../icons/text.svg'
 import IconInclude from '../icons/include.svg'
@@ -11,13 +20,6 @@ import IconPrivate from '../icons/private.svg'
 import IconSuccess from '../icons/success.svg'
 import IconTime from '../icons/time.svg'
 import IconBolt from '../icons/bolt.svg'
-import Loader from '../components/Loader';
-import { deletePost, IPost, postPost } from '../server-api/posts';
-import { useNavigate } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
-import TextareaAutosize from 'react-textarea-autosize';
-import IncludeTemp, { IIncludeData, IncludeTempArray } from '../components/Include';
-import { deleteInclude, getPostIncludes, IInclude, postInclude } from '../server-api/includes';
 
 const NewPostPage = () => {
   const navigate = useNavigate();

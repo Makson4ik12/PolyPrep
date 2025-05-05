@@ -1,19 +1,21 @@
 import styles from './Header.module.scss'
 import "./modals/GlobalModalsStyles.css"
-import { Link } from 'react-router-dom';
-import IconUser from '../icons/user.svg'
-import IconSearch from '../icons/search.svg'
-import IconCreate from '../icons/create.svg'
-import IconMenu from '../icons/text.svg'
-import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
-import { useState } from 'react';
+
 import Modal from 'react-responsive-modal';
 import MobileHeader from './modals/MobileHeader';
+import { Link } from 'react-router-dom';
+import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
+import { useState } from 'react';
 import { useAppSelector } from '../redux-store/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { getUser, IUser } from '../server-api/user';
 import { MiniLoader } from './Loader';
 import { getImgLink } from '../utils/UtilFunctions';
+
+import IconUser from '../icons/user.svg'
+import IconSearch from '../icons/search.svg'
+import IconCreate from '../icons/create.svg'
+import IconMenu from '../icons/text.svg'
 
 export const fetchUserData = async (uid: string) => {
   const resp = await getUser(uid) as IUser;

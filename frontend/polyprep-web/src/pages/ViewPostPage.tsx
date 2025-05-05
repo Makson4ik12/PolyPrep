@@ -1,5 +1,13 @@
 import styles from './ViewPostPage.module.scss'
+
 import store from '../redux-store/store';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import TextareaAutosize from 'react-textarea-autosize';
+import Comment from '../components/Comment';
+import Modal from 'react-responsive-modal';
+import SharePost from '../components/modals/SharePost';
+import ViewUserProfile from '../components/modals/ViewUserProfile';
 import { useEffect, useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { getPostComments, IComment, postComment } from '../server-api/comments';
@@ -8,6 +16,14 @@ import { checkPostIsFavourite, deleteFavourite, postFavourite } from '../server-
 import { deletePost, getPost, IPost } from '../server-api/posts';
 import { getDate } from '../utils/UtilFunctions';
 import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
+import { Badge } from '../components/Badge';
+import Loader, { MiniLoader } from '../components/Loader';
+import { IUser } from '../server-api/user';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { fetchUserData } from '../components/Header';
+import { ViewPostInclude } from '../components/Include';
+import { getPostIncludes, IInclude } from '../server-api/includes';
+
 import IconUser from '../icons/user.svg'
 import IconPrivate from '../icons/private.svg'
 import IconArrowDown from '../icons/arrow_down.svg'
@@ -20,20 +36,6 @@ import IconFavouriteFilled from '../icons/favourite_fill.svg'
 import IconEdit from '../icons/edit.svg'
 import IconContextMenu from '../icons/context_menu.svg'
 import IconUnlike from '../icons/unlike.svg'
-import { Badge } from '../components/Badge';
-import Comment from '../components/Comment';
-import Loader, { MiniLoader } from '../components/Loader';
-import { IUser } from '../server-api/user';
-import Modal from 'react-responsive-modal';
-import SharePost from '../components/modals/SharePost';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import Markdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import TextareaAutosize from 'react-textarea-autosize';
-import { fetchUserData } from '../components/Header';
-import ViewUserProfile from '../components/modals/ViewUserProfile';
-import { ViewPostInclude } from '../components/Include';
-import { getPostIncludes, IInclude } from '../server-api/includes';
 
 const fetchPost = async (post_id: number) => {
   const resp = await getPost(post_id);
