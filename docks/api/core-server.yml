@@ -185,7 +185,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Tokens"
+                $ref: "#/components/schemas/AuthCheck"
 
         default:
           description: "Ошибка запроса"
@@ -208,7 +208,7 @@ paths:
           schema:
             type: integer
         - in: query
-          name: next_view
+          name: next_page
           description: Страница приложения для редиректа
           required: true
           schema:

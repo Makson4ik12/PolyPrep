@@ -1,12 +1,8 @@
 import styles from './NewPostPage.module.scss'
 import { useEffect, useRef, useState } from 'react';
-import useAutosizeTextArea from '../utils/CustomHooks';
 import IconTitle from '../icons/title.svg'
 import IconText from '../icons/text.svg'
 import IconInclude from '../icons/include.svg'
-import IconDoc from '../icons/doc.svg'
-import IconImage from '../icons/image.svg'
-import IconAudio from '../icons/audio.svg'
 import IconCreate from '../icons/create.svg'
 import IconDelete from '../icons/delete.svg'
 import IconSettings from '../icons/settings.svg'

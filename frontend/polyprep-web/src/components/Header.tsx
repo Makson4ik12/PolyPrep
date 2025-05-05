@@ -5,7 +5,6 @@ import IconUser from '../icons/user.svg'
 import IconSearch from '../icons/search.svg'
 import IconCreate from '../icons/create.svg'
 import IconMenu from '../icons/text.svg'
-import store from '../redux-store/store';
 import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
 import { useState } from 'react';
 import Modal from 'react-responsive-modal';

@@ -8,9 +8,7 @@ import { Link } from 'react-router-dom';
 import { useAppSelector } from '../../redux-store/hooks'
 import { useQuery } from '@tanstack/react-query'
 import { fetchUserData } from '../Header'
-import { IUser } from '../../server-api/user'
 import { MiniLoader } from '../Loader'
-import { getImgLink } from '../../utils/UtilFunctions'
 
 interface IMobileHeader {
   onClose: () => void;

@@ -1,22 +1,22 @@
 import styles from './Card.module.scss'
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import IconUser from '../icons/user.svg'
 import IconUnlike from '../icons/unlike.svg'
 import IconShare from '../icons/share.svg'
 import IconFavourite from '../icons/favourite.svg'
 import IconFavouriteFilled from '../icons/favourite_fill.svg'
 import IconComments from '../icons/comments.svg'
-import { getDate, getImgLink } from '../utils/UtilFunctions';
+import { getDate } from '../utils/UtilFunctions';
 import HandleResponsiveView, { screenSizes } from '../utils/ResponsiveView';
 import { Badge } from './Badge';
 import { IPost } from '../server-api/posts';
 import store from '../redux-store/store';
-import { deleteLike, getPostLikes, ILike, ILikes, postLike } from '../server-api/likes';
+import { deleteLike, getPostLikes, ILikes, postLike } from '../server-api/likes';
 import { useEffect, useState } from 'react';
 import IconPrivate from '../icons/private.svg'
 import { getPostComments, IComment } from '../server-api/comments';
 import { checkPostIsFavourite, deleteFavourite, postFavourite } from '../server-api/favourites';
-import { getUser, IUser } from '../server-api/user';
+import { IUser } from '../server-api/user';
 import SharePost from './modals/SharePost';
 import Modal from 'react-responsive-modal';
 import { useQuery, useQueryClient } from '@tanstack/react-query';

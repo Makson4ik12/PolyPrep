@@ -1,11 +1,10 @@
 import styles from '../modals/ChangeUserImage.module.scss'
-import { useEffect, useState } from 'react';
-import { getUser, IUser, postUserImage } from '../../server-api/user';
+import { useState } from 'react';
+import { IUser, postUserImage } from '../../server-api/user';
 import { useAppSelector } from '../../redux-store/hooks';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import IconUser from '../../icons/user.svg'
 import Loader from '../Loader';
-import { getImgLink } from '../../utils/UtilFunctions';
 
 export default function ChangeUserImage({ onClose }: { onClose: () => void }) {
 	const uid = useAppSelector((state) => state.auth.userData.uid);

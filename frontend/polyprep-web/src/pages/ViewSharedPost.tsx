@@ -4,18 +4,14 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getSharedPost, IPost } from '../server-api/posts';
 import { getDate } from '../utils/UtilFunctions';
-import IconDoc from '../icons/doc.svg'
-import IconImage from '../icons/image.svg'
-import IconAudio from '../icons/audio.svg'
 import IconUser from '../icons/user.svg'
 import IconPrivate from '../icons/private.svg'
 import IconPublic from '../icons/public.svg'
 import IconArrowDown from '../icons/arrow_down.svg'
 import IconArrowUp from '../icons/arrow_up.svg'
-import IconDownload from '../icons/download.svg'
 import { Badge } from '../components/Badge';
 import Loader, { MiniLoader } from '../components/Loader';
-import { getUser, IUser } from '../server-api/user';
+import { IUser } from '../server-api/user';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useQuery } from '@tanstack/react-query';
