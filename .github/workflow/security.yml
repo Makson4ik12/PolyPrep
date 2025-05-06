@@ -1,10 +1,11 @@
-name: PolyPrep Security Checks
+name: Security Checks
 
 on:
   push:
     branches: [devsec]
   pull_request:
     branches: [devsec]
+  workflow_dispatch:
 
 jobs:
   detect-changes:
@@ -16,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Identify changed file types
+      - name: Identify changed files
         id: filter
         uses: tj-actions/changed-files@v42
         with:
@@ -33,27 +34,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Set up Go
+      - name: Setup Go
         uses: actions/setup-go@v4
         with:
           go-version: '1.21'
       
-      - name: Install Go security tools
+      - name: Run golangci-lint
         run: |
           go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-          go install github.com/securego/gosec/v2/cmd/gosec@latest
-      
-      - name: Run golangci-lint
-        run: golangci-lint run ./...
+          golangci-lint run ./...
       
       - name: Run gosec
-        run: gosec -fmt=json ./... > gosec-report.json || true
-      
-      - name: Upload gosec report
-        uses: actions/upload-artifact@v3
-        with:
-          name: gosec-report
-          path: gosec-report.json
+        run: |
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          gosec ./...
 
   python-checks:
     needs: detect-changes
@@ -62,32 +56,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       
-      - name: Install Python security tools
-        run: |
-          pip install bandit safety pylint
-      
       - name: Run Bandit
-        run: bandit -r PolyPrep/ -f json -o bandit-report.json || true
+        run: |
+          pip install bandit
+          bandit -r PolyPrep/
       
       - name: Run Safety
-        run: safety check --json --output safety-report.json || true
-      
-      - name: Run Pylint
-        run: pylint --output-format=json PolyPrep/ > pylint-report.json || true
-      
-      - name: Upload Python reports
-        uses: actions/upload-artifact@v3
-        with:
-          name: python-reports
-          path: |
-            bandit-report.json
-            safety-report.json
-            pylint-report.json
+        run: |
+          pip install safety
+          safety check
 
   js-checks:
     needs: detect-changes
@@ -96,27 +78,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
       
-      - name: Install JS dependencies
-        working-directory: ./PolyPrep/static/js
-        run: npm install
-      
       - name: Run npm audit
         working-directory: ./PolyPrep/static/js
-        run: npm audit --json > npm-audit.json || true
+        run: |
+          npm install
+          npm audit
       
       - name: Run Snyk
         working-directory: ./PolyPrep/static/js
-        run: npx snyk test --json > snyk-report.json || true
-      
-      - name: Upload JS reports
-        uses: actions/upload-artifact@v3
-        with:
-          name: js-reports
-          path: |
-            PolyPrep/static/js/npm-audit.json
-            PolyPrep/static/js/snyk-report.json
+        run: |
+          npm install -g snyk
+          snyk test
