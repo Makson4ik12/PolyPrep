@@ -8,10 +8,6 @@ on:
 jobs:
   go-security:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./PolyPrep  # Основная директория с Go-кодом
-
     steps:
     - uses: actions/checkout@v4
     
@@ -20,29 +16,36 @@ jobs:
       with:
         go-version: '1.21'
     
-    - name: Configure Go module
+    - name: Find Go files location
+      id: find-go-dir
       run: |
-        # Инициализация модуля (если нужно)
+        if [ -d "PolyPrep" ]; then
+          echo "GO_DIR=PolyPrep" >> $GITHUB_OUTPUT
+        else
+          echo "GO_DIR=." >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Configure Go module
+      working-directory: ${{ steps.find-go-dir.outputs.GO_DIR }}
+      run: |
         if [ ! -f "go.mod" ]; then
           go mod init github.com/Makson4ik12/PolyPrep
         fi
-        
-        # Установка зависимостей
         go mod tidy
         go get github.com/gin-gonic/gin@latest
         go get gorm.io/gorm@latest
-        go mod download
     
     - name: Install gosec
       run: go install github.com/securego/gosec/v2/cmd/gosec@latest
     
     - name: Run security scan
+      working-directory: ${{ steps.find-go-dir.outputs.GO_DIR }}
       run: |
         gosec -exclude=G104,G107 -fmt=json -out=security-report.json ./... || true
-        echo "Security scan completed with exit code $?"
+        echo "Found $(jq '.Issues | length' security-report.json) security issues"
     
     - name: Upload security report
       uses: actions/upload-artifact@v4
       with:
         name: go-security-report
-        path: PolyPrep/security-report.json
+        path: ${{ steps.find-go-dir.outputs.GO_DIR }}/security-report.json
