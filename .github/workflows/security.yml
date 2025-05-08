@@ -1,51 +1,44 @@
-name: PolyPrep Go Security Scan
+name: Go Compositional Analysis
 
 on:
   push:
-    branches: [main]
-  workflow_dispatch:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # Позволяет запускать вручную через UI GitHub
 
 jobs:
-  go-security:
+  analyze:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.21'
-    
-    - name: Find Go files location
-      id: find-go-dir
-      run: |
-        if [ -d "PolyPrep" ]; then
-          echo "GO_DIR=PolyPrep" >> $GITHUB_OUTPUT
-        else
-          echo "GO_DIR=." >> $GITHUB_OUTPUT
-        fi
-    
-    - name: Configure Go module
-      working-directory: ${{ steps.find-go-dir.outputs.GO_DIR }}
-      run: |
-        if [ ! -f "go.mod" ]; then
-          go mod init github.com/Makson4ik12/PolyPrep
-        fi
-        go mod tidy
-        go get github.com/gin-gonic/gin@latest
-        go get gorm.io/gorm@latest
-    
-    - name: Install gosec
-      run: go install github.com/securego/gosec/v2/cmd/gosec@latest
-    
-    - name: Run security scan
-      working-directory: ${{ steps.find-go-dir.outputs.GO_DIR }}
-      run: |
-        gosec -exclude=G104,G107 -fmt=json -out=security-report.json ./... || true
-        echo "Found $(jq '.Issues | length' security-report.json) security issues"
-    
-    - name: Upload security report
-      uses: actions/upload-artifact@v4
-      with:
-        name: go-security-report
-        path: ${{ steps.find-go-dir.outputs.GO_DIR }}/security-report.json
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Run gosec (Security Analysis)
+        run: |
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          gosec ./... 2>&1 | tee gosec-report.txt
+
+      - name: Run staticcheck (Static Analysis)
+        run: |
+          go install honnef.co/go/tools/cmd/staticcheck@latest
+          staticcheck ./... 2>&1 | tee staticcheck-report.txt
+
+      - name: Run govulncheck (Vulnerability Check)
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./... 2>&1 | tee vulncheck-report.txt
+
+      - name: Upload reports as artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: analysis-reports
+          path: |
+            gosec-report.txt
+            staticcheck-report.txt
+            vulncheck-report.txt
