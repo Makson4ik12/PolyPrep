@@ -1,4 +1,4 @@
-name: Enhanced Go Security Analysis
+name: Reliable Go Security Analysis
 
 on:
   push:
@@ -19,111 +19,94 @@ jobs:
         with:
           go-version: '1.23.9'
 
-      - name: Install Python dependencies
+      - name: Install Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      
+
       - name: Prepare environment
         run: |
           cd backend/core
           go mod download
           pip install pandas openpyxl
 
-      - name: Run enhanced analysis
+      - name: Run analysis and generate report
+        id: analysis
         continue-on-error: true
         run: |
           cd backend/core
           
-          # Get tool versions
-          echo "gosec version: $(gosec -version)" > versions.txt
-          echo "staticcheck version: $(staticcheck -version)" >> versions.txt
-          echo "govulncheck version: $(govulncheck -version)" >> versions.txt
+          # Create timestamp
+          echo "Report generated: $(date)" > report_info.txt
           
-          # Run analyses with extended info
-          gosec -fmt=json -exclude-generated -out=gosec.json ./... 2>&1 || echo '{"Issues":[],"Stats":{"files":0,"lines":0,"nosec":0,"found":0}}' > gosec.json
-          staticcheck -f=json -tests=false ./... > staticcheck.json 2>&1 || echo '[]' > staticcheck.json
-          govulncheck -json ./... > govulncheck.json 2>&1 || echo '{"Vulns":[],"Config":{"scan_level":0}}' > govulncheck.json
+          # Run tools and capture output
+          gosec -fmt=json -exclude-generated ./... > gosec.json 2>&1 || echo "Gosec scan completed with exit code $?" > gosec_status.txt
+          staticcheck -f=json ./... > staticcheck.json 2>&1 || echo "Staticcheck scan completed with exit code $?" > staticcheck_status.txt
+          govulncheck -json ./... > govulncheck.json 2>&1 || echo "Govulncheck scan completed with exit code $?" > govulncheck_status.txt
           
-          # Generate detailed Excel report
+          # Count Go files for metrics
+          echo "Files scanned: $(find . -name '*.go' | wc -l)" >> report_info.txt
+          
+          # Generate Excel report
           python3 <<EOF
           import pandas as pd
           import json
-          from datetime import datetime
+          import os
           
-          def safe_json_load(file):
+          def create_sheet(writer, name, data, columns=None):
+              if isinstance(data, list) and data:
+                  df = pd.DataFrame(data, columns=columns) if columns else pd.json_normalize(data)
+                  df.to_excel(writer, sheet_name=name, index=False)
+              else:
+                  status = "No issues found" if not isinstance(data, str) else data
+                  pd.DataFrame({'Result': [status]}).to_excel(writer, sheet_name=name, index=False)
+          
+          with pd.ExcelWriter('go_analysis_report.xlsx', engine='openpyxl') as writer:
+              # Summary sheet
+              summary = []
+              with open('report_info.txt') as f:
+                  summary = [line.strip() for line in f if line.strip()]
+              
+              tool_status = []
+              for tool in ['gosec', 'staticcheck', 'govulncheck']:
+                  status_file = f'{tool}_status.txt'
+                  if os.path.exists(status_file):
+                      with open(status_file) as f:
+                          tool_status.append(f"{tool}: {f.read().strip()}")
+              
+              pd.DataFrame({
+                  'Info': summary + tool_status
+              }).to_excel(writer, sheet_name='Summary', index=False)
+              
+              # Gosec results
               try:
-                  with open(file) as f:
-                      return json.load(f)
+                  with open('gosec.json') as f:
+                      gosec_data = json.load(f)
+                  create_sheet(writer, 'Security Issues', gosec_data.get('Issues', []))
               except:
-                  return None
-          
-          writer = pd.ExcelWriter('enhanced_security_report.xlsx', engine='openpyxl')
-          
-          # Metadata sheet
-          metadata = {
-              'Report Date': [datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
-              'Project': ['PolyPrep/backend/core'],
-              'Scan Scope': ['All .go files']
-          }
-          
-          with open('versions.txt') as f:
-              for line in f:
-                  if ':' in line:
-                      key, val = line.strip().split(':', 1)
-                      metadata[key.strip()] = [val.strip()]
-          
-          pd.DataFrame(metadata).to_excel(writer, sheet_name='Metadata', index=False)
-          
-          # Gosec results with stats
-          gosec_data = safe_json_load('gosec.json') or {'Issues': [], 'Stats': {}}
-          if gosec_data['Issues']:
-              pd.json_normalize(gosec_data['Issues']).to_excel(writer, sheet_name='Security Issues', index=False)
-          else:
-              stats = gosec_data.get('Stats', {})
-              pd.DataFrame({
-                  'Status': ['No security issues found'],
-                  'Files Scanned': [stats.get('files', 0)],
-                  'Lines Scanned': [stats.get('lines', 0)]
-              }).to_excel(writer, sheet_name='Security Issues', index=False)
-          
-          # Staticcheck with package info
-          static_data = []
-          try:
-              with open('staticcheck.json') as f:
-                  static_data = [json.loads(line) for line in f if line.strip()]
-          except:
-              pass
-          
-          if static_data:
-              df = pd.json_normalize(static_data)
-              # Add severity column based on severity level
-              df['Severity'] = df['severity'].map({'error': 'High', 'warning': 'Medium'})
-              df.to_excel(writer, sheet_name='Static Analysis', index=False)
-          else:
-              pd.DataFrame({
-                  'Status': ['No static analysis issues found'],
-                  'Note': ['Checked all .go files excluding tests']
-              }).to_excel(writer, sheet_name='Static Analysis', index=False)
-          
-          # Vulncheck with module info
-          vuln_data = safe_json_load('govulncheck.json') or {'Vulns': []}
-          if vuln_data['Vulns']:
-              df = pd.json_normalize(vuln_data['Vulns'])
-              # Extract module info
-              df['Module'] = df['module_path'] + '@' + df['found_version']
-              df.to_excel(writer, sheet_name='Vulnerabilities', index=False)
-          else:
-              pd.DataFrame({
-                  'Status': ['No known vulnerabilities found'],
-                  'Note': ['Scanned all direct and indirect dependencies']
-              }).to_excel(writer, sheet_name='Vulnerabilities', index=False)
-          
-          writer.close()
+                  create_sheet(writer, 'Security Issues', "Could not parse gosec results")
+              
+              # Staticcheck results
+              try:
+                  static_data = []
+                  if os.path.exists('staticcheck.json'):
+                      with open('staticcheck.json') as f:
+                          static_data = [json.loads(line) for line in f if line.strip()]
+                  create_sheet(writer, 'Static Analysis', static_data)
+              except:
+                  create_sheet(writer, 'Static Analysis', "Could not parse staticcheck results")
+              
+              # Govulncheck results
+              try:
+                  with open('govulncheck.json') as f:
+                      vuln_data = json.load(f)
+                  create_sheet(writer, 'Vulnerabilities', vuln_data.get('Vulns', []))
+              except:
+                  create_sheet(writer, 'Vulnerabilities', "Could not parse govulncheck results")
           EOF
 
-      - name: Upload enhanced report
+      - name: Upload report
         uses: actions/upload-artifact@v4
         with:
-          name: enhanced-security-report
-          path: backend/core/enhanced_security_report.xlsx
+          name: go-analysis-report
+          path: backend/core/go_analysis_report.xlsx
