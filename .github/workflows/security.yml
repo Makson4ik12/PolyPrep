@@ -5,40 +5,49 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch:  # Ручной запуск
+  workflow_dispatch:
 
 jobs:
   analyze:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4  # Обновлено до @v4
+        uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version: '1.21'
 
+      - name: Initialize Go module
+        run: |
+          cd backend/core  # Переходим в директорию с Go кодом
+          go mod init github.com/Makson4ik12/PolyPrep
+          go mod tidy
+
       - name: Run gosec
         run: |
+          cd backend/core
           go install github.com/securego/gosec/v2/cmd/gosec@latest
           gosec ./... 2>&1 | tee gosec-report.txt
 
       - name: Run staticcheck
         run: |
+          cd backend/core
           go install honnef.co/go/tools/cmd/staticcheck@latest
           staticcheck ./... 2>&1 | tee staticcheck-report.txt
 
       - name: Run govulncheck
         run: |
+          cd backend/core
           go install golang.org/x/vuln/cmd/govulncheck@latest
           govulncheck ./... 2>&1 | tee vulncheck-report.txt
 
       - name: Upload reports
-        uses: actions/upload-artifact@v4  # Исправлено на @v4
+        uses: actions/upload-artifact@v4
         with:
           name: analysis-reports
           path: |
-            gosec-report.txt
-            staticcheck-report.txt
-            vulncheck-report.txt
+            backend/core/gosec-report.txt
+            backend/core/staticcheck-report.txt
+            backend/core/vulncheck-report.txt
