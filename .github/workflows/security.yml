@@ -1,4 +1,4 @@
-name: Reliable Go Security Analysis
+name: Robust Go Security Analysis
 
 on:
   push:
@@ -24,89 +24,137 @@ jobs:
         with:
           python-version: '3.10'
 
+      - name: Install analysis tools
+        run: |
+          cd backend/core
+          # Устанавливаем инструменты с явным указанием версий
+          go install github.com/securego/gosec/v2/cmd/gosec@v2.22.3
+          go install honnef.co/go/tools/cmd/staticcheck@v0.6.1
+          go install golang.org/x/vuln/cmd/govulncheck@v1.1.4
+          
+          # Проверяем установку
+          echo "Gosec version: $(gosec -version)" >> tools_versions.txt
+          echo "Staticcheck version: $(staticcheck -version)" >> tools_versions.txt
+          echo "Govulncheck version: $(govulncheck -version)" >> tools_versions.txt
+
       - name: Prepare environment
         run: |
           cd backend/core
           go mod download
           pip install pandas openpyxl
+          echo "Go files found: $(find . -name '*.go' | wc -l)" > scan_info.txt
 
-      - name: Run analysis and generate report
+      - name: Run security analysis
         id: analysis
         continue-on-error: true
         run: |
           cd backend/core
           
-          # Create timestamp
-          echo "Report generated: $(date)" > report_info.txt
-          
-          # Run tools and capture output
-          gosec -fmt=json -exclude-generated ./... > gosec.json 2>&1 || echo "Gosec scan completed with exit code $?" > gosec_status.txt
-          staticcheck -f=json ./... > staticcheck.json 2>&1 || echo "Staticcheck scan completed with exit code $?" > staticcheck_status.txt
-          govulncheck -json ./... > govulncheck.json 2>&1 || echo "Govulncheck scan completed with exit code $?" > govulncheck_status.txt
-          
-          # Count Go files for metrics
-          echo "Files scanned: $(find . -name '*.go' | wc -l)" >> report_info.txt
-          
-          # Generate Excel report
+          # Запускаем анализаторы с подробным логированием
+          gosec -fmt=json -exclude-generated -out=gosec_output.json ./... 2>gosec_error.log || echo "Gosec failed with code $?" > gosec_status.log
+          staticcheck -f=json ./... > staticcheck_output.json 2>staticcheck_error.log || echo "Staticcheck failed with code $?" > staticcheck_status.log
+          govulncheck -json ./... > govulncheck_output.json 2>govulncheck_error.log || echo "Govulncheck failed with code $?" > govulncheck_status.log
+
+          # Генерируем подробный отчет
           python3 <<EOF
           import pandas as pd
           import json
           import os
+          from datetime import datetime
           
-          def create_sheet(writer, name, data, columns=None):
-              if isinstance(data, list) and data:
-                  df = pd.DataFrame(data, columns=columns) if columns else pd.json_normalize(data)
-                  df.to_excel(writer, sheet_name=name, index=False)
+          def read_file_safe(path):
+              try:
+                  with open(path) as f:
+                      return f.read()
+              except:
+                  return "No data available"
+          
+          def try_parse_json(path):
+              try:
+                  with open(path) as f:
+                      return json.load(f)
+              except:
+                  return None
+          
+          with pd.ExcelWriter('security_analysis_report.xlsx', engine='openpyxl') as writer:
+              # Лист с метаинформацией
+              meta_data = {
+                  'Report Date': [datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
+                  'Project': ['PolyPrep/backend/core'],
+                  'Go Version': ['1.23.9'],
+                  'Files Scanned': [read_file_safe('scan_info.txt').split(':')[-1].strip()]
+              }
+              
+              # Добавляем версии инструментов
+              tools_versions = read_file_safe('tools_versions.txt').split('\n')
+              for line in tools_versions:
+                  if ':' in line:
+                      key, val = line.split(':', 1)
+                      meta_data[key.strip()] = [val.strip()]
+              
+              pd.DataFrame(meta_data).to_excel(writer, sheet_name='Metadata', index=False)
+              
+              # Лист с результатами
+              results = []
+              
+              # Обработка gosec
+              gosec_status = read_file_safe('gosec_status.log')
+              if "failed" not in gosec_status.lower():
+                  gosec_data = try_parse_json('gosec_output.json')
+                  if gosec_data and gosec_data.get('Issues'):
+                      results.append({'Tool': 'Gosec', 'Status': 'Success', 'Issues Found': len(gosec_data['Issues']})
+                      pd.json_normalize(gosec_data['Issues']).to_excel(writer, sheet_name='Gosec Issues', index=False)
+                  else:
+                      results.append({'Tool': 'Gosec', 'Status': 'Success', 'Issues Found': 0})
               else:
-                  status = "No issues found" if not isinstance(data, str) else data
-                  pd.DataFrame({'Result': [status]}).to_excel(writer, sheet_name=name, index=False)
-          
-          with pd.ExcelWriter('go_analysis_report.xlsx', engine='openpyxl') as writer:
-              # Summary sheet
-              summary = []
-              with open('report_info.txt') as f:
-                  summary = [line.strip() for line in f if line.strip()]
+                  results.append({'Tool': 'Gosec', 'Status': gosec_status, 'Error Log': read_file_safe('gosec_error.log')})
               
-              tool_status = []
-              for tool in ['gosec', 'staticcheck', 'govulncheck']:
-                  status_file = f'{tool}_status.txt'
-                  if os.path.exists(status_file):
-                      with open(status_file) as f:
-                          tool_status.append(f"{tool}: {f.read().strip()}")
-              
-              pd.DataFrame({
-                  'Info': summary + tool_status
-              }).to_excel(writer, sheet_name='Summary', index=False)
-              
-              # Gosec results
-              try:
-                  with open('gosec.json') as f:
-                      gosec_data = json.load(f)
-                  create_sheet(writer, 'Security Issues', gosec_data.get('Issues', []))
-              except:
-                  create_sheet(writer, 'Security Issues', "Could not parse gosec results")
-              
-              # Staticcheck results
-              try:
+              # Обработка staticcheck
+              staticcheck_status = read_file_safe('staticcheck_status.log')
+              if "failed" not in staticcheck_status.lower():
                   static_data = []
-                  if os.path.exists('staticcheck.json'):
-                      with open('staticcheck.json') as f:
+                  try:
+                      with open('staticcheck_output.json') as f:
                           static_data = [json.loads(line) for line in f if line.strip()]
-                  create_sheet(writer, 'Static Analysis', static_data)
-              except:
-                  create_sheet(writer, 'Static Analysis', "Could not parse staticcheck results")
+                  except:
+                      pass
+                  
+                  if static_data:
+                      results.append({'Tool': 'Staticcheck', 'Status': 'Success', 'Issues Found': len(static_data)})
+                      pd.json_normalize(static_data).to_excel(writer, sheet_name='Staticcheck Issues', index=False)
+                  else:
+                      results.append({'Tool': 'Staticcheck', 'Status': 'Success', 'Issues Found': 0})
+              else:
+                  results.append({'Tool': 'Staticcheck', 'Status': staticcheck_status, 'Error Log': read_file_safe('staticcheck_error.log')})
               
-              # Govulncheck results
-              try:
-                  with open('govulncheck.json') as f:
-                      vuln_data = json.load(f)
-                  create_sheet(writer, 'Vulnerabilities', vuln_data.get('Vulns', []))
-              except:
-                  create_sheet(writer, 'Vulnerabilities', "Could not parse govulncheck results")
+              # Обработка govulncheck
+              govulncheck_status = read_file_safe('govulncheck_status.log')
+              if "failed" not in govulncheck_status.lower():
+                  vuln_data = try_parse_json('govulncheck_output.json')
+                  if vuln_data and vuln_data.get('Vulns'):
+                      results.append({'Tool': 'Govulncheck', 'Status': 'Success', 'Vulnerabilities Found': len(vuln_data['Vulns'])})
+                      pd.json_normalize(vuln_data['Vulns']).to_excel(writer, sheet_name='Vulnerabilities', index=False)
+                  else:
+                      results.append({'Tool': 'Govulncheck', 'Status': 'Success', 'Vulnerabilities Found': 0})
+              else:
+                  results.append({'Tool': 'Govulncheck', 'Status': govulncheck_status, 'Error Log': read_file_safe('govulncheck_error.log')})
+              
+              # Сводный лист
+              pd.DataFrame(results).to_excel(writer, sheet_name='Summary', index=False)
           EOF
 
       - name: Upload report
         uses: actions/upload-artifact@v4
         with:
-          name: go-analysis-report
-          path: backend/core/go_analysis_report.xlsx
+          name: security-analysis-report
+          path: backend/core/security_analysis_report.xlsx
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: analysis-logs
+          path: |
+            backend/core/*.log
+            backend/core/*_output.json
+            backend/core/*_status.log
