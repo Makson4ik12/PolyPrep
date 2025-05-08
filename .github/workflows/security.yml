@@ -19,17 +19,17 @@ jobs:
         with:
           go-version: '1.21'
 
-      - name: Initialize Go module
+      - name: Prepare Go environment
         run: |
-          cd backend/core  # Переходим в директорию с Go кодом
-          go mod init github.com/Makson4ik12/PolyPrep
+          cd backend/core
           go mod tidy
+          go list -m all
 
       - name: Run gosec
         run: |
           cd backend/core
           go install github.com/securego/gosec/v2/cmd/gosec@latest
-          gosec ./... 2>&1 | tee gosec-report.txt
+          gosec -exclude-generated ./... 2>&1 | tee gosec-report.txt
 
       - name: Run staticcheck
         run: |
