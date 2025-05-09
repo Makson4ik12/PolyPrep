@@ -1,14 +1,14 @@
-name: Go Composition Analysis (Fixed)
+name: Go Security Analysis with Vulnerabilities
 
 on:
-  workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
-  composition-analysis:
+  analyze:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -19,31 +19,28 @@ jobs:
         with:
           go-version: '1.23.9'
 
-      - name: Install Python dependencies
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-      - run: pip install pandas openpyxl networkx
-
-      - name: Install Go tools
+      - name: Install tools
         run: |
-          go install github.com/ofabry/go-callvis@latest
-          go install golang.org/x/perf/cmd/benchstat@latest
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          pip install pandas openpyxl
 
-      - name: Run composition analysis
+      - name: Run vulnerability scan
         continue-on-error: true
         run: |
           cd backend/core
           mkdir -p analysis_results
           
-          # 1. Анализ вызовов (упрощенный без networkx)
-          go-callvis -format=json -file=analysis_results/callgraph.json . 2>analysis_results/callgraph.log || echo '{"nodes":[],"edges":[]}' > analysis_results/callgraph.json
+          # Запускаем сканирование уязвимостей
+          govulncheck -json ./... > analysis_results/vulns.json 2>analysis_results/vulns.log || true
           
-          # 2. Анализ зависимостей
-          go list -json -m all > analysis_results/deps.json 2>analysis_results/deps.log || echo '[]' > analysis_results/deps.json
-          go mod graph > analysis_results/mod_graph.txt 2>analysis_results/mod_graph.log || echo '' > analysis_results/mod_graph.txt
+          # Запускаем security scan
+          gosec -fmt=json -out=analysis_results/gosec.json ./... 2>analysis_results/gosec.log || true
+
+      - name: Generate report
+        run: |
+          cd backend/core
           
-          # 3. Генерация отчета (без networkx)
           python3 <<EOF
           import pandas as pd
           import json
@@ -53,57 +50,71 @@ jobs:
               try:
                   with open(path) as f:
                       return json.load(f)
-              except Exception as e:
-                  print(f"Error reading {path}: {str(e)}")
+              except:
                   return None
           
-          with pd.ExcelWriter('composition_report.xlsx', engine='openpyxl') as writer:
+          # Создаем Excel writer с корректными параметрами
+          with pd.ExcelWriter('security_report.xlsx', engine='openpyxl') as writer:
               # Метаданные
               pd.DataFrame({
-                  'Report': ['Go Composition Analysis'],
+                  'Report': ['Go Security Analysis'],
                   'Date': [datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
-                  'Project': ['PolyPrep/backend/core'],
-                  'Tools': ['go-callvis', 'go-list']
+                  'Project': ['PolyPrep/backend/core']
               }).to_excel(writer, sheet_name='Metadata', index=False)
               
-              # 1. Граф вызовов
-              callgraph = safe_read_json('analysis_results/callgraph.json') or {'nodes': [], 'edges': []}
-              
-              if callgraph['nodes']:
-                  pd.DataFrame(callgraph['nodes']).to_excel(writer, sheet_name='Callgraph Nodes', index=False)
+              # Обработка уязвимостей
+              vulns_data = safe_read_json('analysis_results/vulns.json') or {}
+              if vulns_data.get('Vulns'):
+                  vulns_list = []
+                  for vuln in vulns_data['Vulns']:
+                      vulns_list.append({
+                          'ID': vuln.get('OSV', {}).get('id', ''),
+                          'CVE': ', '.join(vuln.get('OSV', {}).get('aliases', [])),
+                          'Summary': vuln.get('OSV', {}).get('summary', ''),
+                          'Severity': vuln.get('OSV', {}).get('severity', [{}])[0].get('score', 'N/A'),
+                          'Affected Version': next(
+                              (e['fixed'] for e in vuln.get('OSV', {}).get('affected', [{}])[0]
+                              .get('ranges', [{}])[0].get('events', [])
+                              if e.get('fixed') else 'N/A', 'N/A'),
+                          'Fixed Version': next(
+                              (e['fixed'] for e in vuln.get('OSV', {}).get('affected', [{}])[0]
+                              .get('ranges', [{}])[0].get('events', [])
+                              if e.get('fixed') else 'N/A', 'N/A'),
+                          'Package': vuln.get('PkgPath', ''),
+                          'Details': vuln.get('OSV', {}).get('details', '')[:500] + '...' if vuln.get('OSV', {}).get('details') else ''
+                      })
+                  vulns_df = pd.DataFrame(vulns_list)
+                  vulns_df.to_excel(writer, sheet_name='Vulnerabilities', index=False)
               else:
-                  pd.DataFrame({'Status': ['No callgraph data available']}).to_excel(writer, sheet_name='Callgraph Nodes', index=False)
+                  pd.DataFrame({'Status': ['No vulnerabilities found']}).to_excel(
+                      writer, sheet_name='Vulnerabilities', index=False)
               
-              if callgraph['edges']:
-                  pd.DataFrame(callgraph['edges']).to_excel(writer, sheet_name='Callgraph Edges', index=False)
+              # Обработка security issues
+              gosec_data = safe_read_json('analysis_results/gosec.json') or {}
+              if gosec_data.get('Issues'):
+                  issues_df = pd.json_normalize(gosec_data['Issues'])
+                  issues_df.to_excel(writer, sheet_name='Security Issues', index=False)
               else:
-                  pd.DataFrame({'Status': ['No callgraph edges available']}).to_excel(writer, sheet_name='Callgraph Edges', index=False)
-              
-              # 2. Зависимости
-              deps = safe_read_json('analysis_results/deps.json') or []
-              if deps:
-                  pd.json_normalize(deps).to_excel(writer, sheet_name='Dependencies', index=False)
-              else:
-                  pd.DataFrame({'Status': ['No dependency data available']}).to_excel(writer, sheet_name='Dependencies', index=False)
-              
-              # 3. Граф модулей (упрощенный текст)
-              try:
-                  with open('analysis_results/mod_graph.txt') as f:
-                      mod_data = [line.strip().split() for line in f if line.strip()]
-                  if mod_data:
-                      pd.DataFrame(mod_data, columns=['Source', 'Target']).to_excel(writer, sheet_name='Module Dependencies', index=False)
-              except Exception as e:
-                  pd.DataFrame({'Error': [str(e)]}).to_excel(writer, sheet_name='Module Dependencies', index=False)
+                  pd.DataFrame({'Status': ['No security issues found']}).to_excel(
+                      writer, sheet_name='Security Issues', index=False)
+          
+          # Проверяем целостность файла
+          try:
+              pd.read_excel('security_report.xlsx', sheet_name=None)
+              print("Excel file created successfully")
+          except Exception as e:
+              print(f"Error verifying Excel file: {str(e)}")
+              exit(1)
           EOF
 
       - name: Upload report
         uses: actions/upload-artifact@v4
         with:
-          name: composition-report
-          path: backend/core/composition_report.xlsx
+          name: security-report
+          path: backend/core/security_report.xlsx
 
       - name: Upload raw data
         uses: actions/upload-artifact@v4
         with:
-          name: composition-raw-data
+          name: analysis-raw-data
           path: backend/core/analysis_results/*
