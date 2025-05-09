@@ -1,0 +1,116 @@
+name: Go Composition Analysis
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  composition-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23.9'
+
+      - name: Install analysis tools
+        run: |
+          go install github.com/ofabry/go-callvis@latest
+          go install github.com/kyoh86/richgo@latest
+          go install github.com/google/pprof@latest
+          pip install pandas openpyxl
+
+      - name: Run composition analysis
+        continue-on-error: true
+        run: |
+          cd backend/core
+          mkdir -p analysis_results
+          
+          # 1. Анализ структуры вызовов
+          go-callvis -format=json -file=analysis_results/callgraph.json . 2>analysis_results/callgraph.log || echo '{"nodes":[],"edges":[]}' > analysis_results/callgraph.json
+          
+          # 2. Анализ зависимостей
+          go mod graph > analysis_results/mod_graph.txt
+          go list -json -m all > analysis_results/deps.json
+          
+          # 3. Генерация Excel-отчета
+          python3 <<EOF
+          import pandas as pd
+          import json
+          import networkx as nx
+          from datetime import datetime
+          
+          def safe_read_json(path):
+              try:
+                  with open(path) as f:
+                      return json.load(f)
+              except:
+                  return None
+          
+          # Создаем Excel-файл
+          with pd.ExcelWriter('composition_report.xlsx', engine='openpyxl') as writer:
+              # Метаданные
+              pd.DataFrame({
+                  'Report': ['Go Composition Analysis'],
+                  'Date': [datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
+                  'Project': ['PolyPrep/backend/core'],
+                  'Tools': ['go-callvis, go-mod-graph']
+              }).to_excel(writer, sheet_name='Metadata', index=False)
+              
+              # 1. Анализ вызовов
+              callgraph = safe_read_json('analysis_results/callgraph.json') or {'nodes': [], 'edges': []}
+              
+              # Ноды (функции/пакеты)
+              if callgraph['nodes']:
+                  nodes_df = pd.DataFrame(callgraph['nodes'])
+                  nodes_df.to_excel(writer, sheet_name='Callgraph Nodes', index=False)
+              
+              # Ребра (вызовы)
+              if callgraph['edges']:
+                  edges_df = pd.DataFrame(callgraph['edges'])
+                  edges_df.to_excel(writer, sheet_name='Callgraph Edges', index=False)
+              
+              # 2. Анализ зависимостей
+              try:
+                  with open('analysis_results/deps.json') as f:
+                      deps = [json.loads(line) for line in f if line.strip()]
+                  if deps:
+                      deps_df = pd.json_normalize(deps)
+                      deps_df.to_excel(writer, sheet_name='Dependencies', index=False)
+              except:
+                  pass
+              
+              # 3. Граф модулей (упрощенный)
+              try:
+                  G = nx.Graph()
+                  with open('analysis_results/mod_graph.txt') as f:
+                      for line in f:
+                          src, dst = line.strip().split()
+                          G.add_edge(src, dst)
+                  
+                  modules = pd.DataFrame({
+                      'Module': list(G.nodes()),
+                      'Dependencies': [', '.join(list(G.neighbors(n))) for n in G.nodes()]
+                  })
+                  modules.to_excel(writer, sheet_name='Module Graph', index=False)
+              except:
+                  pass
+          EOF
+
+      - name: Upload composition report
+        uses: actions/upload-artifact@v4
+        with:
+          name: composition-report
+          path: backend/core/composition_report.xlsx
+
+      - name: Upload raw data
+        uses: actions/upload-artifact@v4
+        with:
+          name: composition-raw-data
+          path: backend/core/analysis_results/*
