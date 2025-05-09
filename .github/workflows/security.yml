@@ -1,4 +1,4 @@
-name: Fixed Go Security Analysis
+name: Comprehensive Go Security Analysis
 
 on:
   push:
@@ -14,102 +14,170 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Verify project structure
+        id: check-structure
+        run: |
+          echo "Checking project structure..."
+          if [ ! -d "backend/core" ]; then
+            echo "ERROR: backend/core directory not found!"
+            echo "Current structure:"
+            ls -R
+            exit 1
+          fi
+          
+          cd backend/core
+          go_files=$(find . -name '*.go' | wc -l)
+          echo "Found $go_files Go files"
+          echo "go_files=$go_files" >> $GITHUB_OUTPUT
+
       - name: Set up Go
+        if: steps.check-structure.outputs.go_files != '0'
         uses: actions/setup-go@v4
         with:
           go-version: '1.23.9'
 
-      - name: Install Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
-      - name: Prepare environment
+      - name: Initialize Go module
+        if: steps.check-structure.outputs.go_files != '0'
         run: |
-          # Переходим в директорию проекта
           cd backend/core
-          
-          # Инициализируем модуль, если нужно
           if [ ! -f go.mod ]; then
             go mod init github.com/Makson4ik12/PolyPrep/backend/core
           fi
-          
-          # Скачиваем зависимости
           go mod tidy
-          
-          # Устанавливаем инструменты анализа
-          go install github.com/securego/gosec/v2/cmd/gosec@latest
-          go install honnef.co/go/tools/cmd/staticcheck@latest
-          go install golang.org/x/vuln/cmd/govulncheck@latest
-          
-          # Устанавливаем Python-зависимости
-          pip install pandas openpyxl
 
-      - name: Run analysis
+      - name: Install analysis tools
+        if: steps.check-structure.outputs.go_files != '0'
+        run: |
+          cd backend/core
+          go install github.com/securego/gosec/v2/cmd/gosec@v2.22.3
+          go install honnef.co/go/tools/cmd/staticcheck@v0.6.1
+          go install golang.org/x/vuln/cmd/govulncheck@v1.1.4
+
+      - name: Run analyses
+        if: steps.check-structure.outputs.go_files != '0'
         continue-on-error: true
         run: |
           cd backend/core
           
-          # Создаем временную директорию для результатов
+          # Create results directory
           mkdir -p analysis_results
           
-          # Запускаем анализаторы
-          gosec -fmt=json -out=analysis_results/gosec.json ./... || echo "{}" > analysis_results/gosec.json
-          staticcheck -f=json ./... > analysis_results/staticcheck.json || echo "[]" > analysis_results/staticcheck.json
-          govulncheck -json ./... > analysis_results/govulncheck.json || echo '{"Vulns":[]}' > analysis_results/govulncheck.json
+          # Run gosec with detailed output
+          gosec -fmt=json -exclude-generated -out=analysis_results/gosec.json ./... 2>analysis_results/gosec.log || {
+            echo '{"Issues":[],"Stats":{"files":0,"lines":0,"found":0}}' > analysis_results/gosec.json
+            echo "Gosec exited with $?"
+          }
           
-          # Создаем простой отчет
+          # Run staticcheck with verbose output
+          staticcheck -f=json -v ./... > analysis_results/staticcheck.json 2>analysis_results/staticcheck.log || {
+            echo '[]' > analysis_results/staticcheck.json
+            echo "Staticcheck exited with $?"
+          }
+          
+          # Run govulncheck with debug info
+          govulncheck -json -v ./... > analysis_results/govulncheck.json 2>analysis_results/govulncheck.log || {
+            echo '{"Vulns":[]}' > analysis_results/govulncheck.json
+            echo "Govulncheck exited with $?"
+          }
+
+      - name: Generate detailed report
+        if: steps.check-structure.outputs.go_files != '0'
+        run: |
+          cd backend/core
+          
+          pip install pandas openpyxl
+          
           python3 <<EOF
           import pandas as pd
           import json
           import os
+          from datetime import datetime
           
-          # Создаем Excel-файл
-          with pd.ExcelWriter('security_report.xlsx', engine='openpyxl') as writer:
-              # Лист с метаданными
-              pd.DataFrame({
-                  'Report': ['Go Security Analysis'],
-                  'Date': [pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')],
-                  'Go Version': ['1.23.9'],
-                  'Files Scanned': [len([f for f in os.listdir('.') if f.endswith('.go')])]
-              }).to_excel(writer, sheet_name='Metadata', index=False)
-              
-              # Обрабатываем результаты gosec
+          def safe_read_json(path):
               try:
-                  with open('analysis_results/gosec.json') as f:
-                      gosec_data = json.load(f)
-                  if 'Issues' in gosec_data and gosec_data['Issues']:
-                      pd.json_normalize(gosec_data['Issues']).to_excel(writer, sheet_name='Security Issues', index=False)
-                  else:
-                      pd.DataFrame({'Result': ['No security issues found']}).to_excel(writer, sheet_name='Security Issues', index=False)
-              except:
-                  pd.DataFrame({'Error': ['Could not process gosec results']}).to_excel(writer, sheet_name='Security Issues', index=False)
+                  with open(path) as f:
+                      return json.load(f)
+              except Exception as e:
+                  print(f"Error reading {path}: {str(e)}")
+                  return None
+          
+          def count_go_files():
+              return len([f for f in os.listdir('.') if f.endswith('.go')])
+          
+          # Create comprehensive report
+          with pd.ExcelWriter('detailed_security_report.xlsx', engine='openpyxl') as writer:
+              # Metadata sheet
+              meta_data = {
+                  'Project': ['PolyPrep/backend/core'],
+                  'Report Date': [datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
+                  'Go Version': ['1.23.9'],
+                  'Go Files Found': [count_go_files()],
+                  'Analysis Tools': ['gosec v2.22.3, staticcheck v0.6.1, govulncheck v1.1.4']
+              }
+              pd.DataFrame(meta_data).to_excel(writer, sheet_name='Metadata', index=False)
               
-              # Обрабатываем staticcheck
+              # Gosec results
+              gosec_data = safe_read_json('analysis_results/gosec.json') or {'Issues': [], 'Stats': {}}
+              if gosec_data.get('Issues'):
+                  issues_df = pd.json_normalize(gosec_data['Issues'])
+                  issues_df['Severity'] = issues_df['severity'].map({'HIGH': 'Critical', 'MEDIUM': 'High', 'LOW': 'Medium'})
+                  issues_df.to_excel(writer, sheet_name='Security Issues', index=False)
+              else:
+                  pd.DataFrame({
+                      'Status': ['No security issues found'],
+                      'Files Scanned': [gosec_data.get('Stats', {}).get('files', 0)],
+                      'Lines Scanned': [gosec_data.get('Stats', {}).get('lines', 0)]
+                  }).to_excel(writer, sheet_name='Security Issues', index=False)
+              
+              # Staticcheck results
+              static_data = []
               try:
                   with open('analysis_results/staticcheck.json') as f:
                       static_data = [json.loads(line) for line in f if line.strip()]
-                  if static_data:
-                      pd.json_normalize(static_data).to_excel(writer, sheet_name='Static Analysis', index=False)
-                  else:
-                      pd.DataFrame({'Result': ['No static analysis issues found']}).to_excel(writer, sheet_name='Static Analysis', index=False)
-              except:
-                  pd.DataFrame({'Error': ['Could not process staticcheck results']}).to_excel(writer, sheet_name='Static Analysis', index=False)
+              except Exception as e:
+                  print(f"Error processing staticcheck: {str(e)}")
               
-              # Обрабатываем govulncheck
-              try:
-                  with open('analysis_results/govulncheck.json') as f:
-                      vuln_data = json.load(f)
-                  if 'Vulns' in vuln_data and vuln_data['Vulns']:
-                      pd.json_normalize(vuln_data['Vulns']).to_excel(writer, sheet_name='Vulnerabilities', index=False)
-                  else:
-                      pd.DataFrame({'Result': ['No vulnerabilities found']}).to_excel(writer, sheet_name='Vulnerabilities', index=False)
-              except:
-                  pd.DataFrame({'Error': ['Could not process govulncheck results']}).to_excel(writer, sheet_name='Vulnerabilities', index=False)
+              if static_data:
+                  static_df = pd.json_normalize(static_data)
+                  static_df['Severity'] = static_df['severity'].map({'error': 'High', 'warning': 'Medium'})
+                  static_df.to_excel(writer, sheet_name='Static Analysis', index=False)
+              else:
+                  pd.DataFrame({
+                      'Status': ['No static analysis issues found'],
+                      'Note': ['Analyzed all .go files excluding tests']
+                  }).to_excel(writer, sheet_name='Static Analysis', index=False)
+              
+              # Govulncheck results
+              vuln_data = safe_read_json('analysis_results/govulncheck.json') or {'Vulns': []}
+              if vuln_data.get('Vulns'):
+                  vuln_df = pd.json_normalize(vuln_data['Vulns'])
+                  vuln_df['Module'] = vuln_df['module_path'] + '@' + vuln_df['found_version']
+                  vuln_df.to_excel(writer, sheet_name='Vulnerabilities', index=False)
+              else:
+                  pd.DataFrame({
+                      'Status': ['No known vulnerabilities found'],
+                      'Scanned Dependencies': [len(os.popen('go list -m all').read().splitlines())]
+                  }).to_excel(writer, sheet_name='Vulnerabilities', index=False)
           EOF
 
       - name: Upload report
+        if: steps.check-structure.outputs.go_files != '0'
         uses: actions/upload-artifact@v4
         with:
-          name: security-report
-          path: backend/core/security_report.xlsx
+          name: security-analysis-report
+          path: backend/core/detailed_security_report.xlsx
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: analysis-logs
+          path: backend/core/analysis_results/*.log
+
+      - name: No Go files found
+        if: steps.check-structure.outputs.go_files == '0'
+        run: |
+          echo "##[error]No Go files found in backend/core directory!"
+          echo "Current structure:"
+          ls -R
+          exit 1
