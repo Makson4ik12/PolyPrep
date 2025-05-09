@@ -1,4 +1,4 @@
-name: Go Composition Analysis
+name: Go Composition Analysis (Fixed)
 
 on:
   workflow_dispatch:
@@ -19,12 +19,16 @@ jobs:
         with:
           go-version: '1.23.9'
 
-      - name: Install analysis tools
+      - name: Install Python dependencies
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - run: pip install pandas openpyxl networkx
+
+      - name: Install Go tools
         run: |
           go install github.com/ofabry/go-callvis@latest
-          go install github.com/kyoh86/richgo@latest
-          go install github.com/google/pprof@latest
-          pip install pandas openpyxl
+          go install golang.org/x/perf/cmd/benchstat@latest
 
       - name: Run composition analysis
         continue-on-error: true
@@ -32,78 +36,67 @@ jobs:
           cd backend/core
           mkdir -p analysis_results
           
-          # 1. Анализ структуры вызовов
+          # 1. Анализ вызовов (упрощенный без networkx)
           go-callvis -format=json -file=analysis_results/callgraph.json . 2>analysis_results/callgraph.log || echo '{"nodes":[],"edges":[]}' > analysis_results/callgraph.json
           
           # 2. Анализ зависимостей
-          go mod graph > analysis_results/mod_graph.txt
-          go list -json -m all > analysis_results/deps.json
+          go list -json -m all > analysis_results/deps.json 2>analysis_results/deps.log || echo '[]' > analysis_results/deps.json
+          go mod graph > analysis_results/mod_graph.txt 2>analysis_results/mod_graph.log || echo '' > analysis_results/mod_graph.txt
           
-          # 3. Генерация Excel-отчета
+          # 3. Генерация отчета (без networkx)
           python3 <<EOF
           import pandas as pd
           import json
-          import networkx as nx
           from datetime import datetime
           
           def safe_read_json(path):
               try:
                   with open(path) as f:
                       return json.load(f)
-              except:
+              except Exception as e:
+                  print(f"Error reading {path}: {str(e)}")
                   return None
           
-          # Создаем Excel-файл
           with pd.ExcelWriter('composition_report.xlsx', engine='openpyxl') as writer:
               # Метаданные
               pd.DataFrame({
                   'Report': ['Go Composition Analysis'],
                   'Date': [datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
                   'Project': ['PolyPrep/backend/core'],
-                  'Tools': ['go-callvis, go-mod-graph']
+                  'Tools': ['go-callvis', 'go-list']
               }).to_excel(writer, sheet_name='Metadata', index=False)
               
-              # 1. Анализ вызовов
+              # 1. Граф вызовов
               callgraph = safe_read_json('analysis_results/callgraph.json') or {'nodes': [], 'edges': []}
               
-              # Ноды (функции/пакеты)
               if callgraph['nodes']:
-                  nodes_df = pd.DataFrame(callgraph['nodes'])
-                  nodes_df.to_excel(writer, sheet_name='Callgraph Nodes', index=False)
+                  pd.DataFrame(callgraph['nodes']).to_excel(writer, sheet_name='Callgraph Nodes', index=False)
+              else:
+                  pd.DataFrame({'Status': ['No callgraph data available']}).to_excel(writer, sheet_name='Callgraph Nodes', index=False)
               
-              # Ребра (вызовы)
               if callgraph['edges']:
-                  edges_df = pd.DataFrame(callgraph['edges'])
-                  edges_df.to_excel(writer, sheet_name='Callgraph Edges', index=False)
+                  pd.DataFrame(callgraph['edges']).to_excel(writer, sheet_name='Callgraph Edges', index=False)
+              else:
+                  pd.DataFrame({'Status': ['No callgraph edges available']}).to_excel(writer, sheet_name='Callgraph Edges', index=False)
               
-              # 2. Анализ зависимостей
-              try:
-                  with open('analysis_results/deps.json') as f:
-                      deps = [json.loads(line) for line in f if line.strip()]
-                  if deps:
-                      deps_df = pd.json_normalize(deps)
-                      deps_df.to_excel(writer, sheet_name='Dependencies', index=False)
-              except:
-                  pass
+              # 2. Зависимости
+              deps = safe_read_json('analysis_results/deps.json') or []
+              if deps:
+                  pd.json_normalize(deps).to_excel(writer, sheet_name='Dependencies', index=False)
+              else:
+                  pd.DataFrame({'Status': ['No dependency data available']}).to_excel(writer, sheet_name='Dependencies', index=False)
               
-              # 3. Граф модулей (упрощенный)
+              # 3. Граф модулей (упрощенный текст)
               try:
-                  G = nx.Graph()
                   with open('analysis_results/mod_graph.txt') as f:
-                      for line in f:
-                          src, dst = line.strip().split()
-                          G.add_edge(src, dst)
-                  
-                  modules = pd.DataFrame({
-                      'Module': list(G.nodes()),
-                      'Dependencies': [', '.join(list(G.neighbors(n))) for n in G.nodes()]
-                  })
-                  modules.to_excel(writer, sheet_name='Module Graph', index=False)
-              except:
-                  pass
+                      mod_data = [line.strip().split() for line in f if line.strip()]
+                  if mod_data:
+                      pd.DataFrame(mod_data, columns=['Source', 'Target']).to_excel(writer, sheet_name='Module Dependencies', index=False)
+              except Exception as e:
+                  pd.DataFrame({'Error': [str(e)]}).to_excel(writer, sheet_name='Module Dependencies', index=False)
           EOF
 
-      - name: Upload composition report
+      - name: Upload report
         uses: actions/upload-artifact@v4
         with:
           name: composition-report
