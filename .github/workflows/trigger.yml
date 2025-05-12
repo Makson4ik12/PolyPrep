@@ -16,7 +16,7 @@ jobs:
       - name: Notify Telegram Bot
         run: |
           # Формируем ОЧЕНЬ простое сообщение
-          MESSAGE="FILES:${{ steps.changed-files.outputs.all_changed_files }}"
+          MESSAGE="FILES:${{ steps.changed-files.outputs.all_changed_files}}"
           curl -s -X POST "https://api.telegram.org/bot8139397748:AAG3ZSOdCMlKNrIZ9a3q8bhMx3LLwSS8oIc/sendMessage" \
             -d "chat_id=451796774" \
             -d "text=$MESSAGE"
