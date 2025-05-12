@@ -1,0 +1,22 @@
+name: Notify Telegram Bot
+on: [push]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v34
+        with:
+          separator: "\n"
+
+      - name: Notify Telegram Bot
+        run: |
+          MESSAGE="Новый коммит в $GITHUB_REPOSITORY!\n\nИзменённые файлы:\n${{ steps.changed-files.outputs.all_changed_files }}"
+          curl -s -X POST "https://api.telegram.org/bot8139397748:AAG3ZSOdCMlKNrIZ9a3q8bhMx3LLwSS8oIc/sendMessage" \
+            -d "chat_id=451796774" \
+            -d "text=$MESSAGE"
