@@ -154,7 +154,7 @@ jobs:
                       pd.DataFrame({'Status': ['No TypeScript errors found']}).to_excel(
                           writer, sheet_name='Type Errors', index=False)
               except Exception as e:
-                  pd.DataFrame({'Error': [f'Could not process TypeScript errors: {str(e)}']}).to_excel(
+                  pd.DataFrame({'Error': [f'Could not process TypeScript errors: {str(e)}' ]}).to_excel(
                       writer, sheet_name='Type Errors', index=False)
           EOF
 
