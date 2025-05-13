@@ -36,23 +36,30 @@ import (
 
 func GetPost(c *gin.Context) {
 
-	postID, err := strconv.Atoi(c.Query("id")) //get id(integer)
-	if err != nil || postID <= 0 {             //check id, return 400
+	postID, err := strconv.Atoi(c.Query("id"))
+	if err != nil || postID <= 0 {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Invalid post ID",
 		})
 		return
 	}
 
+	tx := database.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
 	var post models.Post
-	result := database.DB.First(&post, postID) //get post from db
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound { //if not found return 403
+	if err := tx.Set("gorm:query_option", "FOR UPDATE").First(&post, postID).Error; err != nil {
+		tx.Rollback()
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusForbidden, gin.H{
 				"message": "Post not found",
 			})
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{ //return 500
+			c.JSON(http.StatusInternalServerError, gin.H{
 				"message": "Database error",
 			})
 		}
@@ -60,18 +67,54 @@ func GetPost(c *gin.Context) {
 	}
 
 	currentUserID := c.GetString("user_id")
-	if !post.Public && post.AuthorID != currentUserID { //check "Public", return 405
+	now := time.Now()
+
+	if !post.ScheduledAt.IsZero() && post.ScheduledAt.After(now) {
+
+		if post.AuthorID != currentUserID {
+			tx.Rollback()
+			c.JSON(http.StatusForbidden, gin.H{
+				"message": "Post is scheduled and not yet available",
+			})
+			return
+		}
+	} else if !post.ScheduledAt.IsZero() && post.ScheduledAt.Before(now) {
+		post.ScheduledAt = time.Time{}
+		if err := tx.Save(&post).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Failed to update post schedule",
+			})
+			return
+		}
+	}
+
+	if !post.Public && post.AuthorID != currentUserID {
+		tx.Rollback()
 		c.JSON(http.StatusMethodNotAllowed, gin.H{
 			"message": "No access to private post",
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{ //return 200
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Transaction failed",
+		})
+		return
+	}
+
+	scheduledAt := int64(0)
+	if !post.ScheduledAt.IsZero() {
+		scheduledAt = post.ScheduledAt.Unix()
+	}
+
+	c.JSON(http.StatusOK, gin.H{
 		"id":           post.ID,
 		"created_at":   post.CreatedAt.Unix(),
 		"updated_at":   post.UpdatedAt.Unix(),
-		"scheduled_at": post.ScheduledAt.Unix(),
+		"scheduled_at": scheduledAt,
 		"author_id":    post.AuthorID,
 		"title":        post.Title,
 		"text":         post.Text,
@@ -528,29 +571,80 @@ func GetSharePost(c *gin.Context) {
 		return
 	}
 
-	var share models.Share
-	if err := database.DB.Where("uuid = ? AND expires_at > ?", uuid, time.Now()).First(&share).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusForbidden, gin.H{})
-			return
+	tx := database.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Database error",
-		})
+	}()
+
+	var share models.Share
+	if err := tx.Where("uuid = ? AND expires_at > ?", uuid, time.Now()).First(&share).Error; err != nil {
+		tx.Rollback()
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusForbidden, gin.H{
+				"message": "Share not found or expired",
+			})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Database error",
+			})
+		}
 		return
 	}
 
 	var post models.Post
-	if err := database.DB.First(&post, share.PostID).Error; err != nil {
-		c.JSON(http.StatusForbidden, gin.H{})
+	if err := tx.Set("gorm:query_option", "FOR UPDATE").First(&post, share.PostID).Error; err != nil {
+		tx.Rollback()
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusForbidden, gin.H{
+				"message": "Post not found",
+			})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Database error",
+			})
+		}
 		return
+	}
+
+	now := time.Now()
+
+	if !post.ScheduledAt.IsZero() && post.ScheduledAt.After(now) {
+		tx.Rollback()
+		c.JSON(http.StatusForbidden, gin.H{
+			"message": "Post is scheduled and not yet available",
+		})
+		return
+	} else if !post.ScheduledAt.IsZero() && post.ScheduledAt.Before(now) {
+		post.ScheduledAt = time.Time{}
+		if err := tx.Save(&post).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Failed to update post schedule",
+			})
+			return
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Transaction failed",
+		})
+		return
+	}
+
+	scheduledAt := int64(0)
+	if !post.ScheduledAt.IsZero() {
+		scheduledAt = post.ScheduledAt.Unix()
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"id":           post.ID,
 		"created_at":   post.CreatedAt.Unix(),
 		"updated_at":   post.UpdatedAt.Unix(),
-		"scheduled_at": post.ScheduledAt.Unix(),
+		"scheduled_at": scheduledAt,
 		"author_id":    post.AuthorID,
 		"title":        post.Title,
 		"text":         post.Text,
