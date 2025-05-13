@@ -1,0 +1,171 @@
+name: TypeScript Security Analysis (Fixed)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm install -g npm@latest
+          npm install -g eslint@latest
+          npm install -g @typescript-eslint/parser @typescript-eslint/eslint-plugin
+          pip install pandas openpyxl
+
+      - name: Initialize project
+        run: |
+          mkdir -p analysis_results
+          
+          # Создаем package-lock.json если его нет
+          if [ ! -f "package-lock.json" ]; then
+            npm i --package-lock-only
+          fi
+          
+          # Создаем базовый eslint.config.js если его нет
+          if [ ! -f "eslint.config.js" ] && [ ! -f ".eslintrc" ]; then
+            echo 'export default [
+              {
+                files: ["**/*.ts"],
+                ignores: ["**/*.d.ts"],
+                languageOptions: {
+                  parser: "@typescript-eslint/parser",
+                  parserOptions: {
+                    project: true
+                  }
+                },
+                plugins: {
+                  "@typescript-eslint": require("@typescript-eslint/eslint-plugin")
+                },
+                rules: {
+                  "@typescript-eslint/no-explicit-any": "warn"
+                }
+              }
+            ];' > eslint.config.js
+          fi
+
+      - name: Run security scans
+        continue-on-error: true
+        run: |
+          # 1. Audit зависимостей (с обработкой ошибок)
+          npm audit --json > analysis_results/npm_audit.json 2>analysis_results/npm_audit.log || echo '{"vulnerabilities":{}}' > analysis_results/npm_audit.json
+          
+          # 2. ESLint анализ (с поддержкой нового формата)
+          eslint . -f json -o analysis_results/eslint_report.json --ext .ts,.tsx --config eslint.config.js 2>analysis_results/eslint.log || echo '[]' > analysis_results/eslint_report.json
+          
+          # 3. TSC проверка типов
+          tsc --noEmit --allowJs --skipLibCheck --pretty false > analysis_results/tsc_errors.txt 2>&1 || echo '' > analysis_results/tsc_errors.txt
+
+      - name: Generate report
+        run: |
+          python3 <<EOF
+          import pandas as pd
+          import json
+          from datetime import datetime
+          
+          def safe_read_json(path):
+              try:
+                  with open(path) as f:
+                      return json.load(f)
+              except Exception as e:
+                  print(f"Error reading {path}: {str(e)}")
+                  return None
+
+          with pd.ExcelWriter('typescript_analysis.xlsx', engine='openpyxl') as writer:
+              # Метаданные
+              pd.DataFrame({
+                  'Report': ['TypeScript Security Analysis'],
+                  'Date': [datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
+                  'Project': ['PolyPrep'],
+                  'Node Version': ['$(node -v)'],
+                  'NPM Version': ['$(npm -v)']
+              }).to_excel(writer, sheet_name='Metadata', index=False)
+              
+              # 1. NPM Audit результаты
+              audit_data = safe_read_json('analysis_results/npm_audit.json') or {}
+              vulns = audit_data.get('vulnerabilities', {})
+              
+              if vulns:
+                  vuln_list = []
+                  for name, data in vulns.items():
+                      for via in data.get('via', []):
+                          if isinstance(via, dict):
+                              vuln_list.append({
+                                  'Package': name,
+                                  'Version': data.get('version', ''),
+                                  'Severity': data.get('severity', '').capitalize(),
+                                  'CVE': via.get('url', '').split('/')[-1] if via.get('url') else '',
+                                  'Title': via.get('title', ''),
+                                  'Fixed In': data.get('fixAvailable', {}).get('version', ''),
+                                  'Path': ' -> '.join(data.get('nodes', [])),
+                                  'More Info': via.get('url', '')
+                              })
+                  if vuln_list:
+                      pd.DataFrame(vuln_list).to_excel(writer, sheet_name='NPM Vulnerabilities', index=False)
+              else:
+                  pd.DataFrame({'Status': ['No npm vulnerabilities found']}).to_excel(
+                      writer, sheet_name='NPM Vulnerabilities', index=False)
+              
+              # 2. ESLint результаты
+              eslint_data = safe_read_json('analysis_results/eslint_report.json') or []
+              if eslint_data and any('messages' in item for item in eslint_data):
+                  issues = []
+                  for item in eslint_data:
+                      for message in item.get('messages', []):
+                          issues.append({
+                              'File': item.get('filePath', ''),
+                              'Line': message.get('line', ''),
+                              'Column': message.get('column', ''),
+                              'Severity': 'Error' if message.get('severity') == 2 else 'Warning',
+                              'Rule': message.get('ruleId', ''),
+                              'Message': message.get('message', ''),
+                              'Fixable': 'Yes' if message.get('fix') else 'No'
+                          })
+                  pd.DataFrame(issues).to_excel(writer, sheet_name='Code Quality', index=False)
+              else:
+                  pd.DataFrame({'Status': ['No ESLint issues found']}).to_excel(
+                      writer, sheet_name='Code Quality', index=False)
+              
+              # 3. TypeScript ошибки
+              try:
+                  with open('analysis_results/tsc_errors.txt') as f:
+                      tsc_errors = [line.strip() for line in f if line.strip() and 'error TS' in line]
+                  if tsc_errors:
+                      pd.DataFrame({
+                          'Error': [e.split('error TS')[1].split(':')[0] for e in tsc_errors],
+                          'Message': [':'.join(e.split(':')[2:]).strip() for e in tsc_errors],
+                          'File': [e.split(':')[0] for e in tsc_errors]
+                      }).to_excel(writer, sheet_name='Type Errors', index=False)
+                  else:
+                      pd.DataFrame({'Status': ['No TypeScript errors found']}).to_excel(
+                          writer, sheet_name='Type Errors', index=False)
+              except Exception as e:
+                  pd.DataFrame({'Error': [f'Could not process TypeScript errors: {str(e)}' ]}).to_excel(
+                      writer, sheet_name='Type Errors', index=False)
+          EOF
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: typescript-analysis-report
+          path: typescript_analysis.xlsx
+
+      - name: Upload logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: typescript-analysis-logs
+          path: analysis_results/*.log

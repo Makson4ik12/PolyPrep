@@ -139,6 +139,15 @@ func getAuthURL(cfg *config.Config, nextPage string) string {
 		"&redirect_uri=" + cfg.RedirectURL + nextPage
 }
 
+func getAuthMobileURL(cfg *config.Config, nextPage string) string {
+	baseURL := strings.TrimSuffix(cfg.KeycloakURL, "/")
+	return baseURL + "/realms/" + cfg.Realm + "/protocol/openid-connect/auth" +
+		"?client_id=" + cfg.ClientID +
+		"&response_type=code" +
+		"&scope=openid profile" +
+		"&redirect_uri=" + cfg.MobileRedirectURL + nextPage
+}
+
 func RefreshToken(c *gin.Context) {
 	var req struct {
 		RefreshToken string `json:"refresh_token" binding:"required"`
@@ -182,11 +191,11 @@ func RefreshToken(c *gin.Context) {
 func MobileAuthCallback(c *gin.Context) {
 
 	code := c.Query("code")
-	nextView := c.Query("next_view")
+	nextView := c.Query("next_page")
 
 	if code == "" || nextView == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Parameters 'code' and 'next_view' are required",
+			"message": "Parameters 'code' and 'next_page' are required",
 		})
 		return
 	}
@@ -237,7 +246,7 @@ func MobileAuthCallback(c *gin.Context) {
 type AuthRequestIOS struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
-	NextView     string `json:"next_view"`
+	NextPage     string `json:"next_page"`
 }
 
 // ------------------------------POST/auth/mobile/check------------------------------//
@@ -255,7 +264,7 @@ func MobileAuthCheck(c *gin.Context) {
 
 	if req.AccessToken == "" {
 		c.JSON(http.StatusOK, gin.H{
-			"url":      getAuthURL(cfg, req.NextView),
+			"url":      getAuthMobileURL(cfg, req.NextPage),
 			"redirect": true,
 		})
 		return
@@ -264,14 +273,14 @@ func MobileAuthCheck(c *gin.Context) {
 	token, _, err := keycloakClient.DecodeAccessToken(c.Request.Context(), req.AccessToken, cfg.Realm)
 	if err != nil || token == nil {
 		c.JSON(http.StatusOK, gin.H{
-			"url":      getAuthURL(cfg, req.NextView),
+			"url":      getAuthMobileURL(cfg, req.NextPage),
 			"redirect": true,
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"url":      getAuthURL(cfg, req.NextView),
+		"url":      getAuthMobileURL(cfg, req.NextPage),
 		"redirect": false,
 	})
 }

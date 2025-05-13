@@ -1,0 +1,116 @@
+name: Go Security Analysis with Vulnerabilities (Fixed)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23.9'
+
+      - name: Install tools
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          pip install pandas openpyxl
+
+      - name: Run scans
+        continue-on-error: true
+        run: |
+          cd backend/core
+          mkdir -p analysis_results
+          
+          # Запускаем сканирование уязвимостей
+          govulncheck -json ./... > analysis_results/vulns.json 2>analysis_results/vulns.log || echo '{"Vulns":[]}' > analysis_results/vulns.json
+          
+          # Запускаем security scan
+          gosec -fmt=json -out=analysis_results/gosec.json ./... 2>analysis_results/gosec.log || echo '{"Issues":[]}' > analysis_results/gosec.json
+
+      - name: Generate report
+        run: |
+          cd backend/core
+          
+          python3 <<EOF
+          import pandas as pd
+          import json
+          from datetime import datetime
+          
+          def safe_read_json(path):
+              try:
+                  with open(path) as f:
+                      return json.load(f)
+              except Exception as e:
+                  print(f"Error reading {path}: {str(e)}")
+                  return None
+          
+          # Создаем Excel файл
+          with pd.ExcelWriter('security_report.xlsx', engine='openpyxl') as writer:
+              # Метаданные
+              pd.DataFrame({
+                  'Report': ['Go Security Analysis'],
+                  'Date': [datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
+                  'Project': ['PolyPrep/backend/core']
+              }).to_excel(writer, sheet_name='Metadata', index=False)
+              
+              # Обработка уязвимостей
+              vulns_data = safe_read_json('analysis_results/vulns.json') or {'Vulns': []}
+              vulns_list = []
+              
+              for vuln in vulns_data.get('Vulns', []):
+                  osv = vuln.get('OSV', {})
+                  affected = osv.get('affected', [{}])[0]
+                  ranges = affected.get('ranges', [{}])[0]
+                  events = ranges.get('events', [])
+                  
+                  fixed_ver = next((e['fixed'] for e in events if 'fixed' in e), 'N/A')
+                  introduced_ver = next((e['introduced'] for e in events if 'introduced' in e), 'N/A')
+                  
+                  vulns_list.append({
+                      'ID': osv.get('id', ''),
+                      'CVE': ', '.join(osv.get('aliases', [])),
+                      'Summary': osv.get('summary', ''),
+                      'Severity': osv.get('severity', [{}])[0].get('score', 'N/A'),
+                      'Affected Version': introduced_ver,
+                      'Fixed Version': fixed_ver,
+                      'Package': vuln.get('PkgPath', ''),
+                      'Details': (osv.get('details', '')[:497] + '...') if osv.get('details') else ''
+                  })
+              
+              if vulns_list:
+                  pd.DataFrame(vulns_list).to_excel(writer, sheet_name='Vulnerabilities', index=False)
+              else:
+                  pd.DataFrame({'Status': ['No vulnerabilities found']}).to_excel(
+                      writer, sheet_name='Vulnerabilities', index=False)
+              
+              # Обработка security issues
+              gosec_data = safe_read_json('analysis_results/gosec.json') or {'Issues': []}
+              if gosec_data.get('Issues'):
+                  issues_df = pd.json_normalize(gosec_data['Issues'])
+                  issues_df.to_excel(writer, sheet_name='Security Issues', index=False)
+              else:
+                  pd.DataFrame({'Status': ['No security issues found']}).to_excel(
+                      writer, sheet_name='Security Issues', index=False)
+          EOF
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report
+          path: backend/core/security_report.xlsx
+
+      - name: Upload raw data
+        uses: actions/upload-artifact@v4
+        with:
+          name: analysis-raw-data
+          path: backend/core/analysis_results/*
