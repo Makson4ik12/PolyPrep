@@ -16,7 +16,6 @@ import (
 	"gorm.io/gorm"
 
 	"fmt"
-	"path/filepath"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -112,6 +111,11 @@ func UploadIncludes(c *gin.Context) {
 	postIDStr := c.Query("post_id")
 	filename := c.Query("filename")
 
+	if !isValidFilename(filename) {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid filename"})
+		return
+	}
+
 	if postIDStr == "" || filename == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Missing PostId or Filename headers"})
 		return
@@ -156,7 +160,7 @@ func UploadIncludes(c *gin.Context) {
 		return
 	}
 
-	fileExt := strings.ToLower(filepath.Ext(filename))
+	fileExt := strings.ToLower(getTrueFileExtension(filename))
 
 	if !isExtensionAllowed(fileExt) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "File extension not allowed"})
@@ -201,6 +205,21 @@ func UploadIncludes(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+func getTrueFileExtension(filename string) string {
+	parts := strings.Split(filename, ".")
+	if len(parts) < 2 {
+		return ""
+	}
+
+	ext := parts[len(parts)-1]
+
+	if len(ext) > 5 {
+		return ""
+	}
+
+	return "." + ext
+}
+
 func isExtensionAllowed(ext string) bool {
 	allowedExtensions := map[string]bool{
 		".jpg":  true,
@@ -226,10 +245,25 @@ func isExtensionAllowed(ext string) bool {
 }
 
 func isValidFilename(filename string) bool {
-
 	if strings.ContainsAny(filename, "/\\?%*:|\"<>") {
 		return false
 	}
+
+	if strings.Contains(filename, "..") ||
+		strings.HasPrefix(filename, ".") ||
+		strings.HasSuffix(filename, ".") {
+		return false
+	}
+
+	if len(filename) < 5 {
+		return false
+	}
+
+	lastDot := strings.LastIndex(filename, ".")
+	if lastDot == -1 || lastDot == len(filename)-1 {
+		return false
+	}
+
 	return true
 }
 
