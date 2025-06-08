@@ -31,7 +31,7 @@ services:
        - ./frontend/polyprep-web/public:/app/public
     environment:
       - CHOKIDAR_USEPOLLING=true
-      - REACT_APP_BACKEND_URL=http://90.156.170.153:8081
+      - REACT_APP_BACKEND_URL=https://90.156.170.153:8081
       - HOST=0.0.0.0
     depends_on:
       - backend
