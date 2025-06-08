@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"polyprep/config"
 	"polyprep/database"
 	"polyprep/handlers"
@@ -88,5 +89,12 @@ func main() {
 		}
 	}
 
-	r.Run(":" + cfg.ServerPort)
+	certFile := "../../../cert.pem"
+	keyFile := "../../../key.pem"
+
+	log.Printf("Starting HTTPS server on port %s", cfg.ServerPort)
+	err := r.RunTLS(":"+cfg.ServerPort, certFile, keyFile)
+	if err != nil {
+		log.Fatalf("Failed to start HTTPS server: %v", err)
+	}
 }
