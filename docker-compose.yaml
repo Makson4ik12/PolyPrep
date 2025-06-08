@@ -15,18 +15,22 @@ services:
       REALM: "master"
       CLIENT_ID: "polyclient"
       CLIENT_SECRET: "WYB2ObPJDY2xBDjpus9wQiWPo96b4Gcs"
+    labels:
+      prometheus-job: "backend"
+      prometheus-port: "8081"
+      prometheus-path: "/metrics"
 
   frontend:
     build:
       context: frontend
       dockerfile: Dockerfile
     ports:
-      - "3001:3000"  # Сопоставляем порт 3000 контейнера с портом 3000 хоста
+      - "3001:3000"
     volumes:
        - ./frontend/polyprep-web/src:/app/src
        - ./frontend/polyprep-web/public:/app/public
     environment:
-      - CHOKIDAR_USEPOLLING=true  # Для работы файлового вотчера в Docker
+      - CHOKIDAR_USEPOLLING=true
       - REACT_APP_BACKEND_URL=http://90.156.170.153:8081
       - HOST=0.0.0.0
     depends_on:
@@ -44,6 +48,7 @@ services:
       KC_HOSTNAME_STRICT: false
       KC_HOSTNAME_STRICT_HTTPS: false
       KC_HTTP_ENABLED: true
+      JAVA_OPTS: "-Djava.awt.headless=true -XX:+UseContainerSupport -XX:MaxRAMPercentage=75 -Djboss.modules.system.pkgs=org.jboss.byteman -Djava.awt.headless=true -Dorg.jboss.metrics.enabled=true"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/realms/master"]
       interval: 10s
@@ -53,6 +58,44 @@ services:
       - data:/opt/keycloak/data/
       - ./backend/keycloak/keycloak-2fa-email-authenticator.jar:/opt/keycloak/providers/keycloak-2fa-email-authenticator.jar
       - ./backend/keycloak/my-custom-theme:/opt/keycloak/themes/my-custom-theme/
+    labels:
+      prometheus-job: "keycloak"
+      prometheus-port: "9990"
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    depends_on:
+      - cadvisor
+      - postgres-exporter
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    depends_on:
+      - prometheus
 
   postgres:
     image: postgres:13
@@ -70,6 +113,17 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:Md_rzy3dBdKmAMYZC2a_@postgres:5432/bd?sslmode=disable"
+    ports:
+      - "9187:9187"
+    depends_on:
+      - postgres
+
 volumes:
   data:
   postgres_data:
+  grafana-storage:
