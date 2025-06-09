@@ -2,6 +2,8 @@ import styles from './NewPostPage.module.scss'
 
 import Loader from '../components/Loader';
 import TextareaAutosize from 'react-textarea-autosize';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useRef, useState } from 'react';
 import { deletePost, IPost, postPost } from '../server-api/posts';
 import { useNavigate } from 'react-router-dom';
@@ -20,6 +22,8 @@ import IconPrivate from '../icons/private.svg'
 import IconSuccess from '../icons/success.svg'
 import IconTime from '../icons/time.svg'
 import IconBolt from '../icons/bolt.svg'
+import IconEdit from '../icons/edit.svg'
+import IconPreview from '../icons/preview.svg'
 
 const NewPostPage = () => {
   const navigate = useNavigate();
@@ -33,8 +37,9 @@ const NewPostPage = () => {
   const [isError, setIsError] = useState({ind: false, error: ""});
   const [isLoading, setIsLoading] = useState(false);
   const [includeData, setIncludeData] = useState<IIncludeData[]>([]);
+  const [editMode, setEditMode] = useState(true);
+  const [text, setText] = useState<string>("");
 
-  const textRef = useRef<HTMLTextAreaElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
   const hashtagesRef = useRef<HTMLInputElement>(null);
 
@@ -159,6 +164,10 @@ const NewPostPage = () => {
     setIncludeData(prev => prev.filter(item => item.id !== id));
   };
 
+  const handleOnTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setText(e.target.value);
+  }
+
   return (
     <div className={styles.container}>
       <form onSubmit={handleOnSubmit} autoComplete="off">
@@ -186,16 +195,40 @@ const NewPostPage = () => {
           <h2>Текст</h2>
         </div>
 
-        <TextareaAutosize 
-          id="text" 
-          name="text" 
-          placeholder='Абв'
-          ref={textRef}
-          spellCheck={false}
-          autoCapitalize='on'
-          maxLength={15000}
-          required
-        />
+        {
+          editMode ?
+            <TextareaAutosize 
+              id="text" 
+              name="text" 
+              placeholder='Абв'
+              spellCheck={false}
+              autoCapitalize='on'
+              maxLength={15000}
+              onChange={handleOnTextChange}
+              defaultValue={text}
+              required
+            />
+          :
+            <div className={styles.md_wrapper}>
+              <Markdown remarkPlugins={[remarkGfm]}>{ text }</Markdown>
+            </div>
+        }
+        
+
+        <div className={styles.buttons}>
+          <img 
+            className={editMode ? styles.button_selected : ""} 
+            src={IconEdit} 
+            alt='edit' 
+            onClick={() => setEditMode(true)}
+          />
+          <img 
+            className={!editMode ? styles.button_selected : ""} 
+            src={IconPreview} 
+            alt='preview' 
+            onClick={() => setEditMode(false)}
+          />
+        </div>
 
         <div className={styles.subheader}>
           <img src={IconHashtag} alt='hashtages' />
