@@ -515,8 +515,10 @@ func GetRandomPosts(c *gin.Context) {
 		return
 	}
 
+	now := time.Now()
+
 	var posts []models.Post
-	result := database.DB.Where("public = true").
+	result := database.DB.Where("public = true AND (scheduled_at IS NULL OR scheduled_at <= ?)", now).
 		Order("RANDOM()").
 		Limit(count).
 		Find(&posts)
