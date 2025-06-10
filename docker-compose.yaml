@@ -16,9 +16,9 @@ services:
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
       - --certificatesresolvers.letsencrypt.acme.email=maks.http@mail.ru
       - --certificatesresolvers.letsencrypt.acme.storage=/acme.json
-      - --certificatesresolvers.letsencrypt.acme.storageMode=600
       - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
     labels:
       - "traefik.enable=true"
