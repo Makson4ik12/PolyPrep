@@ -22,11 +22,11 @@ func LoadConfig() *Config {
 
 	return &Config{
 		ServerPort:        "8081",
-		KeycloakURL:       "http://90.156.170.153:8091",
+		KeycloakURL:       "https://auth.polyprep.ru",
 		ClientID:          "polyclient",
 		ClientSecret:      "WYB2ObPJDY2xBDjpus9wQiWPo96b4Gcs",
 		Realm:             "master",
-		RedirectURL:       "http://90.156.170.153:3001/",
+		RedirectURL:       "https://polyprep.ru/",
 		MobileRedirectURL: "yourapp://oauth-callback",
 	}
 }
