@@ -65,18 +65,12 @@ services:
       context: frontend
       dockerfile: Dockerfile
     ports:
-      - "3001:3000"
-    volumes:
-       - ./frontend/polyprep-web/src:/app/src
-       - ./frontend/polyprep-web/public:/app/public
-    environment:
-      - CHOKIDAR_USEPOLLING=true
-      - HOST=0.0.0.0
+      - "3001:80"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`polyprep.ru`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
-      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
       - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
     depends_on:
       - backend

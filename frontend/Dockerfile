@@ -1,21 +1,15 @@
-# Development Dockerfile (без nginx)
-FROM node:18-alpine
-
-# Устанавливаем рабочую директорию
+FROM node:18-alpine AS builder
 WORKDIR /app
-
-# 1. Копируем только package.json для кэширования
 COPY polyprep-web/package*.json ./
 
-# 2. Устанавливаем зависимости
-RUN npm install && \
-    npm install --save-dev @types/axios
-
-# 3. Копируем все файлы проекта
+RUN npm install
 COPY polyprep-web/ ./
+RUN npm run build
 
-# 4. Открываем порт 3000
-EXPOSE 3001
+FROM nginx:stable-alpine
+COPY --from=builder /app/build /usr/share/nginx/html
+COPY polyprep-web/nginx.conf /etc/nginx/conf.d/default.conf
 
-# 5. Запускаем приложение с параметрами для Docker
-CMD ["npm", "start"]
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
