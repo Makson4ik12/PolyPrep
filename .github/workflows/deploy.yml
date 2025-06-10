@@ -22,3 +22,4 @@ jobs:
             # Дополнительные команды для деплоя:
             # docker-compose up -d --build
             # npm install && pm2 restart app
+            
