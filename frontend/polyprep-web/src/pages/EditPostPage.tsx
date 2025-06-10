@@ -3,6 +3,8 @@ import styles from './NewPostPage.module.scss'
 import TemporaryInclude from '../components/Include';
 import Loader from '../components/Loader';
 import TextareaAutosize from 'react-textarea-autosize';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useEffect, useRef, useState } from 'react';
 import { getPost, IPost, putPost } from '../server-api/posts';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -21,6 +23,8 @@ import IconPrivate from '../icons/private.svg'
 import IconSuccess from '../icons/success.svg'
 import IconTime from '../icons/time.svg'
 import IconBolt from '../icons/bolt.svg'
+import IconEdit from '../icons/edit.svg'
+import IconPreview from '../icons/preview.svg'
 
 const EditPostPage = () => {
   const location = useLocation();
@@ -32,6 +36,8 @@ const EditPostPage = () => {
   const [titleLen, setTitleLen] = useState(0);
   const [hashtagesLen, setHashtagsLen] = useState(0);
   const [isError, setIsError] = useState({ind: false, error: ""});
+  const [editMode, setEditMode] = useState(true);
+  const [text, setText] = useState<string>("");
 
   const [oldIncludes, setOldIncludes] = useState<IInclude[]>([]);
   const [newIncludes, setNewIncludes] = useState<IIncludeData[]>([]);
@@ -169,6 +175,10 @@ const EditPostPage = () => {
     await queryClient.invalidateQueries({ queryKey: ['viewpostpage-id' + post_id] });
   }
 
+  const handleOnTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setText(e.target.value);
+  }
+
   useEffect(() => {
     (async () => {
       setIsLoadingPost(true);
@@ -176,6 +186,7 @@ const EditPostPage = () => {
       await getPost(post_id)
       .then((resp) => {
         setPostData(resp as IPost);
+        setText((resp as IPost).text);
 
         if ((resp as IPost).public)
           setIsPrivate(false);
@@ -228,17 +239,40 @@ const EditPostPage = () => {
           <h2>Текст</h2>
         </div>
 
-        <TextareaAutosize 
-          id="text" 
-          name="text" 
-          placeholder='Абв'
-          ref={textRef}
-          spellCheck={false}
-          defaultValue={ postData?.text }
-          autoCapitalize='on'
-          maxLength={15000}
-          required
-        />
+        {
+          editMode ?
+            <TextareaAutosize 
+              id="text" 
+              name="text" 
+              placeholder='Абв'
+              ref={textRef}
+              spellCheck={false}
+              autoCapitalize='on'
+              maxLength={15000}
+              onChange={handleOnTextChange}
+              defaultValue={text}
+              required
+            />
+          :
+            <div className={styles.md_wrapper}>
+              <Markdown remarkPlugins={[remarkGfm]}>{ text }</Markdown>
+            </div>
+        }
+
+         <div className={styles.buttons}>
+          <img 
+            className={editMode ? styles.button_selected : ""} 
+            src={IconEdit} 
+            alt='edit' 
+            onClick={() => setEditMode(true)}
+          />
+          <img 
+            className={!editMode ? styles.button_selected : ""} 
+            src={IconPreview} 
+            alt='preview' 
+            onClick={() => setEditMode(false)}
+          />
+        </div>
 
         <div className={styles.subheader}>
           <img src={IconHashtag} alt='hashtages' />

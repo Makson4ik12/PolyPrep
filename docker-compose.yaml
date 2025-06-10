@@ -1,6 +1,41 @@
 version: "3.3"
 
 services:
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/acme.json:/acme.json
+    command:
+      - --api.dashboard=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.letsencrypt.acme.email=maks.http@mail.ru
+      - --certificatesresolvers.letsencrypt.acme.storage=/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.polyprep.ru`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.tls=true"
+      - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.dashboard.middlewares=auth"
+      - "traefik.http.middlewares.auth.basicauth.users=admin:{SHA}0DPiKuNIrrVmD8IUCuw1hQxNqZc=" # admin admin
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.routers.http-catchall.rule=hostregexp(`{any:.+}`)"
+      - "traefik.http.routers.http-catchall.entrypoints=web"
+      - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
+
   backend:
     build:
       context: backend/core
@@ -16,23 +51,27 @@ services:
       CLIENT_ID: "polyclient"
       CLIENT_SECRET: "WYB2ObPJDY2xBDjpus9wQiWPo96b4Gcs"
     labels:
-      prometheus-job: "backend"
-      prometheus-port: "8081"
-      prometheus-path: "/metrics"
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`api.polyprep.ru`)"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.services.backend.loadbalancer.server.port=8081"
+      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
+      - "prometheus-job=backend"
+      - "prometheus-port=8081"
+      - "prometheus-path=/metrics"
 
   frontend:
     build:
       context: frontend
       dockerfile: Dockerfile
     ports:
-      - "3001:3000"
-    volumes:
-       - ./frontend/polyprep-web/src:/app/src
-       - ./frontend/polyprep-web/public:/app/public
-    environment:
-      - CHOKIDAR_USEPOLLING=true
-      - REACT_APP_BACKEND_URL=http://90.156.170.153:8081
-      - HOST=0.0.0.0
+      - "3001:80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`polyprep.ru`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
     depends_on:
       - backend
 
@@ -45,9 +84,9 @@ services:
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_HOSTNAME_STRICT: false
-      KC_HOSTNAME_STRICT_HTTPS: false
-      KC_HTTP_ENABLED: true
+      KC_HOSTNAME: auth.polyprep.ru
+      KC_HOSTNAME_STRICT: "false"
+      KC_PROXY: "edge"
       JAVA_OPTS: "-Djava.awt.headless=true -XX:+UseContainerSupport -XX:MaxRAMPercentage=75 -Djboss.modules.system.pkgs=org.jboss.byteman -Djava.awt.headless=true -Dorg.jboss.metrics.enabled=true"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/realms/master"]
@@ -59,8 +98,13 @@ services:
       - ./backend/keycloak/keycloak-2fa-email-authenticator.jar:/opt/keycloak/providers/keycloak-2fa-email-authenticator.jar
       - ./backend/keycloak/my-custom-theme:/opt/keycloak/themes/my-custom-theme/
     labels:
-      prometheus-job: "keycloak"
-      prometheus-port: "9990"
+      - "traefik.enable=true"
+      - "traefik.http.routers.keycloak.rule=Host(`auth.polyprep.ru`)"
+      - "traefik.http.routers.keycloak.entrypoints=websecure"
+      - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
+      - "traefik.http.routers.keycloak.tls.certresolver=letsencrypt"
+      - "prometheus-job=keycloak"
+      - "prometheus-port=9990"
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
@@ -82,6 +126,12 @@ services:
     ports:
       - "9090:9090"
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus.rule=Host(`prometheus.polyprep.ru`)"
+      - "traefik.http.routers.prometheus.entrypoints=websecure"
+      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+      - "traefik.http.routers.prometheus.tls.certresolver=letsencrypt"
     depends_on:
       - cadvisor
       - postgres-exporter
@@ -94,6 +144,12 @@ services:
     ports:
       - "3000:3000"
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.polyprep.ru`)"
+      - "traefik.http.routers.grafana.entrypoints=websecure"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+      - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
     depends_on:
       - prometheus
 

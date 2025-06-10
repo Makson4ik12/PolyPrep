@@ -36,6 +36,7 @@ import IconFavouriteFilled from '../icons/favourite_fill.svg'
 import IconEdit from '../icons/edit.svg'
 import IconContextMenu from '../icons/context_menu.svg'
 import IconUnlike from '../icons/unlike.svg'
+import { useAppSelector } from '../redux-store/hooks';
 
 const fetchPost = async (post_id: number) => {
   const resp = await getPost(post_id);
@@ -49,7 +50,7 @@ const ViewPostPage = () => {
   const queryClient = useQueryClient();
   
   const post_id = Number(location.pathname.slice(location.pathname.lastIndexOf('/') + 1, location.pathname.length) || -1);
-  const userData = store.getState().auth.userData;
+  const userData = useAppSelector(data => data.auth.userData);
 
   const [postComments, setPostComments] = useState<IComment[]>();
   const [userLike, setUserLike] = useState(false);

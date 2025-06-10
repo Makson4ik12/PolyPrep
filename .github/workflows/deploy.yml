@@ -1,0 +1,24 @@
+name: Deploy to Linux Server
+on:
+  push:
+    branches: [ main ]  # Триггер на пуш в main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install SSH key
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /root/PolyPrep
+            ./update.sh
+            # Дополнительные команды для деплоя:
+            # docker-compose up -d --build
+            # npm install && pm2 restart app
